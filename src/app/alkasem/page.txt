@@ -1,0 +1,1157 @@
+'use client'
+import { useState, ChangeEvent, FormEvent } from 'react'
+
+interface FamilyRelation {
+  id: string
+  title: string
+  names: string
+  isTitleBold: boolean
+  isNamesBold: boolean
+}
+
+interface TextField {
+  value: string
+  isBold: boolean
+  isHandwritten?: boolean
+}
+
+interface ObituaryData {
+  deceasedName: TextField
+  deceasedTitle: TextField
+  quranVerse: TextField
+  familyRelations: FamilyRelation[]
+  families: TextField
+  announcementText: TextField
+  deathDateHijri: TextField
+  deathDateGregorian: TextField
+  prayerLocation: TextField
+  prayerTime: TextField
+  burialLocation: TextField
+  condolenceLocation: TextField
+  condolenceAddress: TextField
+  menDays: TextField
+  menTime: TextField
+  womenDays: TextField
+  womenTime: TextField
+  officeName: TextField
+  officeAddress: TextField
+  phone: TextField
+  mobile: TextField
+  closingText: TextField
+}
+
+// قائمة الآيات القرآنية المقترحة
+const QURAN_VERSES = [
+  "إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ",
+  "كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ وَإِنَّمَا تُوَفَّوْنَ أُجُورَكُمْ يَوْمَ الْقِيَامَةِ",
+  "اللَّهُ يَتَوَفَّى الْأَنْفُسَ حِينَ مَوْتِهَا وَالَّتِي لَمْ تَمُتْ فِي مَنَامِهَا",
+  "وَهُوَ الْقَاهِرُ فَوْقَ عِبَادِهِ وَهُوَ الْحَكِيمُ الْخَبِيرُ",
+  "وَمَا كَانَ لِنَفْسٍ أَنْ تَمُوتَ إِلَّا بِإِذْنِ اللَّهِ كِتَابًا مُؤَجَّلًا",
+  "كُلُّ مَنْ عَلَيْهَا فَانٍ وَيَبْقَى وَجْهُ رَبِّكَ ذُو الْجَلَالِ وَالْإِكْرَامِ"
+]
+
+export default function ObituaryPage() {
+  const [obituary, setObituary] = useState<ObituaryData>({
+    deceasedName: { value: "", isBold: false },
+    deceasedTitle: { value: "", isBold: false },
+    quranVerse: { value: "", isBold: true, isHandwritten: false },
+    familyRelations: [],
+    families: { value: "", isBold: false },
+    announcementText: { value: "", isBold: true },
+    deathDateHijri: { value: "", isBold: false },
+    deathDateGregorian: { value: "", isBold: false },
+    prayerLocation: { value: "", isBold: false },
+    prayerTime: { value: "", isBold: false },
+    burialLocation: { value: "", isBold: false },
+    condolenceLocation: { value: "", isBold: true },
+    condolenceAddress: { value: "", isBold: false },
+    menDays: { value: "", isBold: false },
+    menTime: { value: "", isBold: false },
+    womenDays: { value: "", isBold: false },
+    womenTime: { value: "", isBold: false },
+    officeName: { value: "", isBold: true },
+    officeAddress: { value: "", isBold: false },
+    phone: { value: "", isBold: false },
+    mobile: { value: "", isBold: false },
+    closingText: { value: "", isBold: false }
+  })
+
+  const [preview, setPreview] = useState<boolean>(false)
+  const [showVerseDropdown, setShowVerseDropdown] = useState<boolean>(false)
+  const [newRelation, setNewRelation] = useState<{title: string, names: string, isTitleBold: boolean, isNamesBold: boolean}>({ 
+    title: '', 
+    names: '', 
+    isTitleBold: true,
+    isNamesBold: false 
+  })
+
+  const handleInputChange = (field: keyof ObituaryData, value: string) => {
+    setObituary(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        value: value
+      }
+    }))
+  }
+
+  const handleBoldToggle = (field: keyof ObituaryData) => {
+    if (field !== 'familyRelations') {
+      setObituary(prev => ({
+        ...prev,
+        [field]: {
+          ...prev[field] as TextField,
+          isBold: !(prev[field] as TextField).isBold
+        }
+      }))
+    }
+  }
+
+  const handleHandwrittenToggle = (field: keyof ObituaryData) => {
+    if (field === 'quranVerse') {
+      setObituary(prev => ({
+        ...prev,
+        [field]: {
+          ...prev[field] as TextField,
+          isHandwritten: !(prev[field] as TextField).isHandwritten
+        }
+      }))
+    }
+  }
+
+  const handleVerseSelect = (verse: string) => {
+    setObituary(prev => ({
+      ...prev,
+      quranVerse: {
+        ...prev.quranVerse,
+        value: verse
+      }
+    }))
+    setShowVerseDropdown(false)
+  }
+
+  const handleRelationChange = (id: string, field: string, value: string) => {
+    setObituary(prev => ({
+      ...prev,
+      familyRelations: prev.familyRelations.map(relation =>
+        relation.id === id ? { ...relation, [field]: value } : relation
+      )
+    }))
+  }
+
+  const handleRelationBoldToggle = (id: string, field: 'isTitleBold' | 'isNamesBold') => {
+    setObituary(prev => ({
+      ...prev,
+      familyRelations: prev.familyRelations.map(relation =>
+        relation.id === id ? { ...relation, [field]: !relation[field] } : relation
+      )
+    }))
+  }
+
+  const addNewRelation = () => {
+    if (newRelation.title.trim() && newRelation.names.trim()) {
+      const newRelationWithId: FamilyRelation = {
+        id: Date.now().toString(),
+        title: newRelation.title,
+        names: newRelation.names,
+        isTitleBold: newRelation.isTitleBold,
+        isNamesBold: newRelation.isNamesBold
+      }
+      
+      setObituary(prev => ({
+        ...prev,
+        familyRelations: [...prev.familyRelations, newRelationWithId]
+      }))
+      
+      setNewRelation({ 
+        title: '', 
+        names: '', 
+        isTitleBold: true,
+        isNamesBold: false 
+      })
+    }
+  }
+
+  const removeRelation = (id: string) => {
+    setObituary(prev => ({
+      ...prev,
+      familyRelations: prev.familyRelations.filter(relation => relation.id !== id)
+    }))
+  }
+
+  const moveRelationUp = (index: number) => {
+    if (index === 0) return
+    
+    setObituary(prev => {
+      const newRelations = [...prev.familyRelations]
+      const temp = newRelations[index]
+      newRelations[index] = newRelations[index - 1]
+      newRelations[index - 1] = temp
+      
+      return {
+        ...prev,
+        familyRelations: newRelations
+      }
+    })
+  }
+
+  const moveRelationDown = (index: number) => {
+    if (index === obituary.familyRelations.length - 1) return
+    
+    setObituary(prev => {
+      const newRelations = [...prev.familyRelations]
+      const temp = newRelations[index]
+      newRelations[index] = newRelations[index + 1]
+      newRelations[index + 1] = temp
+      
+      return {
+        ...prev,
+        familyRelations: newRelations
+      }
+    })
+  }
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setPreview(true)
+  }
+
+  const handleEdit = () => {
+    setPreview(false)
+  }
+
+  const renderField = (field: TextField, className: string = "") => {
+    const baseClasses = field.isBold ? 'font-bold' : ''
+    const handwrittenClasses = field.isHandwritten ? 'handwritten-text' : ''
+    
+    return (
+      <span className={`${baseClasses} ${handwrittenClasses} ${className}`}>
+        {field.value}
+      </span>
+    )
+  }
+
+  // دالة خاصة لعرض الآية القرآنية مع الأقواس
+  const renderQuranVerse = (field: TextField) => {
+    const baseClasses = field.isBold ? 'font-bold' : ''
+    const handwrittenClasses = field.isHandwritten ? 'handwritten-text-preview' : ''
+    
+    return (
+      <div className={`${baseClasses} ${handwrittenClasses} text-2xl leading-relaxed`}>
+        ﴿ {field.value} ﴾
+      </div>
+    )
+  }
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-center text-amber-800 mb-8">
+          {preview ? 'معاينة النعوة' : 'تعديل النعوة'}
+        </h1>
+
+        {!preview ? (
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            {/* البيانات الأساسية */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">اسم الفقيدة</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('deceasedName')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.deceasedName.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.deceasedName.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.deceasedName.value}
+                  onChange={(e) => handleInputChange('deceasedName', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  placeholder="أدخل اسم الفقيدة"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">لقب الفقيدة</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('deceasedTitle')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.deceasedTitle.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.deceasedTitle.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.deceasedTitle.value}
+                  onChange={(e) => handleInputChange('deceasedTitle', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                  placeholder="أدخل لقب الفقيدة"
+                />
+              </div>
+            </div>
+
+            {/* الآية القرآنية - محسّن */}
+            <div className="mb-6">
+              <div className="flex flex-wrap items-center gap-4 mb-3">
+                <label className="block text-gray-700 font-medium text-lg">الآية القرآنية</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('quranVerse')}
+                    className={`px-3 py-1 rounded text-sm ${
+                      obituary.quranVerse.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.quranVerse.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleHandwrittenToggle('quranVerse')}
+                    className={`px-3 py-1 rounded text-sm ${
+                      obituary.quranVerse.isHandwritten ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.quranVerse.isHandwritten ? 'يدوي ✓' : 'طباعة'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowVerseDropdown(!showVerseDropdown)}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm"
+                  >
+                    اختر آية
+                  </button>
+                </div>
+              </div>
+
+              {/* قائمة الآيات المنسدلة */}
+              {showVerseDropdown && (
+                <div className="mb-4 border border-gray-300 rounded-lg bg-white shadow-lg max-h-60 overflow-y-auto">
+                  {QURAN_VERSES.map((verse, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleVerseSelect(verse)}
+                      className="p-3 border-b border-gray-200 hover:bg-amber-50 cursor-pointer transition-colors"
+                    >
+                      <div className="text-right text-gray-700 leading-relaxed">
+                        ﴿{verse} ﴾
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <textarea
+                value={obituary.quranVerse.value}
+                onChange={(e) => handleInputChange('quranVerse', e.target.value)}
+                rows={3}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 text-lg ${
+                  obituary.quranVerse.isHandwritten ? 'handwritten-text-input' : ''
+                }`}
+                placeholder="اختر آية من القائمة أو اكتب الآية المطلوبة..."
+              />
+              
+              <div className="mt-2 text-sm text-gray-500 flex gap-4">
+                {obituary.quranVerse.isHandwritten && (
+                  <span className="text-green-600">✓ نمط الكتابة اليدوية مفعل</span>
+                )}
+                <span className="text-blue-600">سيتم إضافة الأقواس القرآنية (﴿ ﴾) تلقائياً في المعاينة</span>
+              </div>
+            </div>
+
+            {/* العلاقات العائلية - القابلة للتعديل */}
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-amber-800">العلاقات العائلية</h3>
+                <span className="text-sm text-gray-500">{obituary.familyRelations.length} علاقة</span>
+              </div>
+
+              <div className="space-y-4">
+                {obituary.familyRelations.map((relation, index) => (
+                  <div key={relation.id} className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className="md:col-span-2">
+                        <div className="flex flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => moveRelationUp(index)}
+                            disabled={index === 0}
+                            className={`px-3 py-1 rounded-lg text-white text-sm ${
+                              index === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
+                          >
+                            ▲ أعلى
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveRelationDown(index)}
+                            disabled={index === obituary.familyRelations.length - 1}
+                            className={`px-3 py-1 rounded-lg text-white text-sm ${
+                              index === obituary.familyRelations.length - 1 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                            }`}
+                          >
+                            ▼ أسفل
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="md:col-span-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-gray-600">صلة القرابة</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRelationBoldToggle(relation.id, 'isTitleBold')}
+                            className={`px-2 py-1 rounded text-xs ${
+                              relation.isTitleBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            {relation.isTitleBold ? 'غامق ✓' : 'عادي'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={relation.title}
+                          onChange={(e) => handleRelationChange(relation.id, 'title', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium"
+                          placeholder="صلة القرابة"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs text-gray-600">الأسماء</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRelationBoldToggle(relation.id, 'isNamesBold')}
+                            className={`px-2 py-1 rounded text-xs ${
+                              relation.isNamesBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                            }`}
+                          >
+                            {relation.isNamesBold ? 'غامق ✓' : 'عادي'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={relation.names}
+                          onChange={(e) => handleRelationChange(relation.id, 'names', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                          placeholder="الأسماء"
+                        />
+                      </div>
+                      
+                      <div className="md:col-span-2">
+                        <button
+                          type="button"
+                          onClick={() => removeRelation(relation.id)}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition duration-300"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500 text-center">
+                      الترتيب: {index + 1}
+                    </div>
+                  </div>
+                ))}
+
+                {obituary.familyRelations.length === 0 && (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-100">
+                    <p className="text-gray-500">لا توجد علاقات عائلية مضافة</p>
+                    <p className="text-sm text-gray-400 mt-2">استخدم النموذج أدناه لإضافة العلاقات</p>
+                  </div>
+                )}
+              </div>
+
+              {/* إضافة علاقة جديدة */}
+              <div className="mt-6 p-4 border-2 border-dashed border-amber-300 rounded-lg bg-amber-50">
+                <h4 className="font-bold text-amber-800 mb-3">إضافة علاقة عائلية جديدة</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm">صلة القرابة</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewRelation(prev => ({ ...prev, isTitleBold: !prev.isTitleBold }))}
+                        className={`px-2 py-1 rounded text-xs ${
+                          newRelation.isTitleBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {newRelation.isTitleBold ? 'غامق ✓' : 'عادي'}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={newRelation.title}
+                      onChange={(e) => setNewRelation(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="صلة القرابة (مثال: أبناء العم)"
+                      className="w-full px-3 py-2 border border-amber-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm">الأسماء</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewRelation(prev => ({ ...prev, isNamesBold: !prev.isNamesBold }))}
+                        className={`px-2 py-1 rounded text-xs ${
+                          newRelation.isNamesBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {newRelation.isNamesBold ? 'غامق ✓' : 'عادي'}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={newRelation.names}
+                      onChange={(e) => setNewRelation(prev => ({ ...prev, names: e.target.value }))}
+                      placeholder="الأسماء"
+                      className="w-full px-3 py-2 border border-amber-300 rounded-lg"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={addNewRelation}
+                  className="bg-amber-600 hover:bg-amber-700 text-white py-2 px-6 rounded-lg transition duration-300"
+                >
+                  إضافة العلاقة
+                </button>
+              </div>
+            </div>
+
+            {/* العائلات */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">العائلات</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('families')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.families.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.families.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <textarea
+                value={obituary.families.value}
+                onChange={(e) => handleInputChange('families', e.target.value)}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                placeholder="أسماء العائلات..."
+              />
+            </div>
+
+            {/* النص الإعلاني */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">النص الإعلاني</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('announcementText')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.announcementText.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.announcementText.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <textarea
+                value={obituary.announcementText.value}
+                onChange={(e) => handleInputChange('announcementText', e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                placeholder="النص الرئيسي للإعلان"
+              />
+            </div>
+
+            {/* تفاصيل الوفاة والدفن */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">تاريخ الوفاة (هجري)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('deathDateHijri')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.deathDateHijri.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.deathDateHijri.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.deathDateHijri.value}
+                  onChange={(e) => handleInputChange('deathDateHijri', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: 29 ربيع الأول 1448 هـ"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">تاريخ الوفاة (ميلادي)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('deathDateGregorian')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.deathDateGregorian.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.deathDateGregorian.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.deathDateGregorian.value}
+                  onChange={(e) => handleInputChange('deathDateGregorian', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: 16 أيلول 2025 م"
+                />
+              </div>
+            </div>
+
+            {/* معلومات الصلاة والدفن */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">مكان الصلاة</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('prayerLocation')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.prayerLocation.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.prayerLocation.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.prayerLocation.value}
+                  onChange={(e) => handleInputChange('prayerLocation', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مكان صلاة الجنازة"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">وقت الصلاة</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('prayerTime')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.prayerTime.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.prayerTime.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.prayerTime.value}
+                  onChange={(e) => handleInputChange('prayerTime', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: بعد صلاة العصر"
+                />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">مكان الدفن</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('burialLocation')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.burialLocation.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.burialLocation.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={obituary.burialLocation.value}
+                onChange={(e) => handleInputChange('burialLocation', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="مكان المقبرة"
+              />
+            </div>
+
+            {/* معلومات التعزية */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">مكان التعزية</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('condolenceLocation')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.condolenceLocation.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.condolenceLocation.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={obituary.condolenceLocation.value}
+                onChange={(e) => handleInputChange('condolenceLocation', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="اسم مكان التعزية"
+              />
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">عنوان التعزية</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('condolenceAddress')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.condolenceAddress.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.condolenceAddress.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={obituary.condolenceAddress.value}
+                onChange={(e) => handleInputChange('condolenceAddress', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="العنوان التفصيلي"
+              />
+            </div>
+
+            {/* أوقات التعزية */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">أيام التعزية (رجال)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('menDays')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.menDays.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.menDays.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.menDays.value}
+                  onChange={(e) => handleInputChange('menDays', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: الثلاثاء 23 / والأربعاء 24 أيلول 2025 م"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">الوقت (رجال)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('menTime')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.menTime.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.menTime.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.menTime.value}
+                  onChange={(e) => handleInputChange('menTime', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: من الساعة 4 حتى 8 مساءً"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">أيام التعزية (نساء)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('womenDays')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.womenDays.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.womenDays.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.womenDays.value}
+                  onChange={(e) => handleInputChange('womenDays', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: الثلاثاء 23 / والأربعاء 24 أيلول 2025 م"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">الوقت (نساء)</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('womenTime')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.womenTime.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.womenTime.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.womenTime.value}
+                  onChange={(e) => handleInputChange('womenTime', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="مثال: من الساعة 4 حتى 8 مساءً"
+                />
+              </div>
+            </div>
+
+            {/* معلومات المكتب */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">اسم المكتب</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('officeName')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.officeName.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.officeName.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.officeName.value}
+                  onChange={(e) => handleInputChange('officeName', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="اسم المكتب أو المسؤول"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">عنوان المكتب</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('officeAddress')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.officeAddress.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.officeAddress.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.officeAddress.value}
+                  onChange={(e) => handleInputChange('officeAddress', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="عنوان المكتب"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">هاتف</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('phone')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.phone.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.phone.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.phone.value}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="رقم الهاتف"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="block text-gray-700 font-medium">جوال</label>
+                  <button
+                    type="button"
+                    onClick={() => handleBoldToggle('mobile')}
+                    className={`px-2 py-1 rounded text-xs ${
+                      obituary.mobile.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {obituary.mobile.isBold ? 'غامق ✓' : 'عادي'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={obituary.mobile.value}
+                  onChange={(e) => handleInputChange('mobile', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="رقم الجوال"
+                />
+              </div>
+            </div>
+
+            {/* النص الختامي */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <label className="block text-gray-700 font-medium">النص الختامي</label>
+                <button
+                  type="button"
+                  onClick={() => handleBoldToggle('closingText')}
+                  className={`px-2 py-1 rounded text-xs ${
+                    obituary.closingText.isBold ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {obituary.closingText.isBold ? 'غامق ✓' : 'عادي'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={obituary.closingText.value}
+                onChange={(e) => handleInputChange('closingText', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="النص الختامي للنعوة"
+              />
+            </div>
+
+            <div className="text-center">
+              <button
+                type="submit"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 transform hover:scale-105"
+              >
+                معاينة النعوة
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* معاينة النعوة */
+          <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden border-2 border-amber-200">
+            {/* القرآن الكريم في الأعلى */}
+            {obituary.quranVerse.value && (
+              <div className="bg-amber-800 text-white py-6 px-8 text-center">
+                {renderQuranVerse(obituary.quranVerse)}
+              </div>
+            )}
+
+            {/* المحتوى الرئيسي */}
+            <div className="p-8 space-y-6">
+              {/* العلاقات العائلية */}
+              {obituary.familyRelations.length > 0 && (
+                <div className="space-y-4 text-right">
+                  {obituary.familyRelations.map((relation) => (
+                    <div key={relation.id} className="border-b-2 border-amber-300 pb-4">
+                      {relation.isTitleBold ? (
+                        <span className="font-bold text-lg">{relation.title}:</span>
+                      ) : (
+                        <span className="text-lg">{relation.title}:</span>
+                      )}{' '}
+                      {relation.isNamesBold ? (
+                        <span className="font-bold">{relation.names}</span>
+                      ) : (
+                        <span>{relation.names}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* العائلات */}
+              {obituary.families.value && (
+                <div className="bg-amber-50 p-6 rounded-lg border-2 border-amber-200">
+                  <div className="text-center font-bold text-lg mb-4">وعموم آل:</div>
+                  <div className="text-center leading-8 text-gray-700 whitespace-pre-line">
+                    {renderField(obituary.families)}
+                  </div>
+                </div>
+              )}
+
+              {/* النص المركزي */}
+              <div className="text-center py-6 space-y-4">
+                {obituary.announcementText.value && (
+                  <div className="text-xl text-gray-800">
+                    {renderField(obituary.announcementText)}
+                  </div>
+                )}
+                <div className="text-2xl font-bold text-amber-800">
+                  الخالدة إلى رحمة الله تعالى
+                </div>
+                {(obituary.deceasedName.value || obituary.deceasedTitle.value) && (
+                  <div className="text-lg text-gray-700">
+                    {renderField(obituary.deceasedName)}
+                    {obituary.deceasedTitle.value && ` ${renderField(obituary.deceasedTitle)}`}
+                  </div>
+                )}
+              </div>
+
+              {/* تفاصيل الوفاة والدفن */}
+              {(obituary.deathDateHijri.value || obituary.deathDateGregorian.value || obituary.prayerLocation.value) && (
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-300 space-y-4">
+                  <div className="text-center font-bold text-lg mb-4">التي وافتْها المنية</div>
+                  
+                  <div className="text-right space-y-2">
+                    {obituary.deathDateHijri.value && (
+                      <div>
+                        <span className="font-bold">فجر يوم الأحد الواقع في:</span> {renderField(obituary.deathDateHijri)}
+                      </div>
+                    )}
+                    {obituary.deathDateGregorian.value && (
+                      <div>
+                        <span className="font-bold">الموافق لـ:</span> {renderField(obituary.deathDateGregorian)}
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-bold">ويشيع جثمانها الطاهر من مشفى هشام عطان</span>
+                    </div>
+                    {obituary.prayerTime.value && (
+                      <div>
+                        <span className="font-bold">حيث يصلى عليها {renderField(obituary.prayerTime)} يوم الإثنين</span>
+                      </div>
+                    )}
+                    {obituary.prayerLocation.value && (
+                      <div>
+                        <span className="font-bold">في:</span> {renderField(obituary.prayerLocation)}
+                      </div>
+                    )}
+                    {obituary.burialLocation.value && (
+                      <div>
+                        <span className="font-bold">ثم توارى الثرى في:</span> {renderField(obituary.burialLocation)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* التعزية */}
+              {(obituary.condolenceLocation.value || obituary.menDays.value || obituary.womenDays.value) && (
+                <div className="bg-amber-800 text-white p-6 rounded-lg text-center space-y-4">
+                  <div className="font-bold text-xl">نعتذر عن تلقّي التعازي للرجال والنساء</div>
+                  {obituary.condolenceLocation.value && (
+                    <div className="font-bold text-lg">وصالة {renderField(obituary.condolenceLocation)}</div>
+                  )}
+                  {obituary.condolenceAddress.value && (
+                    <div className="text-lg">الكائنة في {renderField(obituary.condolenceAddress)}</div>
+                  )}
+                  
+                  {(obituary.menDays.value || obituary.womenDays.value) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                      <div className="bg-amber-700 p-4 rounded-lg">
+                        <div className="font-bold mb-2">للرجال</div>
+                        <div>{renderField(obituary.menDays)}</div>
+                        <div>{renderField(obituary.menTime)}</div>
+                      </div>
+                      
+                      <div className="bg-amber-700 p-4 rounded-lg">
+                        <div className="font-bold mb-2">للنساء</div>
+                        <div>{renderField(obituary.womenDays)}</div>
+                        <div>{renderField(obituary.womenTime)}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* المكتب */}
+              {(obituary.officeName.value || obituary.phone.value) && (
+                <div className="bg-gray-800 text-white p-6 rounded-lg text-center space-y-3">
+                  {obituary.officeName.value && (
+                    <div className="font-bold text-xl">{renderField(obituary.officeName)}</div>
+                  )}
+                  <div className="text-lg">لخدمتكم في جميع المناسبات</div>
+                  <div className="text-amber-300 font-bold">الكمال ليلاً ونهاراً</div>
+                  {obituary.officeAddress.value && (
+                    <div className="text-sm">{renderField(obituary.officeAddress)}</div>
+                  )}
+                  {(obituary.phone.value || obituary.mobile.value) && (
+                    <div className="flex justify-center gap-8 mt-4">
+                      {obituary.phone.value && (
+                        <div>
+                          <div className="font-bold">هاتف</div>
+                          <div>{renderField(obituary.phone)}</div>
+                        </div>
+                      )}
+                      {obituary.mobile.value && (
+                        <div>
+                          <div className="font-bold">جوال</div>
+                          <div>{renderField(obituary.mobile)}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* الختام */}
+              <div className="text-center py-4 space-y-2">
+                {obituary.closingText.value && (
+                  <div className="text-lg text-gray-700">{renderField(obituary.closingText)}</div>
+                )}
+                <div className="text-sm text-gray-500">ويبقى وجه ربك ذو الجلال والإكرام</div>
+              </div>
+            </div>
+
+            {/* زر التعديل */}
+            <div className="bg-gray-100 p-6 text-center">
+              <button
+                onClick={handleEdit}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-300"
+              >
+                تعديل النعوة
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap');
+        
+        body {
+          font-family: 'Amiri', serif;
+        }
+        
+        .handwritten-text {
+          font-family: 'Dancing Script', cursive;
+          font-size: 1.4em;
+          line-height: 1.6;
+        }
+        
+        .handwritten-text-input {
+          font-family: 'Dancing Script', cursive;
+          font-size: 1.3em;
+          font-weight: 500;
+        }
+        
+        .handwritten-text-preview {
+          font-family: 'Dancing Script', cursive;
+          font-size: 1.8em;
+          font-weight: 600;
+          line-height: 1.8;
+        }
+      `}</style>
+    </div>
+  )
+}
