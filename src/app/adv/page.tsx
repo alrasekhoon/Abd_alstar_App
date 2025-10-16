@@ -19,8 +19,8 @@ export default function AdvManagement() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const API_URL = 'http://alraskun.atwebpages.com/cp_adv.php';
-  const UPLOAD_URL = 'http://alraskun.atwebpages.com/upload_adv.php';
+  const API_URL = '/api/proxy/cp_adv.php';
+  const UPLOAD_URL = '/api/proxy/upload_adv.php';
 
   useEffect(() => {
     fetchData();
@@ -227,7 +227,7 @@ export default function AdvManagement() {
                       {editingItem.image_path && (
                         <div className="flex items-center space-x-3">
                           <Image 
-                            src={`http://alraskun.atwebpages.com/img/adv/${editingItem.image_path}`}
+                            src={`/api/proxy/img/adv/${editingItem.image_path}`}
                             alt="Preview"
                             width={48}
                             height={48}
@@ -304,7 +304,7 @@ export default function AdvManagement() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {item.image_path && (
                       <Image 
-                        src={`http://alraskun.atwebpages.com/img/adv/${item.image_path}`}
+                        src={`/api/proxy/img/adv/${item.image_path}`}
                         alt={item.title}
                         width={64}
                         height={64}

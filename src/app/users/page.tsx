@@ -75,7 +75,7 @@ export default function UserManagement() {
   const [userTypeFilter, setUserTypeFilter] = useState('الكل');
   const [editingUserType, setEditingUserType] = useState<number | null>(null);
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_users.php';
+  const API_URL = '/api/proxy/cp_users.php';
 
   useEffect(() => {
     fetchUsers();
@@ -98,7 +98,7 @@ export default function UserManagement() {
   const fetchUserSubscriptions = async (userId: number) => {
     try {
       setLoadingSubscriptions(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`http://alraskun.atwebpages.com/cp_subscriptions.php?userid=${userId}`);
+      const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}`);
       if (!response.ok) throw new Error('فشل في جلب اشتراكات المستخدم');
       const result = await response.json();
       setSubscriptions(prev => ({ ...prev, [userId]: result }));
@@ -112,7 +112,7 @@ export default function UserManagement() {
   const fetchUserPayments = async (userId: number) => {
     try {
       setLoadingPayments(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`http://alraskun.atwebpages.com/cp_payments.php?userid=${userId}`);
+      const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}`);
       if (!response.ok) throw new Error('فشل في جلب دفعات المستخدم');
       const result = await response.json();
       setPayments(prev => ({ ...prev, [userId]: result }));
@@ -126,7 +126,7 @@ export default function UserManagement() {
   const fetchUserBills = async (userId: number) => {
     try {
       setLoadingBills(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`http://alraskun.atwebpages.com/cp_user_show_bill.php?userid=${userId}`);
+      const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}`);
       if (!response.ok) throw new Error('فشل في جلب فواتير المستخدم');
       const result = await response.json();
       setBills(prev => ({ ...prev, [userId]: result }));

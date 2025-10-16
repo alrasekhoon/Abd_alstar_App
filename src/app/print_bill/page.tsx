@@ -53,8 +53,8 @@ export default function BillManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
  
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_bills.php';
-  const MATERIALS_API_URL = 'http://alraskun.atwebpages.com/cp_bill_material.php';
+  const API_URL = '/api/proxy/cp_bills.php';
+  const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
 
   useEffect(() => {
     fetchData();

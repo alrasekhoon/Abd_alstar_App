@@ -31,7 +31,7 @@ export default function NewsManagement() {
     { value: 'اخبار الراسخون', label: 'اخبار الراسخون' }
   ];
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_news.php';
+  const API_URL = '/api/proxy/cp_news.php';
 
   useEffect(() => {
     fetchData();

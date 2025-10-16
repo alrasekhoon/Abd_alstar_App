@@ -29,8 +29,8 @@ export default function MoneyManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_money.php';
-  const USERS_API_URL = 'http://alraskun.atwebpages.com/cp_mony_getuser.php';
+  const API_URL = '/api/proxy/cp_money.php';
+  const USERS_API_URL = '/api/proxy/cp_mony_getuser.php';
 
   // تعريف المستخدم الحالي كمتغير ثابت بدلاً من state
   const currentUser = { id: 1, name: 'Admin' };

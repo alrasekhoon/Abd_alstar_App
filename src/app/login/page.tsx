@@ -16,7 +16,8 @@ export default function LoginPage() {
   setError('');
 
   try {
-    const response = await fetch('http://alraskun.atwebpages.com/cp_login.php', {
+    
+    const response = await fetch('/api/proxy/cp_login.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

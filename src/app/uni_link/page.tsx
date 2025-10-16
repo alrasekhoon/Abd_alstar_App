@@ -21,7 +21,7 @@ export default function UniLinksPage() {
     show1: 1
   });
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_uni_links.php';
+  const API_URL = '/api/proxy/cp_uni_links.php';
 
   // جلب البيانات عند تحميل الصفحة
   useEffect(() => {

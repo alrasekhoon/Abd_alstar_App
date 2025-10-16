@@ -79,9 +79,9 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_material.php';
-  const UNITS_API_URL = 'http://alraskun.atwebpages.com/cp_tunits.php';
-  const CATEGORY_API_URL = 'http://alraskun.atwebpages.com/cp_ashtrak.php';
+  const API_URL = '/api/proxy/cp_material.php';
+  const UNITS_API_URL = '/api/proxy/cp_tunits.php';
+  const CATEGORY_API_URL = '/api/proxy/cp_ashtrak.php';
 
   useEffect(() => {
     fetchMaterials();

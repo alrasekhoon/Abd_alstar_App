@@ -34,8 +34,8 @@ export default function UserManagement() {
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_users1.php';
-  const ROLES_API_URL = 'http://alraskun.atwebpages.com/cp_roles.php';
+  const API_URL = '/api/proxy/cp_users1.php';
+  const ROLES_API_URL = '/api/proxy/cp_roles.php';
 
   useEffect(() => {
     fetchData();

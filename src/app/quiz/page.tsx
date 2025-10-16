@@ -81,7 +81,7 @@ export default function MultiQuestionExtractor() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://alraskun.atwebpages.com/cp_ashtrak.php');
+        const response = await fetch('/api/proxy/cp_ashtrak.php');
         if (!response.ok) throw new Error('فشل جلب الفئات');
         const data = await response.json();
         setCategories(data);
@@ -101,7 +101,7 @@ export default function MultiQuestionExtractor() {
         setMaterials([]);
         setSelectedMaterial('');
 
-        const response = await fetch(`http://alraskun.atwebpages.com/get_material.php?year1=${selectedYear}`);
+        const response = await fetch(`/api/proxy/get_material.php?year1=${selectedYear}`);
         
         if (!response.ok) {
           throw new Error('فشل جلب البيانات من الخادم');
@@ -299,7 +299,7 @@ export default function MultiQuestionExtractor() {
   const verifyQuestionsOnServer = async (materialId: number, unitNum: number) => {
     try {
       const response = await fetch(
-        `http://alraskun.atwebpages.com/cp_multi_quiz.php?material_id=${materialId}&unit_num=${unitNum}`
+        `/api/proxy/cp_multi_quiz.php?material_id=${materialId}&unit_num=${unitNum}`
       );
       return await response.json();
     } catch (error) {
@@ -365,7 +365,7 @@ export default function MultiQuestionExtractor() {
     try {
       console.log('Sending data:', JSON.stringify(questions, null, 2));
 
-      const response = await fetch('http://alraskun.atwebpages.com/cp_multi_quiz.php', {
+      const response = await fetch('/api/proxy/cp_multi_quiz.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -378,7 +378,7 @@ export default function MultiQuestionExtractor() {
 
       if (!responseText.trim().startsWith('{') && !responseText.trim().startsWith('[')) {
         if (response.ok) {
-          const verifyResponse = await fetch(`http://alraskun.atwebpages.com/cp_multi_quiz.php?material_id=${questions[0].material_id}&unit_num=${questions[0].unit_num}`);
+          const verifyResponse = await fetch(`/api/proxy/cp_multi_quiz.php?material_id=${questions[0].material_id}&unit_num=${questions[0].unit_num}`);
           const verifiedData = await verifyResponse.json();
           
           if (verifiedData.length > 0) {

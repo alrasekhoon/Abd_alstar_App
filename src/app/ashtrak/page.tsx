@@ -34,7 +34,7 @@ export default function AshtrakManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_ashtrak.php';
+  const API_URL = '/api/proxy/cp_ashtrak.php';
 
   useEffect(() => {
     fetchData();

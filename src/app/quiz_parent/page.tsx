@@ -46,8 +46,8 @@ export default function QuizParentManagement() {
   const [isLoadingQuizItems, setIsLoadingQuizItems] = useState<boolean>(false);
   const [selectedUnit, setSelectedUnit] = useState<string>('1');
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_quiz_parent.php';
-  const TQUIZ_API_URL = 'http://alraskun.atwebpages.com/get_quiz_items.php';
+  const API_URL = '/api/proxy/cp_quiz_parent.php';
+  const TQUIZ_API_URL = '/api/proxy/get_quiz_items.php';
 
 
 
@@ -80,7 +80,7 @@ export default function QuizParentManagement() {
       setSelectedMaterial('');
       setFetchError(null);
 
-      const response = await fetch(`http://alraskun.atwebpages.com/get_material.php?year1=${selectedYear}`);
+      const response = await fetch(`/api/proxy/get_material.php?year1=${selectedYear}`);
       
       if (!response.ok) {
         throw new Error('فشل جلب البيانات من الخادم');

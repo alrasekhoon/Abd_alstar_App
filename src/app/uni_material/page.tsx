@@ -45,7 +45,7 @@ export default function UniMaterialPage() {
     { value: 2, label: 'فصل 2' }
   ];
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_uni_material.php';
+  const API_URL = '/api/proxy/cp_uni_material.php';
 
   // جلب البيانات عند تحميل الصفحة
   useEffect(() => {

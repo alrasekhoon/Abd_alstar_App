@@ -28,7 +28,7 @@ export default function TdelvManagement() {
   const [filterType, setFilterType] = useState<string>('');
   const [filterCity, setFilterCity] = useState<string>('');
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_delv.php';
+  const API_URL = '/api/proxy/cp_delv.php';
 
   const fetchData = useCallback(async () => {
     try {

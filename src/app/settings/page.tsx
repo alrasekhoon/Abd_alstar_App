@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_settings.php';
+  const API_URL = '/api/proxy/cp_settings.php';
 
   // جلب الإعدادات عند تحميل الصفحة
   useEffect(() => {

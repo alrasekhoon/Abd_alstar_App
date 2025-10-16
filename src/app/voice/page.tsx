@@ -52,7 +52,7 @@ export default function MaterialManagement() {
     pageNum: ''
   });
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_voice.php';
+  const API_URL = '/api/proxy/cp_voice.php';
 
   useEffect(() => {
     fetchData();
@@ -780,7 +780,7 @@ export default function MaterialManagement() {
                             {voice.voice_name}
                           </span>
                           <button 
-                            onClick={() => copyToClipboard('http://alraskun.atwebpages.com/voices/'+voice.voice_name)}
+                            onClick={() => copyToClipboard('/api/proxy/voices/'+voice.voice_name)}
                             className="text-gray-400 hover:text-blue-500 p-1"
                             title="نسخ اسم الصوت"
                           >
@@ -793,7 +793,7 @@ export default function MaterialManagement() {
                           <audio 
                             controls 
                             className="w-full min-w-[200px]"
-                            src={`http://alraskun.atwebpages.com/${voice.voice_path}`}
+                            src={`/api/proxy/${voice.voice_path}`}
                           >
                             متصفحك لا يدعم تشغيل الصوتيات.
                           </audio>
@@ -1064,7 +1064,7 @@ export default function MaterialManagement() {
                       <p className="text-sm text-gray-600 mb-2">التسجيل الحالي:</p>
                       <audio 
                         controls 
-                        src={`http://alraskun.atwebpages.com/${editingVoice.voice_path}`}
+                        src={`/api/proxy/${editingVoice.voice_path}`}
                         className="w-full"
                       />
                     </div>

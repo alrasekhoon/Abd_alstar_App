@@ -44,7 +44,7 @@ export default function NotificationManagement() {
     { value: 'vip', label: 'VIP' }
   ];
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_notif.php';
+  const API_URL = '/api/proxy/cp_notif.php';
 
   useEffect(() => {
     fetchData();

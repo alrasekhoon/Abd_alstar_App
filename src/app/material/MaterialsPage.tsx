@@ -70,8 +70,8 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     voice_active: 1
   });
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_material.php';
-  const CATEGORY_API_URL = 'http://alraskun.atwebpages.com/cp_ashtrak.php';
+  const API_URL = '/api/proxy/cp_material.php';
+  const CATEGORY_API_URL = '/api/proxy/cp_ashtrak.php';
 
   useEffect(() => {
     fetchData();

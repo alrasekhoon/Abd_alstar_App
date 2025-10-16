@@ -69,10 +69,10 @@ export default function MaterialManagement() {
   const [selectedUnit, setSelectedUnit] = useState<{materialId: number, unitNum: number} | null>(null);
   const [editingQuiz, setEditingQuiz] = useState<QuizItem | null>(null);
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_material.php';
-  const CATEGORY_API_URL = 'http://alraskun.atwebpages.com/cp_ashtrak.php';
-  const UNITS_API_URL = 'http://alraskun.atwebpages.com/cp_tunits.php';
-  const QUIZ_API_URL = 'http://alraskun.atwebpages.com/cp_quiz.php';
+  const API_URL = '/api/proxy/cp_material.php';
+  const CATEGORY_API_URL = '/api/proxy/cp_ashtrak.php';
+  const UNITS_API_URL = '/api/proxy/cp_tunits.php';
+  const QUIZ_API_URL = '/api/proxy/cp_quiz.php';
 
   useEffect(() => {
     fetchData();

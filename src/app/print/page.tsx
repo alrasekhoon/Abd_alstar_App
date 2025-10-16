@@ -29,7 +29,7 @@ export default function TprintManagement() {
     year: ''
   });
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_tprint.php';
+  const API_URL = '/api/proxy/cp_tprint.php';
 
   useEffect(() => {
     fetchData();

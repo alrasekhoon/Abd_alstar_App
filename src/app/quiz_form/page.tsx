@@ -70,7 +70,7 @@ export default function QuizFormsManagement() {
     setLoadingStates(prev => ({ ...prev, [key]: value }));
   };
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_quiz_form.php';
+  const API_URL = '/api/proxy/cp_quiz_form.php';
 
   
 

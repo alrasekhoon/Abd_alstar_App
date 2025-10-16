@@ -94,9 +94,9 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   // حالة عرض كل الأسئلة
   const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_material.php';
-  const QUIZ_API_URL = 'http://alraskun.atwebpages.com/cp_quiz.php';
-  const CATEGORY_API_URL = 'http://alraskun.atwebpages.com/cp_ashtrak.php';
+  const API_URL = '/api/proxy/cp_material.php';
+  const QUIZ_API_URL = '/api/proxy/cp_quiz.php';
+  const CATEGORY_API_URL = '/api/proxy/cp_ashtrak.php';
 
   useEffect(() => {
     fetchMaterials();

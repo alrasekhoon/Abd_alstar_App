@@ -27,7 +27,7 @@ export default function HomeWorkManagement() {
   const [selectedTitleFilter, setSelectedTitleFilter] = useState<number | 'all'>('all');
   const [selectedYearFilter, setSelectedYearFilter] = useState<number | 'all'>('all');
 
-  const API_URL = 'http://alraskun.atwebpages.com/cp_homework.php';
+  const API_URL = '/api/proxy/cp_homework.php';
 
   // قائمة السنوات الدراسية (المستويات)
   const academicYears = [1, 2, 3, 4];
