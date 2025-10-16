@@ -32,8 +32,15 @@ type UnitItem = {
   material_name?: string;
 };
 
+// تعريف نوع للمعاملات
+interface QuizNavigationParams {
+  materialId: number;
+  unitNum: number;
+}
+
+// تعريف نوع للدالة onNavigate
 interface UnitsPageProps {
-  onNavigate: (page: 'quizzes', params?: any) => void;
+  onNavigate: (page: 'quizzes', params?: QuizNavigationParams) => void;
   initialMaterialId?: number;
 }
 
@@ -41,7 +48,6 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
- // const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   

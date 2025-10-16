@@ -34,8 +34,13 @@ type CategoryItem = {
   voice_price: string;
 };
 
+// تعريف نوع محدد لمعاملات onNavigate
+type NavigateParams = {
+  materialId: number;
+};
+
 interface MaterialsPageProps {
-  onNavigate: (page: 'units' | 'quizzes', params?: any) => void;
+  onNavigate: (page: 'units' | 'quizzes', params?: NavigateParams) => void;
 }
 
 export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
