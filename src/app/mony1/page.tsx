@@ -27,7 +27,7 @@ export default function MoneyManagement() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
- // const [currentUser, setCurrentUser] = useState<{id: number, name: string}>({id: 1, name: 'Admin'});
+  const [currentUser, setCurrentUser] = useState<{id: number, name: string}>({id: 1, name: 'Admin'});
   const [searchTerm, setSearchTerm] = useState('');
 
   const API_URL = 'http://alraskun.atwebpages.com/cp_money.php';
