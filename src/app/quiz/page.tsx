@@ -419,6 +419,7 @@ export default function MultiQuestionExtractor() {
             />
           </svg>
           <div className="absolute hidden group-hover:block z-10 w-100 p-2 text-sm text-white bg-gray-800 rounded shadow-lg right-0">
+  <div className="absolute hidden group-hover:block z-10 w-100 p-2 text-sm text-white bg-gray-800 rounded shadow-lg right-0">
   <div className="bg-gray-800 p-4 rounded-lg text-right font-arabic my-4 whitespace-pre-line border border-gray-300">
     <p className="">01- {'{1}'}: أول من نقل استعمال مصطلح الأحوال الشخصية، هو:</p>
     <p className="mb-2 text-gray-300">إجابة السؤال موجود في الوحدة (1) الصفحة رقم (1) أهمية السؤال (1).</p>
@@ -436,6 +437,7 @@ export default function MultiQuestionExtractor() {
     <p>4- سيتعرف النظام على الجواب الصحيح عن طريق وجود نجمة في النهاية دون فراغ</p>
     <p>5- أهمية السؤال تكون رقم بين 1-5 (1 للأهمية القصوى)</p>
   </div>
+</div>
 </div>
         </div>
       </div>
