@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.CUSTOM_API_URL || 'http://alraskun.atwebpages.com';
 
-// تعريف نوع Params صحيح لـ Next.js
-type Params = {
-  params: {
-    path: string[];
-  };
-};
-
 // دالة مساعدة لبناء الـ URL
 function buildTargetUrl(request: NextRequest, path: string[]) {
   const url = new URL(request.url);
@@ -51,9 +44,12 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
   }
 }
 
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   try {
-    const { path } = params;
+    const { path } = await params;
     const targetUrl = buildTargetUrl(request, path);
     
     console.log('GET Proxying to:', targetUrl);
@@ -85,9 +81,12 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function POST(request: NextRequest, { params }: Params) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   try {
-    const { path } = params;
+    const { path } = await params;
     const contentType = request.headers.get('content-type') || '';
 
     // إذا كان الطلب يحتوي على ملفات، استخدم معالجة خاصة
@@ -125,9 +124,12 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   try {
-    const { path } = params;
+    const { path } = await params;
     const targetUrl = buildTargetUrl(request, path);
     const body = await request.text();
     
@@ -157,9 +159,12 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
   try {
-    const { path } = params;
+    const { path } = await params;
     const targetUrl = buildTargetUrl(request, path);
     
     console.log('DELETE Proxying to:', targetUrl);
