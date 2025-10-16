@@ -39,7 +39,7 @@ type QuizItem = {
 };
 
 interface QuizzesPageProps {
-  //onNavigate: (page: 'materials' | 'units') => void;
+  onNavigate: (page: 'materials' | 'units') => void;
   initialMaterialId?: number;
   initialUnitNum?: number;
 }
