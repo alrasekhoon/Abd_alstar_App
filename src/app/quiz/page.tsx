@@ -50,6 +50,19 @@ interface Question {
   importance: number;
 }
 
+// نص المساعدة مخزن في متغير منفصل
+const HELP_TEXT = {
+  example: `01- {1}: أول من نقل استعمال مصطلح الأحوال الشخصية، هو:`,
+  explanation: `إجابة السؤال موجود في الوحدة (1) الصفحة رقم (1) أهمية السؤال (1).`,
+  points: [
+    "1- في المثال السابق سيتم استخراج رمز السؤال من البداية 01- {1}",
+    "2- سيتم استخراج نص بين علامتي (\":\") كمثال :نص السؤال:",
+    "3- وسيتم استخراج رقم الوحدة والصفحة وأهمية السؤال من السطر الثاني",
+    "4- سيتعرف النظام على الجواب الصحيح عن طريق وجود نجمة في النهاية دون فراغ",
+    "5- أهمية السؤال تكون رقم بين 1-5 (1 للأهمية القصوى)"
+  ]
+};
+
 export default function MultiQuestionExtractor() {
   const [inputText, setInputText] = useState<string>('');
   const [questions, setQuestions] = useState<ExtractedQuestion[]>([]);
@@ -61,7 +74,7 @@ export default function MultiQuestionExtractor() {
   const [isLoadingMaterials, setIsLoadingMaterials] = useState<boolean>(true);
   const [selectedYear, setSelectedYear] = useState<string>('1');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [filterType, setFilterType] = useState<string>('all'); // إضافة حالة الفلترة
+  const [filterType, setFilterType] = useState<string>('all');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // جلب الفئات من الخادم
@@ -123,11 +136,11 @@ export default function MultiQuestionExtractor() {
   // تصفية الأسئلة المعروضة حسب النوع المختار
   const filteredQuestions = questions.filter(question => {
     if (filterType === 'invalid') {
-      return question.error; // عرض الأسئلة المعطوبة فقط
+      return question.error;
     } else if (filterType === 'valid') {
-      return !question.error; // عرض الأسئلة الصالحة فقط
+      return !question.error;
     }
-    return true; // عرض الكل
+    return true;
   });
 
   const extractAllQuestions = (): ExtractedQuestion[] => {
@@ -419,26 +432,22 @@ export default function MultiQuestionExtractor() {
             />
           </svg>
           <div className="absolute hidden group-hover:block z-10 w-100 p-2 text-sm text-white bg-gray-800 rounded shadow-lg right-0">
-  <div className="absolute hidden group-hover:block z-10 w-100 p-2 text-sm text-white bg-gray-800 rounded shadow-lg right-0">
-  <div className="bg-gray-800 p-4 rounded-lg text-right font-arabic my-4 whitespace-pre-line border border-gray-300">
-    <p className="">01- {'{1}'}: أول من نقل استعمال مصطلح الأحوال الشخصية، هو:</p>
-    <p className="mb-2 text-gray-300">إجابة السؤال موجود في الوحدة (1) الصفحة رقم (1) أهمية السؤال (1).</p>
-    <ul className="list-disc pr-5 space-y-1">
-      <li>أ- علي الطنطاوي.</li>
-      <li className=" text-green-600">ب- محمد قدري باشا.*</li>
-      <li>ج- محمد القرضاوي.</li>
-      <li>د- ابن القيم الجوزي.</li>
-    </ul>
+            <div className="bg-gray-800 p-4 rounded-lg text-right font-arabic my-4 whitespace-pre-line border border-gray-300">
+              <p className="">{HELP_TEXT.example}</p>
+              <p className="mb-2 text-gray-300">{HELP_TEXT.explanation}</p>
+              <ul className="list-disc pr-5 space-y-1">
+                <li>أ- علي الطنطاوي.</li>
+                <li className="text-green-600">ب- محمد قدري باشا.*</li>
+                <li>ج- محمد القرضاوي.</li>
+                <li>د- ابن القيم الجوزي.</li>
+              </ul>
 
-    <p>************************************</p>
-    <p>1-  في المثال السابق سيتم استخراج رمز السؤال من البداية 01- {'{1}'}  </p>
-    <p>2- سيتم استخراج نص بين علامتي (النقطتين فوق بعض) كمثال :نص السؤال:</p>
-    <p>3- وسيتم استخراج رقم الوحدة والصفحة وأهمية السؤال من السطر الثاني</p>
-    <p>4- سيتعرف النظام على الجواب الصحيح عن طريق وجود نجمة في النهاية دون فراغ</p>
-    <p>5- أهمية السؤال تكون رقم بين 1-5 (1 للأهمية القصوى)</p>
-  </div>
-</div>
-</div>
+              <p>************************************</p>
+              {HELP_TEXT.points.map((point, index) => (
+                <p key={index}>{point}</p>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -478,8 +487,6 @@ export default function MultiQuestionExtractor() {
             <option value="4">السنة الرابعة</option>
           </select>
         </div>
-        
-        
         
         <div>
           <label className="block text-lg font-medium mb-2">
