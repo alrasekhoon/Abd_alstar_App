@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.CUSTOM_API_URL || 'http://alraskun.atwebpages.com';
+const API_BASE_URL = process.env.CUSTOM_API_URL || 'http://alraskun.atwebpages.com1';
 
 // دالة مساعدة لبناء الـ URL
 function buildTargetUrl(request: NextRequest, path: string[]) {
