@@ -39,16 +39,16 @@ type QuizItem = {
 };
 
 interface QuizzesPageProps {
-  onNavigate: (page: 'materials' | 'units') => void;
+  //onNavigate: (page: 'materials' | 'units') => void;
   initialMaterialId?: number;
   initialUnitNum?: number;
 }
 
-export default function QuizzesPage({ onNavigate, initialMaterialId, initialUnitNum }: QuizzesPageProps) {
+export default function QuizzesPage({ initialMaterialId, initialUnitNum }: QuizzesPageProps) {
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
+ // const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
   const [selectedUnitNum, setSelectedUnitNum] = useState<number | null>(initialUnitNum || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -180,7 +180,7 @@ export default function QuizzesPage({ onNavigate, initialMaterialId, initialUnit
       }
 
       setQuizzes(result);
-      setSelectedMaterialId(materialId);
+     // setSelectedMaterialId(materialId);
       setSelectedUnitNum(unitNum);
       
       // تحديث حالة السؤال الجديد
@@ -217,7 +217,7 @@ export default function QuizzesPage({ onNavigate, initialMaterialId, initialUnit
       }
 
       setQuizzes(result);
-      setSelectedMaterialId(materialId);
+     // setSelectedMaterialId(materialId);
       setSelectedUnitNum(null);
       
     } catch (err) {

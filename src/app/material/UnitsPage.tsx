@@ -41,7 +41,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
+ // const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -153,7 +153,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       }));
       
       setUnits(unitsWithMaterialName);
-      setSelectedMaterialId(materialId);
+      //setSelectedMaterialId(materialId);
       
       // تحديث حالة الوحدة الجديدة
       setNewUnit(prev => ({

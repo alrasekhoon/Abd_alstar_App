@@ -394,7 +394,7 @@ export default function MaterialManagement() {
     }
   };
 
-  const handleUpdate = async (formData: FormData) => {
+  const handleUpdate = async () => {
     if (!editingVoice?.id) return;
 
     try {
@@ -476,7 +476,7 @@ export default function MaterialManagement() {
     }
 
     if (editingVoice.id) {
-      await handleUpdate(formData);
+      await handleUpdate();
     } else {
       await handleAdd(formData);
     }

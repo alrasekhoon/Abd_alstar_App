@@ -17,6 +17,17 @@ type Subscription = {
   category_name: string;
 };
 
+// تعريف نوع للبيانات القادمة من API
+type ApiNotificationItem = {
+  id?: number;
+  title?: string | null;
+  body?: string | null;
+  url1?: string | null;
+  ashtrak?: string | null;
+  note1?: string | null;
+  user_type?: string | null;
+};
+
 export default function NotificationManagement() {
   const [notificationItems, setNotificationItems] = useState<NotificationItem[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -52,10 +63,10 @@ export default function NotificationManagement() {
         throw new Error(`فشل في جلب الإشعارات: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data: ApiNotificationItem[] = await response.json();
       // تنظيف البيانات من القيم null
-      const cleanedData = data.map((item: any) => ({
-        ...item,
+      const cleanedData: NotificationItem[] = data.map((item: ApiNotificationItem) => ({
+        id: item.id,
         title: item.title || '',
         body: item.body || '',
         url1: item.url1 || '',
@@ -79,7 +90,7 @@ export default function NotificationManagement() {
       if (!response.ok) {
         throw new Error('فشل في جلب الاشتراكات');
       }
-      const data = await response.json();
+      const data: Subscription[] = await response.json();
       setSubscriptions(data);
     } catch (err) {
       console.error('Error fetching subscriptions:', err);
