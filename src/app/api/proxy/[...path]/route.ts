@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.CUSTOM_API_URL || 'http://alraskun.atwebpages.com';
 
+// تعريف نوع Params صحيح لـ Next.js
+type Params = {
+  params: {
+    path: string[];
+  };
+};
+
 // دالة مساعدة لبناء الـ URL
 function buildTargetUrl(request: NextRequest, path: string[]) {
   const url = new URL(request.url);
@@ -18,7 +25,6 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
     const formData = await request.formData();
     
     console.log('File upload to:', targetUrl);
-    console.log('FormData entries:', Array.from(formData.entries()));
     
     // إرسال FormData مباشرة إلى السيرفر الهدف
     const response = await fetch(targetUrl, {
@@ -45,10 +51,7 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
-) {
+export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { path } = params;
     const targetUrl = buildTargetUrl(request, path);
@@ -82,10 +85,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
-) {
+export async function POST(request: NextRequest, { params }: Params) {
   try {
     const { path } = params;
     const contentType = request.headers.get('content-type') || '';
@@ -125,17 +125,13 @@ export async function POST(
   }
 }
 
-// ... باقي الدوال PUT و DELETE تبقى كما هي
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
-) {
+export async function PUT(request: NextRequest, { params }: Params) {
   try {
     const { path } = params;
     const targetUrl = buildTargetUrl(request, path);
     const body = await request.text();
     
-    console.log('PUT Proxying to:', targetUrl, 'Body:', body);
+    console.log('PUT Proxying to:', targetUrl);
     
     const response = await fetch(targetUrl, {
       method: 'PUT',
@@ -161,10 +157,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
-) {
+export async function DELETE(request: NextRequest, { params }: Params) {
   try {
     const { path } = params;
     const targetUrl = buildTargetUrl(request, path);
