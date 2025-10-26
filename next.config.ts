@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   },
   // السماح بعرض الصور من النطاقات الخارجية
   images: {
-    domains: ['alraskun.atwebpages.com'],
+    domains: ['https://alrasekhooninlaw.com', 'http://alrasekhooninlaw.com'],
     unoptimized: true, // مهم لـ Vercel
   },
 };

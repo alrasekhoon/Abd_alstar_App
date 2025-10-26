@@ -11,17 +11,19 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
 
-  return (
-    <div className="flex h-screen">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* عرض الهيدر فقط في صفحة /ashtrak */}
-        {pathname === '/ashtrak' && <Header />}
-        <main className="flex-1 overflow-y-auto p-4">
-          {children}
-        </main>
-      </div>
-      {/* عرض القائمة الجانبية فقط في صفحة /ashtrak */}
-      {pathname === '/ashtrak' && <Sidebar />}
+ return (
+  <div className="flex h-screen">
+    {/* عرض القائمة الجانبية فقط في صفحة /home_work */}
+    {pathname === '/ashtrak' && <Sidebar />}
+
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* عرض الهيدر فقط في صفحة /home_work */}
+      {pathname === '/ashtrak' && <Header />}
+      <main className="flex-1 overflow-y-auto p-4">
+        {children}
+      </main>
     </div>
-  )
+  </div>
+)
+
 }

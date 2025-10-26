@@ -289,7 +289,7 @@ export default function SettingsPage() {
                     <div className={`h-4 w-4 rounded border ${settings.print_show === 1 ? 'bg-blue-600 border-blue-600' : 'bg-gray-100 border-gray-300'}`}></div>
                   )}
                   <label htmlFor="print_show" className="mr-2 block text-sm font-medium text-gray-700">
-                   تفعيل الطباعة
+                  زر تفعيل
                   </label>
                 </div>
 

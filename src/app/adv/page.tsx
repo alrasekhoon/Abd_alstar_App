@@ -225,18 +225,19 @@ export default function AdvManagement() {
                         </div>
                       )}
                       {editingItem.image_path && (
-                        <div className="flex items-center space-x-3">
-                          <Image 
-                            src={`/api/proxy/img/adv/${editingItem.image_path}`}
-                            alt="Preview"
-                            width={48}
-                            height={48}
-                            className="h-12 w-12 object-cover rounded-md"
-                            unoptimized={true}
-                          />
-                          <span className="text-sm text-gray-600">{editingItem.image_path}</span>
-                        </div>
-                      )}
+  <div className="flex items-center space-x-3">
+    <Image 
+      src={`/api/proxy/img/adv/${editingItem.image_path}`}
+      alt="Preview"
+      width={48}
+      height={48}
+      className="h-12 w-12 object-cover rounded-md"
+      unoptimized={true}
+      loading="eager" // ⬅️ أضف هذا السطر
+    />
+    <span className="text-sm text-gray-600">{editingItem.image_path}</span>
+  </div>
+)}
                     </div>
                   </div>
                 </div>
@@ -302,17 +303,19 @@ export default function AdvManagement() {
               {data.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {item.image_path && (
-                      <Image 
-                        src={`/api/proxy/img/adv/${item.image_path}`}
-                        alt={item.title}
-                        width={64}
-                        height={64}
-                        className="h-16 w-16 object-cover rounded-md"
-                        unoptimized={true}
-                      />
-                    )}
-                  </td>
+  {item.image_path && (
+    <Image 
+      src={`/api/proxy/img/adv/${item.image_path}`}
+      alt={item.title}
+      width={64}
+      height={64}
+      className="h-16 w-16 object-cover rounded-md"
+      unoptimized={true}
+      loading="eager" // ⬅️ أضف هذا السطر
+      priority={true} // ⬅️ وأضف هذا السطر للصور المهمة
+    />
+  )}
+</td>
                   <td className="px-6 py-4 max-w-xs">
                     <div className="text-sm font-medium text-gray-900">{item.title}</div>
                   </td>

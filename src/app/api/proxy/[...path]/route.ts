@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.CUSTOM_API_URL || 'http://alraskun.atwebpages.com1';
+const API_BASE_URL = process.env.CUSTOM_API_URL ;//|| 'http://alraskun.atwebpages.com';
 
 // دالة مساعدة لبناء الـ URL
 function buildTargetUrl(request: NextRequest, path: string[]) {
@@ -14,12 +14,10 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
   try {
     const targetUrl = buildTargetUrl(request, path);
     
-    // إنشاء FormData جديد من الطلب الوارد
     const formData = await request.formData();
     
     console.log('File upload to:', targetUrl);
     
-    // إرسال FormData مباشرة إلى السيرفر الهدف
     const response = await fetch(targetUrl, {
       method: 'POST',
       body: formData,
@@ -44,12 +42,65 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
   }
 }
 
+// دالة للتعامل مع الملفات (صور، ملفات، إلخ)
+async function handleFileRequest(request: NextRequest, path: string[]) {
+  try {
+    const targetUrl = buildTargetUrl(request, path);
+    
+    console.log('File request to:', targetUrl);
+    
+    const response = await fetch(targetUrl, {
+      method: 'GET',
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // الحصول على نوع المحتوى من الاستجابة
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    
+    // إنشاء الاستجابة مع البيانات الثنائية
+    const arrayBuffer = await response.arrayBuffer();
+    
+    return new NextResponse(arrayBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=3600', // تخزين مؤقت للصور
+      },
+    });
+    
+  } catch (error) {
+    console.error('File request error:', error);
+    return NextResponse.json(
+      { 
+        error: 'فشل في جلب الملف',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     const { path } = await params;
+    
+    // إذا كان الطلب لملف (صور، إلخ)
+    const isFileRequest = path[0] === 'uploads' || 
+                         path[path.length - 1].includes('.') || 
+                         request.headers.get('accept')?.includes('image');
+    
+    if (isFileRequest) {
+      return handleFileRequest(request, path);
+    }
+
+    // للطلبات العادية (JSON)
     const targetUrl = buildTargetUrl(request, path);
     
     console.log('GET Proxying to:', targetUrl);
@@ -89,12 +140,10 @@ export async function POST(
     const { path } = await params;
     const contentType = request.headers.get('content-type') || '';
 
-    // إذا كان الطلب يحتوي على ملفات، استخدم معالجة خاصة
     if (contentType.includes('multipart/form-data')) {
       return handleFileUpload(request, path);
     }
 
-    // للطلبات العادية (JSON)
     const targetUrl = buildTargetUrl(request, path);
     const body = await request.text();
     
