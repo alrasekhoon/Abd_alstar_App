@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Subscription = {
   id: number;
@@ -52,12 +52,21 @@ export default function UserSubscriptionsModal({
     }
   }, [isOpen, userId]);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      const response = await fetch(`${API_URL}?user_id=${userId}`);
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${API_URL}?user_id=${userId}&_t=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
       
       if (!response.ok) {
         throw new Error(`فشل في جلب البيانات: ${response.status}`);
@@ -76,7 +85,7 @@ export default function UserSubscriptionsModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   const handleAddSubscription = async () => {
     try {
@@ -89,7 +98,9 @@ export default function UserSubscriptionsModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({
           userid: userId,
           materialid: parseInt(newSubscription.materialid),
@@ -127,7 +138,9 @@ export default function UserSubscriptionsModal({
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({ id })
       });
 
@@ -153,7 +166,9 @@ export default function UserSubscriptionsModal({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({ 
           id, 
           type1: newType 

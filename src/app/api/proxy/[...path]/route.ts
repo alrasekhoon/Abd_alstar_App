@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.CUSTOM_API_URL ;//|| 'http://alraskun.atwebpages.com';
 
+// رؤوس افتراضية لمنع التخزين المؤقت للردود JSON
+const NO_CACHE_JSON_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
+
 // دالة مساعدة لبناء الـ URL
 function buildTargetUrl(request: NextRequest, path: string[]) {
   const url = new URL(request.url);
@@ -27,8 +34,8 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+  const data = await response.json();
+  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
     
   } catch (error) {
     console.error('File upload error:', error);
@@ -37,7 +44,7 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
         error: 'فشل في رفع الملف',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }
@@ -64,11 +71,14 @@ async function handleFileRequest(request: NextRequest, path: string[]) {
     // إنشاء الاستجابة مع البيانات الثنائية
     const arrayBuffer = await response.arrayBuffer();
     
+    // إذا كانت الملفات من مجلد uploads (صور المستخدم/بطاقات) نمنع الكاش لكي تعكس التغييرات فوراً
+    const cacheHeader = path[0] === 'uploads' ? 'no-store' : 'public, max-age=3600';
+
     return new NextResponse(arrayBuffer, {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=3600', // تخزين مؤقت للصور
+        'Cache-Control': cacheHeader,
       },
     });
     
@@ -79,7 +89,7 @@ async function handleFileRequest(request: NextRequest, path: string[]) {
         error: 'فشل في جلب الملف',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }
@@ -117,8 +127,8 @@ export async function GET(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+  const data = await response.json();
+  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
     
   } catch (error) {
     console.error('Proxy GET error:', error);
@@ -127,7 +137,7 @@ export async function GET(
         error: 'فشل في الاتصال بالسيرفر',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }
@@ -161,14 +171,14 @@ export async function POST(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+  const data = await response.json();
+  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
     
   } catch (error) {
     console.error('Proxy POST error:', error);
     return NextResponse.json(
       { error: 'فشل في الاتصال بالسيرفر' },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }
@@ -196,14 +206,14 @@ export async function PUT(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+  const data = await response.json();
+  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
     
   } catch (error) {
     console.error('Proxy PUT error:', error);
     return NextResponse.json(
       { error: 'فشل في الاتصال بالسيرفر' },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }

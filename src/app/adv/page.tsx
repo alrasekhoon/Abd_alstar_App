@@ -17,6 +17,7 @@ export default function AdvManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const API_URL = '/api/proxy/cp_adv.php';
@@ -38,6 +39,25 @@ export default function AdvManagement() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: { [key: string]: string } = {};
+
+    if (!editingItem?.title.trim()) {
+      errors.title = 'العنوان مطلوب';
+    }
+
+    if (!editingItem?.description.trim()) {
+      errors.description = 'الوصف مطلوب';
+    }
+
+    if (!editingItem?.image_path.trim()) {
+      errors.image = 'صورة الإعلان مطلوبة';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleFileUpload = async (file: File): Promise<string> => {
@@ -68,8 +88,15 @@ export default function AdvManagement() {
       return;
     }
 
+    // التحقق من حجم الملف (5MB كحد أقصى)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('حجم الصورة يجب أن يكون أقل من 5MB');
+      return;
+    }
+
     try {
       setUploading(true);
+      setFormErrors(prev => ({ ...prev, image: '' }));
       const fileName = await handleFileUpload(file);
       
       if (editingItem) {
@@ -108,6 +135,11 @@ export default function AdvManagement() {
     e.preventDefault();
     if (!editingItem) return;
 
+    // التحقق من صحة النموذج
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const url = editingItem.id ? `${API_URL}?id=${editingItem.id}` : API_URL;
@@ -123,6 +155,7 @@ export default function AdvManagement() {
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
 
       setEditingItem(null);
+      setFormErrors({});
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحفظ');
@@ -131,10 +164,22 @@ export default function AdvManagement() {
 
   const openEditForm = (item: AdvItem) => {
     setEditingItem({ ...item });
+    setFormErrors({});
   };
 
   const openAddForm = () => {
     setEditingItem({ title: '', description: '', image_path: '', note: '' });
+    setFormErrors({});
+  };
+
+  const removeImage = () => {
+    if (editingItem) {
+      setEditingItem({
+        ...editingItem,
+        image_path: ''
+      });
+      setFormErrors(prev => ({ ...prev, image: 'صورة الإعلان مطلوبة' }));
+    }
   };
 
   if (isLoading) return (
@@ -198,26 +243,46 @@ export default function AdvManagement() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      العنوان <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                        formErrors.title ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       value={editingItem.title}
-                      onChange={(e) => setEditingItem({...editingItem, title: e.target.value})}
+                      onChange={(e) => {
+                        setEditingItem({...editingItem, title: e.target.value});
+                        if (e.target.value.trim()) {
+                          setFormErrors(prev => ({ ...prev, title: '' }));
+                        }
+                      }}
                       required
                     />
+                    {formErrors.title && (
+                      <p className="mt-1 text-sm text-red-600">{formErrors.title}</p>
+                    )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">صورة الإعلان</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      صورة الإعلان <span className="text-red-500">*</span>
+                    </label>
                     <div className="space-y-3">
                       <input
                         type="file"
                         ref={fileInputRef}
                         accept="image/*"
                         onChange={handleImageChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                          formErrors.image ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        required={!editingItem.image_path}
                       />
+                      {formErrors.image && (
+                        <p className="text-sm text-red-600">{formErrors.image}</p>
+                      )}
                       {uploading && (
                         <div className="flex items-center text-blue-600">
                           <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
@@ -225,32 +290,56 @@ export default function AdvManagement() {
                         </div>
                       )}
                       {editingItem.image_path && (
-  <div className="flex items-center space-x-3">
-    <Image 
-      src={`/api/proxy/img/adv/${editingItem.image_path}`}
-      alt="Preview"
-      width={48}
-      height={48}
-      className="h-12 w-12 object-cover rounded-md"
-      unoptimized={true}
-      loading="eager" // ⬅️ أضف هذا السطر
-    />
-    <span className="text-sm text-gray-600">{editingItem.image_path}</span>
-  </div>
-)}
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Image 
+                              src={`/api/proxy/img/adv/${editingItem.image_path}`}
+                              alt="Preview"
+                              width={48}
+                              height={48}
+                              className="h-12 w-12 object-cover rounded-md"
+                              unoptimized={true}
+                              loading="eager"
+                            />
+                            <span className="text-sm text-gray-600">{editingItem.image_path}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeImage}
+                            className="text-red-600 hover:text-red-800 p-1"
+                            title="إزالة الصورة"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    الوصف <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      formErrors.description ? 'border-red-500' : 'border-gray-300'
+                    }`}
                     value={editingItem.description}
-                    onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                    onChange={(e) => {
+                      setEditingItem({...editingItem, description: e.target.value});
+                      if (e.target.value.trim()) {
+                        setFormErrors(prev => ({ ...prev, description: '' }));
+                      }
+                    }}
                     required
                   />
+                  {formErrors.description && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -261,6 +350,21 @@ export default function AdvManagement() {
                     value={editingItem.note}
                     onChange={(e) => setEditingItem({...editingItem, note: e.target.value})}
                   />
+                </div>
+
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="mr-3">
+                      <p className="text-sm text-yellow-700">
+                        <span className="font-medium">ملاحظة:</span> الحقول التي تحمل علامة (*) إلزامية. يجب إضافة صورة للإعلان.
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -273,7 +377,7 @@ export default function AdvManagement() {
                   </button>
                   <button
                     type="submit"
-                    disabled={uploading}
+                    disabled={uploading || !editingItem.image_path}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -303,19 +407,19 @@ export default function AdvManagement() {
               {data.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
-  {item.image_path && (
-    <Image 
-      src={`/api/proxy/img/adv/${item.image_path}`}
-      alt={item.title}
-      width={64}
-      height={64}
-      className="h-16 w-16 object-cover rounded-md"
-      unoptimized={true}
-      loading="eager" // ⬅️ أضف هذا السطر
-      priority={true} // ⬅️ وأضف هذا السطر للصور المهمة
-    />
-  )}
-</td>
+                    {item.image_path && (
+                      <Image 
+                        src={`/api/proxy/img/adv/${item.image_path}`}
+                        alt={item.title}
+                        width={64}
+                        height={64}
+                        className="h-16 w-16 object-cover rounded-md"
+                        unoptimized={true}
+                        loading="eager"
+                        priority={true}
+                      />
+                    )}
+                  </td>
                   <td className="px-6 py-4 max-w-xs">
                     <div className="text-sm font-medium text-gray-900">{item.title}</div>
                   </td>

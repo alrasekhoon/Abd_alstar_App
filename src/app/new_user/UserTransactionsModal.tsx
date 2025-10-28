@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Transaction = {
   id: number;
@@ -50,7 +50,7 @@ export default function UserTransactionsModal({
   const API_URL = '/api/proxy/user_transactions.php';
 
   // جلب البيانات - مع منع الـ Cache
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -98,7 +98,7 @@ export default function UserTransactionsModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -141,7 +141,9 @@ export default function UserTransactionsModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify(requestBody),
       });
       
@@ -186,6 +188,10 @@ const handleDeleteTransaction = async (transactionId: number) => {
     // إرسال البيانات في query parameters بدلاً من body
     const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
       method: 'DELETE',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      },
+      cache: 'no-store' as RequestCache
     });
 
     const result = await response.json();

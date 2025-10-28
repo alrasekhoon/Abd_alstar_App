@@ -103,7 +103,17 @@ const [transactionsModal, setTransactionsModal] = useState({
         ...(filters.block_status !== '' && { block_status: filters.block_status })
       });
 
-      const response = await fetch(`${API_URL}?${params}`);
+      // إضافة timestamp ومنع الـ cache في المتصفح
+      const url = `${API_URL}?${params}&_t=${new Date().getTime()}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
       
       if (!response.ok) {
         throw new Error(`فشل في جلب البيانات: ${response.status}`);
@@ -161,7 +171,9 @@ const [transactionsModal, setTransactionsModal] = useState({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({ block: blockStatus }),
       });
 
@@ -193,7 +205,9 @@ const [transactionsModal, setTransactionsModal] = useState({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({ user_type: userType }),
       });
 
