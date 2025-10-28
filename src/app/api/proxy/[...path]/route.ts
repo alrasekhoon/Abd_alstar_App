@@ -4,9 +4,11 @@ const API_BASE_URL = process.env.CUSTOM_API_URL ;//|| 'http://alraskun.atwebpage
 
 // رؤوس افتراضية لمنع التخزين المؤقت للردود JSON
 const NO_CACHE_JSON_HEADERS = {
-  'Cache-Control': 'no-store, no-cache, must-revalidate',
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
   'Pragma': 'no-cache',
   'Expires': '0',
+  // Surrogate-Control can help some CDNs respect no-cache rules
+  'Surrogate-Control': 'no-store',
 };
 
 // دالة مساعدة لبناء الـ URL
@@ -72,14 +74,24 @@ async function handleFileRequest(request: NextRequest, path: string[]) {
     const arrayBuffer = await response.arrayBuffer();
     
     // إذا كانت الملفات من مجلد uploads (صور المستخدم/بطاقات) نمنع الكاش لكي تعكس التغييرات فوراً
-    const cacheHeader = path[0] === 'uploads' ? 'no-store' : 'public, max-age=3600';
+    const isUploads = path[0] === 'uploads';
+    const cacheHeader = isUploads ? 'no-store, no-cache, must-revalidate, max-age=0' : 'public, max-age=3600';
+
+    const fileHeaders: { [k: string]: string } = {
+      'Content-Type': contentType,
+      'Cache-Control': cacheHeader,
+    };
+
+    if (isUploads) {
+      // also hint to any surrogate/CDN
+      fileHeaders['Surrogate-Control'] = 'no-store';
+      fileHeaders['Pragma'] = 'no-cache';
+      fileHeaders['Expires'] = '0';
+    }
 
     return new NextResponse(arrayBuffer, {
       status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': cacheHeader,
-      },
+      headers: fileHeaders,
     });
     
   } catch (error) {
