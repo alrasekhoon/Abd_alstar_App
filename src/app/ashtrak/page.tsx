@@ -43,7 +43,19 @@ export default function AshtrakManagement() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setData(result);
@@ -58,8 +70,17 @@ export default function AshtrakManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف العنصر');
@@ -77,12 +98,17 @@ export default function AshtrakManagement() {
   const handleSave = async (item: AshtrakItem) => {
     try {
       const method = 'PUT';
-      const url = `${API_URL}?id=${item.id}`;
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${item.id}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(item),
       });
@@ -103,10 +129,17 @@ export default function AshtrakManagement() {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(newItem),
       });

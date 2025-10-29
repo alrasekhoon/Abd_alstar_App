@@ -36,27 +36,38 @@ export default function TprintManagement() {
   }, []);
 
   useEffect(() => {
-  const applyFilters = () => {
-    let result = [...data];
-    
-    if (filters.type) {
-      result = result.filter(item => item.type1 === filters.type);
-    }
-    
-    if (filters.year) {
-      result = result.filter(item => item.year1.toString() === filters.year);
-    }
-    
-    setFilteredData(result);
-  };
+    const applyFilters = () => {
+      let result = [...data];
+      
+      if (filters.type) {
+        result = result.filter(item => item.type1 === filters.type);
+      }
+      
+      if (filters.year) {
+        result = result.filter(item => item.year1.toString() === filters.year);
+      }
+      
+      setFilteredData(result);
+    };
 
-  applyFilters();
-}, [data, filters]);
+    applyFilters();
+  }, [data, filters]);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -77,8 +88,6 @@ export default function TprintManagement() {
     }
   };
 
- 
-
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -98,16 +107,22 @@ export default function TprintManagement() {
     if (!confirm('هل أنت متأكد من الحذف؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
-        method: 'DELETE',
-      });
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
       
+      const response = await fetch(url, {
+        method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
 
-       console.log(response)
+      console.log(response)
       if (!response.ok) throw new Error('فشل في الحذف');
 
-     
-      
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -119,43 +134,48 @@ export default function TprintManagement() {
     if (!editingItem) return;
 
     try {
-        const method = editingItem.id ? 'PUT' : 'POST';
-        const url = editingItem.id ? `${API_URL}?id=${editingItem.id}` : API_URL;
+      const method = editingItem.id ? 'PUT' : 'POST';
+      const timestamp = Date.now();
+      const url = editingItem.id ? `${API_URL}?id=${editingItem.id}&refresh=${timestamp}` : `${API_URL}?refresh=${timestamp}`;
 
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(editingItem),
-        });
+      const response = await fetch(url, {
+        method,
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(editingItem),
+      });
 
-        const result = await response.json();
-        
-        if (!response.ok) {
-            // عرض رسالة الخطأ من السيرفر إن وجدت
-            throw new Error(result.message || 'فشل في حفظ البيانات');
-        }
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // عرض رسالة الخطأ من السيرفر إن وجدت
+        throw new Error(result.message || 'فشل في حفظ البيانات');
+      }
 
-        if (!result.success) {
-            // عرض رسالة الخطأ من السيرفر
-            throw new Error(result.message || 'فشل في العملية');
-        }
+      if (!result.success) {
+        // عرض رسالة الخطأ من السيرفر
+        throw new Error(result.message || 'فشل في العملية');
+      }
 
-        setEditingItem(null);
-        fetchData();
-        
-        // عرض رسالة نجاح
-        alert(result.message || 'تمت العملية بنجاح');
+      setEditingItem(null);
+      fetchData();
+      
+      // عرض رسالة نجاح
+      alert(result.message || 'تمت العملية بنجاح');
     } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'حدث خطأ غير متوقع';
-        setError(errorMessage);
-        console.error('Error details:', err);
-        
-        // عرض رسالة الخطأ للمستخدم
-        alert(errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ غير متوقع';
+      setError(errorMessage);
+      console.error('Error details:', err);
+      
+      // عرض رسالة الخطأ للمستخدم
+      alert(errorMessage);
     }
-};
+  };
 
   const openEditForm = (item: TprintItem) => {
     setEditingItem({ ...item });
@@ -175,7 +195,7 @@ export default function TprintManagement() {
       quiz_free: 0,
       voice_free: 0
     });
-};
+  };
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
