@@ -103,10 +103,37 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     applyFilters();
   }, [units, selectedYear, selectedCategory, selectedMaterial]);
 
+  // دالة مساعدة لإضافة timestamp وإعدادات منع الكاش
+  const createFetchOptions = (method: string = 'GET', body?: any) => {
+    const timestamp = Date.now();
+    const options: any = {
+      method,
+      cache: 'no-store' as RequestCache,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      next: {
+        tags: ['units-data']
+      }
+    };
+
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+
+    return { timestamp, options };
+  };
+
   const fetchMaterials = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const { timestamp, options } = createFetchOptions();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, options);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -136,7 +163,10 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(CATEGORY_API_URL);
+      const { timestamp, options } = createFetchOptions();
+      const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, options);
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -148,7 +178,10 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const fetchUnits = async (materialId: number) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${UNITS_API_URL}?material_id=${materialId}`);
+      const { timestamp, options } = createFetchOptions();
+      const url = `${UNITS_API_URL}?material_id=${materialId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, options);
       if (!response.ok) throw new Error('فشل في جلب الوحدات');
       const result = await response.json();
       
@@ -159,7 +192,6 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       }));
       
       setUnits(unitsWithMaterialName);
-      //setSelectedMaterialId(materialId);
       
       // تحديث حالة الوحدة الجديدة
       setNewUnit(prev => ({
@@ -209,13 +241,10 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       setShowConfirm(false);
       try {
         setIsLoading(true);
-        const response = await fetch(`${UNITS_API_URL}?id=${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
+        const { timestamp, options } = createFetchOptions('DELETE');
+        const url = `${UNITS_API_URL}?id=${id}&refresh=${timestamp}`;
+        
+        const response = await fetch(url, options);
 
         const data = await response.json();
         
@@ -231,9 +260,6 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
           await fetchUnits(selectedMaterial);
         }
         
-        // Removed success message
-        // setMessage(data.message || 'تم حذف الوحدة بنجاح');
-        // setIsError(false);
       } catch (err) {
         console.error('Error deleting unit:', err);
         setMessage(err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء الحذف');
@@ -249,9 +275,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const handleUnitSave = async (unit: UnitItem) => {
     try {
       const method = unit.id ? 'PUT' : 'POST';
-      const url = unit.id ? `${UNITS_API_URL}?id=${unit.id}` : UNITS_API_URL;
-
-      const payload = {
+      const { timestamp, options } = createFetchOptions(method, {
         material_id: unit.material_id,
         unit_name: unit.unit_name.trim(),
         unit_num: unit.unit_num,
@@ -259,19 +283,16 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
         free: unit.free || 0,
         url1: unit.url1 || '',
         english: unit.english || 0,
-        // تم حل المشكلة: إرسال قيمة show1 مباشرة
         show1: unit.show1 
-      };
-
-      console.log("Payload sent:", payload);
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
       });
+
+      const url = unit.id 
+        ? `${UNITS_API_URL}?id=${unit.id}&refresh=${timestamp}` 
+        : `${UNITS_API_URL}?refresh=${timestamp}`;
+
+      console.log("Payload sent:", options.body);
+
+      const response = await fetch(url, options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -289,10 +310,6 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       if (selectedMaterial !== 'all' && selectedMaterial !== null) {
         await fetchUnits(selectedMaterial);
       }
-      
-      // Removed success message
-      // setMessage('تم حفظ الوحدة بنجاح');
-      // setIsError(false);
       
     } catch (err) {
       console.error('Error saving unit:', err);
@@ -315,7 +332,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     }
 
     try {
-      const payload = {
+      const { timestamp, options } = createFetchOptions('POST', {
         material_id: newUnit.material_id,
         unit_name: newUnit.unit_name.trim(),
         unit_num: newUnit.unit_num || 1,
@@ -323,17 +340,12 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
         free: newUnit.free || 0,
         url1: newUnit.url1 || '',
         english: newUnit.english || 0,
-        // تم حل المشكلة: إرسال قيمة show1 مباشرة
         show1: newUnit.show1 
-      };
-
-      const response = await fetch(UNITS_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
       });
+
+      const url = `${UNITS_API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -355,16 +367,12 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
         free: 0,
         url1: '',
         english: 0,
-        show1: 1 // قيمة افتراضية 1 للحقل الجديد
+        show1: 1
       });
 
       if (selectedMaterial !== 'all' && selectedMaterial !== null) {
         await fetchUnits(selectedMaterial);
       }
-      
-      // Removed success message
-      // setMessage('تم إضافة الوحدة بنجاح');
-      // setIsError(false);
       
     } catch (err) {
       console.error('Error adding unit:', err);
@@ -401,6 +409,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     setShowConfirm(false);
   };
 
+  
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
