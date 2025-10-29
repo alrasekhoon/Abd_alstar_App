@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   
   experimental: {
     serverComponentsExternalPackages: [],
+    // إضافة هذه الإعدادات المهمة
+    staleTimes: {
+      dynamic: 0,  // لا كاش للصفحات الديناميكية
+      static: 60,  // 60 ثانية فقط للصفحات الثابتة
+    },
   },
   
   images: {
@@ -15,13 +20,27 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   
-  // إعدادات الكاش لـ Vercel (محدودة التأثير)
+  // تحسين إعدادات الهيدرز
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
-          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate, max-age=0' },
+          { 
+            key: 'Cache-Control', 
+            value: 'no-cache, no-store, max-age=0, must-revalidate' 
+          },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+        ],
+      },
+      {
+        source: '/:path*', // لجميع الصفحات
+        headers: [
+          { 
+            key: 'Cache-Control', 
+            value: 'public, max-age=0, must-revalidate' 
+          },
         ],
       },
     ];

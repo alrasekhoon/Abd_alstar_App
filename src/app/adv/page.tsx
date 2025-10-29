@@ -28,18 +28,34 @@ export default function AdvManagement() {
   }, []);
 
   const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error('فشل في جلب البيانات');
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  try {
+    setIsLoading(true);
+    
+    const timestamp = Date.now();
+    const url = `${API_URL}?refresh=${timestamp}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+      headers: {
+        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      next: {
+        tags: ['ads'] // إذا كنت ستستخدم revalidateTag لاحقاً
+      }
+    });
+    
+    if (!response.ok) throw new Error('فشل في جلب البيانات');
+    const result = await response.json();
+    setData(result);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
