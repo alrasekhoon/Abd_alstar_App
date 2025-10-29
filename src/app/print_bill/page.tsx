@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-
 type BillItem = {
   id?: number;
   billId: string;
@@ -31,9 +30,9 @@ type BillDetailItem = {
 type MaterialItem = {
   id: number;
   m_name: string;
-  mokarar_free:string;
-  quiz_free:string
-  voice_free:string
+  mokarar_free: string;
+  quiz_free: string;
+  voice_free: string;
 };
 
 export default function BillManagement() {
@@ -51,7 +50,6 @@ export default function BillManagement() {
   const [error, setError] = useState('');
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const [statusFilter, setStatusFilter] = useState<string>('all');
- 
 
   const API_URL = '/api/proxy/cp_bills.php';
   const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
@@ -72,7 +70,19 @@ export default function BillManagement() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setBills(result);
@@ -85,7 +95,19 @@ export default function BillManagement() {
 
   const fetchBillDetails = async (billId: string) => {
     try {
-      const response = await fetch(`${API_URL}?id=${billId}`);
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب تفاصيل الفاتورة');
       const result = await response.json();
       return result.details || [];
@@ -97,7 +119,19 @@ export default function BillManagement() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch(MATERIALS_API_URL);
+      const timestamp = Date.now();
+      const url = `${MATERIALS_API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب المواد');
       const result = await response.json();
       setMaterials(result);
@@ -110,8 +144,17 @@ export default function BillManagement() {
     if (!confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف الفاتورة');
@@ -128,12 +171,17 @@ export default function BillManagement() {
 
     try {
       const method = editingBill.id ? 'PUT' : 'POST';
-      const url = editingBill.id ? `${API_URL}?id=${editingBill.id}` : API_URL;
+      const timestamp = Date.now();
+      const url = editingBill.id ? `${API_URL}?id=${editingBill.id}&refresh=${timestamp}` : `${API_URL}?refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(editingBill),
       });
@@ -147,19 +195,22 @@ export default function BillManagement() {
     }
   };
 
- // const openEditForm = (bill: BillItem) => {
-  //  setEditingBill({ ...bill });
-  //};
-
   const updateBillStatus = async (billId: number, newStatus: string) => {
     try {
       const billToUpdate = bills.find(bill => bill.id === billId);
       if (!billToUpdate) return;
 
-      const response = await fetch(`${API_URL}?id=${billId}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'PUT',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify({
           ...billToUpdate,
@@ -170,9 +221,6 @@ export default function BillManagement() {
       if (!response.ok) throw new Error('فشل في تحديث حالة الفاتورة');
 
       fetchData();
-
-
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحديث الحالة');
     }
