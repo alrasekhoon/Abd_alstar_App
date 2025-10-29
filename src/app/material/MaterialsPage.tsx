@@ -112,7 +112,22 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        next: {
+          tags: ['materials'] // إذا كنت ستستخدم revalidateTag لاحقاً
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -136,7 +151,22 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(CATEGORY_API_URL);
+      const timestamp = Date.now();
+      const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        next: {
+          tags: ['categories'] // إذا كنت ستستخدم revalidateTag لاحقاً
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -150,8 +180,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     if (!confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف المادة');
@@ -171,12 +210,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   const handleSave = async (item: MaterialItem) => {
     try {
       const method = 'PUT';
-      const url = `${API_URL}?id=${item.id}`;
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${item.id}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(item),
       });
@@ -199,10 +243,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(newItem),
       });
