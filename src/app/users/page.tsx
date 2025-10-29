@@ -84,7 +84,15 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب بيانات المستخدمين');
       const result = await response.json();
       setUsers(result);
@@ -98,7 +106,15 @@ export default function UserManagement() {
   const fetchUserSubscriptions = async (userId: number) => {
     try {
       setLoadingSubscriptions(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}`);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}&refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب اشتراكات المستخدم');
       const result = await response.json();
       setSubscriptions(prev => ({ ...prev, [userId]: result }));
@@ -112,7 +128,15 @@ export default function UserManagement() {
   const fetchUserPayments = async (userId: number) => {
     try {
       setLoadingPayments(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}`);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}&refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب دفعات المستخدم');
       const result = await response.json();
       setPayments(prev => ({ ...prev, [userId]: result }));
@@ -126,7 +150,15 @@ export default function UserManagement() {
   const fetchUserBills = async (userId: number) => {
     try {
       setLoadingBills(prev => ({ ...prev, [userId]: true }));
-      const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}`);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}&refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب فواتير المستخدم');
       const result = await response.json();
       setBills(prev => ({ ...prev, [userId]: result }));
@@ -160,11 +192,16 @@ export default function UserManagement() {
 
   const updateUserType = async (userId: number, newUserType: string) => {
     try {
-      const response = await fetch(`${API_URL}?id=${userId}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${userId}&refresh=${timestamp}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
+        cache: 'no-store',
         body: JSON.stringify({ user_type: newUserType }),
       });
       
@@ -218,11 +255,16 @@ export default function UserManagement() {
     const newBlock = currentBlock === 1 ? 0 : 1;
     
     try {
-      const response = await fetch(`${API_URL}?id=${userId}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${userId}&refresh=${timestamp}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
+        cache: 'no-store',
         body: JSON.stringify({ block: newBlock }),
       });
       

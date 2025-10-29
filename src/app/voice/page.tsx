@@ -65,7 +65,15 @@ export default function MaterialManagement() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const data = await response.json();
       
@@ -162,11 +170,16 @@ export default function MaterialManagement() {
 
   // تحديث ترتيب واحد على الخادم
   const updateOrderOnServer = async (voiceId: number, newOrder: number) => {
-    const response = await fetch(`${API_URL}?id=${voiceId}`, {
+    const timestamp = Date.now();
+    const response = await fetch(`${API_URL}?id=${voiceId}&refresh=${timestamp}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       },
+      cache: 'no-store',
       body: JSON.stringify({
         order_show: newOrder
       }),
@@ -380,9 +393,16 @@ export default function MaterialManagement() {
 
   const handleAdd = async (formData: FormData) => {
     try {
-      const response = await fetch(API_URL, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
         method: 'POST',
         body: formData,
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
 
       if (!response.ok) throw new Error('فشل في إضافة الصوت');
@@ -419,11 +439,16 @@ export default function MaterialManagement() {
 
       console.log('Sending update with data:', updateData);
 
-      const response = await fetch(`${API_URL}?id=${editingVoice.id}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${editingVoice.id}&refresh=${timestamp}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
+        cache: 'no-store',
         body: JSON.stringify(updateData),
       });
 
@@ -491,8 +516,15 @@ export default function MaterialManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا الصوت؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${id}&refresh=${timestamp}`, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف الصوت');

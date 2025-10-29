@@ -80,9 +80,16 @@ export default function AdvManagement() {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(UPLOAD_URL, {
+    const timestamp = Date.now();
+    const response = await fetch(`${UPLOAD_URL}?refresh=${timestamp}`, {
       method: 'POST',
       body: formData,
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
     if (!response.ok) {
@@ -135,8 +142,15 @@ export default function AdvManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${id}&refresh=${timestamp}`, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف العنصر');
@@ -159,12 +173,19 @@ export default function AdvManagement() {
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const url = editingItem.id ? `${API_URL}?id=${editingItem.id}` : API_URL;
-
-      const response = await fetch(url, {
+      
+      const timestamp = Date.now();
+      const finalUrl = `${url}${url.includes('?') ? '&' : '?'}refresh=${timestamp}`;
+      
+      const response = await fetch(finalUrl, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
+        cache: 'no-store',
         body: JSON.stringify(editingItem),
       });
 

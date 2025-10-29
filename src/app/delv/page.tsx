@@ -33,7 +33,15 @@ export default function TdelvManagement() {
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setAllData(result);
@@ -68,8 +76,15 @@ export default function TdelvManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?id=${id}&refresh=${timestamp}`, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف العنصر');
@@ -89,11 +104,17 @@ export default function TdelvManagement() {
       const method = editingItem.id ? 'PUT' : 'POST';
       const url = editingItem.id ? `${API_URL}?id=${editingItem.id}` : API_URL;
 
-      const response = await fetch(url, {
+      const timestamp = Date.now();
+      const urlWithTimestamp = `${url}${url.includes('?') ? '&' : '?'}refresh=${timestamp}`;
+      const response = await fetch(urlWithTimestamp, {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
+        cache: 'no-store',
         body: JSON.stringify(editingItem),
       });
 
