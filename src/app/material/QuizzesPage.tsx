@@ -38,6 +38,11 @@ type QuizItem = {
   importance: number;
 };
 
+type CategoryItem = {
+  id: number;
+  category_name: string;
+};
+
 interface QuizzesPageProps {
   onNavigate: (page: 'materials' | 'units') => void;
   initialMaterialId?: number;
@@ -48,7 +53,6 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
- // const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(initialMaterialId || null);
   const [selectedUnitNum, setSelectedUnitNum] = useState<number | null>(initialUnitNum || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,7 +63,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
   const [selectedMaterial, setSelectedMaterial] = useState<number | 'all' | null>(initialMaterialId || 'all');
   const [years, setYears] = useState<number[]>([]);
-  const [categories, setCategories] = useState<{id: number, category_name: string}[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
   // حالة جديدة للسؤال الجديد
   const [newQuiz, setNewQuiz] = useState<Partial<QuizItem>>({
@@ -123,7 +127,18 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const fetchMaterials = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -132,7 +147,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       const result = await response.json();
       
       if (!Array.isArray(result.data)) {
-        throw new Error('تنسيق البيانات غير صحيح: لم يتم استلال مصفوفة');
+        throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
       }
 
       setMaterials(result.data);
@@ -153,7 +168,19 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(CATEGORY_API_URL);
+      const timestamp = Date.now();
+      const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -165,7 +192,18 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const fetchQuizzes = async (materialId: number, unitNum: number) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${QUIZ_API_URL}?material_id=${materialId}&unit_num=${unitNum}`);
+      const timestamp = Date.now();
+      const url = `${QUIZ_API_URL}?material_id=${materialId}&unit_num=${unitNum}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -180,7 +218,6 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       }
 
       setQuizzes(result);
-     // setSelectedMaterialId(materialId);
       setSelectedUnitNum(unitNum);
       
       // تحديث حالة السؤال الجديد
@@ -202,8 +239,18 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const fetchAllQuizzes = async (materialId: number) => {
     try {
       setIsLoading(true);
-      // نستخدم unit_num = 0 لجلب كل الأسئلة (قد تحتاج لتعديل API الخاص بك)
-      const response = await fetch(`${QUIZ_API_URL}?material_id=${materialId}`);
+      const timestamp = Date.now();
+      const url = `${QUIZ_API_URL}?material_id=${materialId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -217,7 +264,6 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       }
 
       setQuizzes(result);
-     // setSelectedMaterialId(materialId);
       setSelectedUnitNum(null);
       
     } catch (err) {
@@ -230,43 +276,43 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   };
 
   const applyFilters = () => {
-  let result = quizzes;
-  
-  // فلترة حسب السنة
-  if (selectedYear !== 'all') {
-    const material = materials.find(m => m.id === selectedMaterial);
-    if (material && material.year1 !== selectedYear) {
-      result = [];
+    let result = quizzes;
+    
+    // فلترة حسب السنة
+    if (selectedYear !== 'all') {
+      const material = materials.find(m => m.id === selectedMaterial);
+      if (material && material.year1 !== selectedYear) {
+        result = [];
+      }
     }
-  }
-  
-  // فلترة حسب الفئة
-  if (selectedCategory !== 'all') {
-    const material = materials.find(m => m.id === selectedMaterial);
-    if (material && material.category_id !== selectedCategory) {
-      result = [];
+    
+    // فلترة حسب الفئة
+    if (selectedCategory !== 'all') {
+      const material = materials.find(m => m.id === selectedMaterial);
+      if (material && material.category_id !== selectedCategory) {
+        result = [];
+      }
     }
-  }
-  
-  // البحث حسب رمز السؤال
-  if (searchTerm.trim() !== '') {
-    const searchText = searchTerm.toLowerCase();
-    result = result.filter(quiz => {
-      // تحويل جميع القيم إلى نص بأمان
-      const qCode = String(quiz.q_code || '');
-      const codeQNumber = String(quiz.code_q_number || '');
-      const combinedCode = qCode && codeQNumber ? `${qCode}/${codeQNumber}` : qCode || codeQNumber;
-      
-      return (
-        combinedCode.toLowerCase().includes(searchText) ||
-        qCode.toLowerCase().includes(searchText) ||
-        codeQNumber.toLowerCase().includes(searchText)
-      );
-    });
-  }
-  
-  setFilteredQuizzes(result);
-};
+    
+    // البحث حسب رمز السؤال
+    if (searchTerm.trim() !== '') {
+      const searchText = searchTerm.toLowerCase();
+      result = result.filter(quiz => {
+        // تحويل جميع القيم إلى نص بأمان
+        const qCode = String(quiz.q_code || '');
+        const codeQNumber = String(quiz.code_q_number || '');
+        const combinedCode = qCode && codeQNumber ? `${qCode}/${codeQNumber}` : qCode || codeQNumber;
+        
+        return (
+          combinedCode.toLowerCase().includes(searchText) ||
+          qCode.toLowerCase().includes(searchText) ||
+          codeQNumber.toLowerCase().includes(searchText)
+        );
+      });
+    }
+    
+    setFilteredQuizzes(result);
+  };
 
   // دالة لدمج رمز السؤال للعرض
   const getCombinedCode = (quiz: QuizItem) => {
@@ -292,11 +338,18 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       setShowConfirm(false);
       try {
         setIsLoading(true);
-        const response = await fetch(`${QUIZ_API_URL}?id=${id}`, {
+        const timestamp = Date.now();
+        const url = `${QUIZ_API_URL}?id=${id}&refresh=${timestamp}`;
+        
+        const response = await fetch(url, {
           method: 'DELETE',
+          cache: 'no-store',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         });
 
@@ -330,188 +383,200 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
     showConfirmation('هل أنت متأكد من حذف هذا السؤال؟', onDelete);
   };
 
- const handleQuizSave = async (quiz: QuizItem) => {
-  try {
-    const method = quiz.id ? 'PUT' : 'POST';
-    const url = quiz.id ? `${QUIZ_API_URL}?id=${quiz.id}` : QUIZ_API_URL;
-
-    const payload = {
-      material_id: quiz.material_id,
-      unit_num: quiz.unit_num,
-      page_num: quiz.page_num,
-      parent: quiz.parent || '',
-      q_txt: quiz.q_txt.trim(),
-      a1: quiz.a1 || '',
-      a2: quiz.a2 || '',
-      a3: quiz.a3 || '',
-      a4: quiz.a4 || '',
-      answer: quiz.answer,
-      note: quiz.note || '',
-      q_code: quiz.q_code || '',
-      code_q_number: quiz.code_q_number || '',
-      timer: quiz.timer || 0,
-      importance: quiz.importance || 1
-    };
-
-    console.log("Payload sent:", payload);
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    console.log("Response status:", response.status, response.statusText);
-
-    // الحصول على النص الخام أولاً
-    const responseText = await response.text();
-    console.log("Raw response:", responseText);
-
-    if (!response.ok) {
-      throw new Error(`خطأ في السيرفر: ${response.status} - ${response.statusText}`);
-    }
-
-    if (!responseText.trim()) {
-      throw new Error('استجابة فارغة من السيرفر');
-    }
-
-    // محاولة تحليل JSON
-    let result;
+  const handleQuizSave = async (quiz: QuizItem) => {
     try {
-      result = JSON.parse(responseText);
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError);
-      throw new Error('تنسيق البيانات غير صحيح من السيرفر');
-    }
+      const method = quiz.id ? 'PUT' : 'POST';
+      const timestamp = Date.now();
+      const url = quiz.id ? `${QUIZ_API_URL}?id=${quiz.id}&refresh=${timestamp}` : `${QUIZ_API_URL}?refresh=${timestamp}`;
 
-    if (!result.success) {
-      throw new Error(result.error || result.message || 'فشل في حفظ السؤال');
-    }
+      const payload = {
+        material_id: quiz.material_id,
+        unit_num: quiz.unit_num,
+        page_num: quiz.page_num,
+        parent: quiz.parent || '',
+        q_txt: quiz.q_txt.trim(),
+        a1: quiz.a1 || '',
+        a2: quiz.a2 || '',
+        a3: quiz.a3 || '',
+        a4: quiz.a4 || '',
+        answer: quiz.answer,
+        note: quiz.note || '',
+        q_code: quiz.q_code || '',
+        code_q_number: quiz.code_q_number || '',
+        timer: quiz.timer || 0,
+        importance: quiz.importance || 1
+      };
 
-    setEditingId(null);
-    
-    // إعادة تحميل البيانات
-    if (selectedMaterial !== 'all' && selectedMaterial !== null) {
-      if (showAllQuizzes) {
-        await fetchAllQuizzes(selectedMaterial);
-      } else if (selectedUnitNum) {
-        await fetchQuizzes(selectedMaterial, selectedUnitNum);
-      }
-    }
-    
-    setMessage('تم حفظ السؤال بنجاح');
-    setIsError(false);
-    
-  } catch (err) {
-    console.error('Error saving quiz:', err);
-    setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
-    setIsError(true);
-  }
-};
+      console.log("Payload sent:", payload);
 
-  const handleQuizAdd = async () => {
-  if (!newQuiz.q_txt?.trim()) {
-    setMessage('يرجى إدخال نص السؤال');
-    setIsError(true);
-    return;
-  }
+      const response = await fetch(url, {
+        method,
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(payload),
+      });
 
-  if (!newQuiz.material_id || !newQuiz.unit_num) {
-    setMessage('يجب اختيار مادة ووحدة أولاً');
-    setIsError(true);
-    return;
-  }
+      console.log("Response status:", response.status, response.statusText);
 
-  try {
-    const payload = {
-      material_id: newQuiz.material_id,
-      unit_num: newQuiz.unit_num,
-      page_num: newQuiz.page_num || 1,
-      parent: newQuiz.parent || '',
-      q_txt: newQuiz.q_txt.trim(),
-      a1: newQuiz.a1 || '',
-      a2: newQuiz.a2 || '',
-      a3: newQuiz.a3 || '',
-      a4: newQuiz.a4 || '',
-      answer: newQuiz.answer || 1,
-      note: newQuiz.note || '',
-      q_code: newQuiz.q_code || '',
-      code_q_number: newQuiz.code_q_number || '',
-      timer: newQuiz.timer || 0,
-      importance: newQuiz.importance || 1
-    };
-
-    console.log("Add quiz payload:", payload);
-
-    const response = await fetch(QUIZ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // نفس التحسينات هنا
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server response error:', errorText);
-      throw new Error(`خطأ في السيرفر: ${response.status} - ${response.statusText}`);
-    }
-
-    let result;
-    try {
+      // الحصول على النص الخام أولاً
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
-      if (responseText.trim() === '') {
+      console.log("Raw response:", responseText);
+
+      if (!response.ok) {
+        throw new Error(`خطأ في السيرفر: ${response.status} - ${response.statusText}`);
+      }
+
+      if (!responseText.trim()) {
         throw new Error('استجابة فارغة من السيرفر');
       }
-      
-      result = JSON.parse(responseText);
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError);
-      throw new Error('تنسيق البيانات غير صحيح من السيرفر');
-    }
 
-    if (!result.success) {
-      throw new Error(result.message || result.error || 'فشل في إضافة السؤال');
-    }
-
-    // إعادة تعيين حالة السؤال الجديد
-    setNewQuiz({
-      material_id: selectedMaterial && selectedMaterial !== 'all' ? selectedMaterial : 0,
-      unit_num: selectedUnitNum || 1,
-      page_num: 1,
-      parent: '',
-      q_txt: '',
-      a1: '',
-      a2: '',
-      a3: '',
-      a4: '',
-      answer: 1,
-      note: '',
-      q_code: '',
-      code_q_number: '',
-      timer: 0,
-      importance: 1
-    });
-
-    if (selectedMaterial !== 'all' && selectedMaterial !== null) {
-      if (showAllQuizzes) {
-        await fetchAllQuizzes(selectedMaterial);
-      } else if (selectedUnitNum) {
-        await fetchQuizzes(selectedMaterial, selectedUnitNum);
+      // محاولة تحليل JSON
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('تنسيق البيانات غير صحيح من السيرفر');
       }
+
+      if (!result.success) {
+        throw new Error(result.error || result.message || 'فشل في حفظ السؤال');
+      }
+
+      setEditingId(null);
+      
+      // إعادة تحميل البيانات
+      if (selectedMaterial !== 'all' && selectedMaterial !== null) {
+        if (showAllQuizzes) {
+          await fetchAllQuizzes(selectedMaterial);
+        } else if (selectedUnitNum) {
+          await fetchQuizzes(selectedMaterial, selectedUnitNum);
+        }
+      }
+      
+      setMessage('تم حفظ السؤال بنجاح');
+      setIsError(false);
+      
+    } catch (err) {
+      console.error('Error saving quiz:', err);
+      setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
+      setIsError(true);
     }
-    
-  } catch (err) {
-    console.error('Error adding quiz:', err);
-    setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
-    setIsError(true);
-  }
-};
+  };
+
+  const handleQuizAdd = async () => {
+    if (!newQuiz.q_txt?.trim()) {
+      setMessage('يرجى إدخال نص السؤال');
+      setIsError(true);
+      return;
+    }
+
+    if (!newQuiz.material_id || !newQuiz.unit_num) {
+      setMessage('يجب اختيار مادة ووحدة أولاً');
+      setIsError(true);
+      return;
+    }
+
+    try {
+      const timestamp = Date.now();
+      const url = `${QUIZ_API_URL}?refresh=${timestamp}`;
+
+      const payload = {
+        material_id: newQuiz.material_id,
+        unit_num: newQuiz.unit_num,
+        page_num: newQuiz.page_num || 1,
+        parent: newQuiz.parent || '',
+        q_txt: newQuiz.q_txt.trim(),
+        a1: newQuiz.a1 || '',
+        a2: newQuiz.a2 || '',
+        a3: newQuiz.a3 || '',
+        a4: newQuiz.a4 || '',
+        answer: newQuiz.answer || 1,
+        note: newQuiz.note || '',
+        q_code: newQuiz.q_code || '',
+        code_q_number: newQuiz.code_q_number || '',
+        timer: newQuiz.timer || 0,
+        importance: newQuiz.importance || 1
+      };
+
+      console.log("Add quiz payload:", payload);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(payload),
+      });
+
+      // نفس التحسينات هنا
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response error:', errorText);
+        throw new Error(`خطأ في السيرفر: ${response.status} - ${response.statusText}`);
+      }
+
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+        
+        if (responseText.trim() === '') {
+          throw new Error('استجابة فارغة من السيرفر');
+        }
+        
+        result = JSON.parse(responseText);
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('تنسيق البيانات غير صحيح من السيرفر');
+      }
+
+      if (!result.success) {
+        throw new Error(result.message || result.error || 'فشل في إضافة السؤال');
+      }
+
+      // إعادة تعيين حالة السؤال الجديد
+      setNewQuiz({
+        material_id: selectedMaterial && selectedMaterial !== 'all' ? selectedMaterial : 0,
+        unit_num: selectedUnitNum || 1,
+        page_num: 1,
+        parent: '',
+        q_txt: '',
+        a1: '',
+        a2: '',
+        a3: '',
+        a4: '',
+        answer: 1,
+        note: '',
+        q_code: '',
+        code_q_number: '',
+        timer: 0,
+        importance: 1
+      });
+
+      if (selectedMaterial !== 'all' && selectedMaterial !== null) {
+        if (showAllQuizzes) {
+          await fetchAllQuizzes(selectedMaterial);
+        } else if (selectedUnitNum) {
+          await fetchQuizzes(selectedMaterial, selectedUnitNum);
+        }
+      }
+      
+    } catch (err) {
+      console.error('Error adding quiz:', err);
+      setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
+      setIsError(true);
+    }
+  };
 
   const handleInputChange = (id: number, field: string, value: string | number) => {
     setQuizzes(prevQuizzes => 

@@ -32,6 +32,11 @@ type UnitItem = {
   material_name?: string;
 };
 
+type CategoryItem = {
+  id: number;
+  category_name: string;
+};
+
 // تعريف نوع للمعاملات
 interface QuizNavigationParams {
   materialId: number;
@@ -57,7 +62,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
   const [selectedMaterial, setSelectedMaterial] = useState<number | 'all' | null>(initialMaterialId || 'all');
   const [years, setYears] = useState<number[]>([]);
-  const [categories, setCategories] = useState<{id: number, category_name: string}[]>([]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
   // حالة جديدة للوحدة الجديدة
   const [newUnit, setNewUnit] = useState<Partial<UnitItem>>({
@@ -103,37 +108,21 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     applyFilters();
   }, [units, selectedYear, selectedCategory, selectedMaterial]);
 
-  // دالة مساعدة لإضافة timestamp وإعدادات منع الكاش
-  const createFetchOptions = (method: string = 'GET', body?: any) => {
-    const timestamp = Date.now();
-    const options: any = {
-      method,
-      cache: 'no-store' as RequestCache,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      },
-      next: {
-        tags: ['units-data']
-      }
-    };
-
-    if (body) {
-      options.headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(body);
-    }
-
-    return { timestamp, options };
-  };
-
   const fetchMaterials = async () => {
     try {
       setIsLoading(true);
-      const { timestamp, options } = createFetchOptions();
+      const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
       
-      const response = await fetch(url, options);
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -142,7 +131,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       const result = await response.json();
       
       if (!Array.isArray(result.data)) {
-        throw new Error('تنسيق البيانات غير صحيح: لم يتم استلال مصفوفة');
+        throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
       }
 
       setMaterials(result.data);
@@ -163,10 +152,19 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
 
   const fetchCategories = async () => {
     try {
-      const { timestamp, options } = createFetchOptions();
+      const timestamp = Date.now();
       const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
       
-      const response = await fetch(url, options);
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -178,10 +176,19 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const fetchUnits = async (materialId: number) => {
     try {
       setIsLoading(true);
-      const { timestamp, options } = createFetchOptions();
+      const timestamp = Date.now();
       const url = `${UNITS_API_URL}?material_id=${materialId}&refresh=${timestamp}`;
       
-      const response = await fetch(url, options);
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب الوحدات');
       const result = await response.json();
       
@@ -241,10 +248,20 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
       setShowConfirm(false);
       try {
         setIsLoading(true);
-        const { timestamp, options } = createFetchOptions('DELETE');
+        const timestamp = Date.now();
         const url = `${UNITS_API_URL}?id=${id}&refresh=${timestamp}`;
         
-        const response = await fetch(url, options);
+        const response = await fetch(url, {
+          method: 'DELETE',
+          cache: 'no-store',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
 
         const data = await response.json();
         
@@ -275,7 +292,10 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   const handleUnitSave = async (unit: UnitItem) => {
     try {
       const method = unit.id ? 'PUT' : 'POST';
-      const { timestamp, options } = createFetchOptions(method, {
+      const timestamp = Date.now();
+      const url = unit.id ? `${UNITS_API_URL}?id=${unit.id}&refresh=${timestamp}` : `${UNITS_API_URL}?refresh=${timestamp}`;
+
+      const payload = {
         material_id: unit.material_id,
         unit_name: unit.unit_name.trim(),
         unit_num: unit.unit_num,
@@ -284,15 +304,21 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
         url1: unit.url1 || '',
         english: unit.english || 0,
         show1: unit.show1 
+      };
+
+      console.log("Payload sent:", payload);
+
+      const response = await fetch(url, {
+        method,
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(payload),
       });
-
-      const url = unit.id 
-        ? `${UNITS_API_URL}?id=${unit.id}&refresh=${timestamp}` 
-        : `${UNITS_API_URL}?refresh=${timestamp}`;
-
-      console.log("Payload sent:", options.body);
-
-      const response = await fetch(url, options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -332,7 +358,10 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     }
 
     try {
-      const { timestamp, options } = createFetchOptions('POST', {
+      const timestamp = Date.now();
+      const url = `${UNITS_API_URL}?refresh=${timestamp}`;
+
+      const payload = {
         material_id: newUnit.material_id,
         unit_name: newUnit.unit_name.trim(),
         unit_num: newUnit.unit_num || 1,
@@ -341,11 +370,19 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
         url1: newUnit.url1 || '',
         english: newUnit.english || 0,
         show1: newUnit.show1 
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(payload),
       });
-
-      const url = `${UNITS_API_URL}?refresh=${timestamp}`;
-
-      const response = await fetch(url, options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -409,7 +446,7 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
     setShowConfirm(false);
   };
 
-  
+
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
