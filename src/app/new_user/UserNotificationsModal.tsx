@@ -39,7 +39,7 @@ export default function UserNotificationsModal({
     note1: ''
   });
 
-  const API_URL = '/api/proxy/notifications.php';
+  const API_URL = '/api/proxy/cp_notifications.php';
 
   const fetchNotifications = async () => {
     try {
