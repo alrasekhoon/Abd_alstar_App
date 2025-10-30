@@ -686,32 +686,32 @@ export default function BillManagement() {
                             </div>
                             
                             <div className="md:col-span-2">
-                              <h4 className="font-medium text-red-500 mb-2">تفاصيل الفاتورة</h4>
-                              {bill.details && bill.details.length > 0 ? (
-                                <div className="overflow-x-auto">
-                                  <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-100">
-                                      <tr>
-                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
-                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
-                                        
-                                      </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                      {bill.details.map((detail, index) => (
-                                        <tr key={index}>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_name}</td>
-                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_price}</td>
-                                
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              ) : (
-                                <p className="text-gray-500">لا توجد تفاصيل متاحة</p>
-                              )}
-                            </div>
+  <h4 className="font-medium text-red-500 mb-2">تفاصيل الفاتورة</h4>
+  {bill.details && bill.details.length > 0 ? (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {bill.details.map((detail, index) => (
+            <tr key={index}>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">{index + 1}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_name}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_price}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <p className="text-gray-500">لا توجد تفاصيل متاحة</p>
+  )}
+</div>
                           </div>
                         </div>
                       </td>
