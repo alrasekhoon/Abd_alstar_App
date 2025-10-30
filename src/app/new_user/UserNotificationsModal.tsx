@@ -1,4 +1,3 @@
-//UserNotificationsModal
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -46,12 +45,17 @@ export default function UserNotificationsModal({
       setIsLoading(true);
       setError('');
       
-      const response = await fetch(`${API_URL}?user_id=${userId}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?user_id=${userId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
+        cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache'
-        },
-        cache: 'no-store'
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
 
       if (!response.ok) {
@@ -76,10 +80,17 @@ export default function UserNotificationsModal({
     try {
       setError('');
       
-      const response = await fetch(API_URL, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify({
           ...newNotification,
@@ -107,10 +118,17 @@ export default function UserNotificationsModal({
     try {
       setError('');
       
-      const response = await fetch(`${API_URL}?id=${editingNotification.id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${editingNotification.id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'PUT',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify({
           title: editingNotification.title,
@@ -139,8 +157,17 @@ export default function UserNotificationsModal({
     try {
       setError('');
       
-      const response = await fetch(`${API_URL}?id=${notificationId}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${notificationId}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
 
       const result = await response.json();
