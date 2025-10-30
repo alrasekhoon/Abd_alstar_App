@@ -56,8 +56,18 @@ export default function NotificationManagement() {
       setIsLoading(true);
       setError('');
       
-      // جلب الإشعارات
-      const response = await fetch(`${API_URL}?action=get_notifications`);
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=get_notifications&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`فشل في جلب الإشعارات: ${response.status}`);
@@ -86,7 +96,19 @@ export default function NotificationManagement() {
 
   const fetchSubscriptions = async () => {
     try {
-      const response = await fetch(`${API_URL}?action=get_subscriptions`);
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=get_subscriptions&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('فشل في جلب الاشتراكات');
       }
@@ -102,8 +124,17 @@ export default function NotificationManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا الإشعار؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?action=delete_notification&id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=delete_notification&id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف الإشعار');
@@ -121,12 +152,17 @@ export default function NotificationManagement() {
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const action = editingItem.id ? 'update_notification' : 'add_notification';
-      const url = `${API_URL}?action=${action}${editingItem.id ? `&id=${editingItem.id}` : ''}`;
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=${action}${editingItem.id ? `&id=${editingItem.id}` : ''}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(editingItem),
       });
