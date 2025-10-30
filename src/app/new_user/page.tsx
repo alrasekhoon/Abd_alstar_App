@@ -5,6 +5,7 @@ import Image from 'next/image';
 import UserSubscriptionsModal from './UserSubscriptionsModal';
 
 import UserTransactionsModal from './UserTransactionsModal';
+import UserNotificationsModal from './UserNotificationsModal';
 
 
 
@@ -69,6 +70,12 @@ export default function UserManagement() {
   const API_URL = '/api/proxy/cp_news_new.php';
 
   const [subscriptionsModal, setSubscriptionsModal] = useState({
+  isOpen: false,
+  userId: 0,
+  userName: ''
+  });
+
+  const [notificationsModal, setNotificationsModal] = useState({
   isOpen: false,
   userId: 0,
   userName: ''
@@ -283,6 +290,9 @@ const [transactionsModal, setTransactionsModal] = useState({
     userId,
     userName
   });
+
+
+
 };
 
 //الدفعات المالية
@@ -293,6 +303,16 @@ const openTransactionsModal = (userId: number, userName: string) => {
     userName
   });
 };
+
+const openNotificationsModal = (userId: number, userName: string) => {
+  setNotificationsModal({
+    isOpen: true,
+    userId,
+    userName
+  });
+};
+
+
 
 
 
@@ -471,35 +491,42 @@ const openTransactionsModal = (userId: number, userName: string) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
   <div className="flex space-x-2">
+    {/* الأزرار الحالية */}
     <button
       onClick={() => openUserDetails(user)}
       className="text-blue-600 hover:text-blue-900 flex items-center"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-      </svg>
+      {/* أيقونة العرض */}
       عرض
     </button>
+    
+    {/* زر الإشعارات الجديد */}
+    <button
+      onClick={() => openNotificationsModal(user.id, user.name)}
+      className="text-orange-600 hover:text-orange-900 flex items-center"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+      </svg>
+      الإشعارات
+    </button>
+
+    {/* باقي الأزرار */}
     <button
       onClick={() => openSubscriptionsModal(user.id, user.name)}
       className="text-green-600 hover:text-green-900 flex items-center"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-      </svg>
+      {/* أيقونة الاشتراكات */}
       الاشتراكات
     </button>
+    
     <button
-  onClick={() => openTransactionsModal(user.id, user.name)}
-  className="text-purple-600 hover:text-purple-900 flex items-center"
->
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-  </svg>
-  الدفعات
-</button>
+      onClick={() => openTransactionsModal(user.id, user.name)}
+      className="text-purple-600 hover:text-purple-900 flex items-center"
+    >
+      {/* أيقونة الدفعات */}
+      الدفعات
+    </button>
   </div>
 </td>
                   </tr>
@@ -753,6 +780,14 @@ const openTransactionsModal = (userId: number, userName: string) => {
   onClose={() => setSubscriptionsModal(prev => ({ ...prev, isOpen: false }))}
   userId={subscriptionsModal.userId}
   userName={subscriptionsModal.userName}
+/>
+
+{/* مودال الإشعارات */}
+<UserNotificationsModal
+  isOpen={notificationsModal.isOpen}
+  onClose={() => setNotificationsModal(prev => ({ ...prev, isOpen: false }))}
+  userId={notificationsModal.userId}
+  userName={notificationsModal.userName}
 />
 
     </div>
