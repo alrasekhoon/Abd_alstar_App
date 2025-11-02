@@ -50,7 +50,19 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
       if (!response.ok) throw new Error('فشل في جلب الإعدادات');
       const result = await response.json();
       setSettings(result);
@@ -61,54 +73,61 @@ export default function SettingsPage() {
     }
   };
 
- const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  const target = e.target as HTMLInputElement;
-  const { name, value, type, checked } = target;
-  
-  let processedValue: string | number = value;
-  
-  if (type === 'checkbox') {
-    processedValue = checked ? 1 : 0;
-  } else if (type === 'number') {
-    processedValue = value === '' ? 0 : Number(value);
-  }
-  
-  setSettings(prev => ({
-    ...prev,
-    [name]: processedValue
-  }));
-};
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const target = e.target as HTMLInputElement;
+    const { name, value, type, checked } = target;
+    
+    let processedValue: string | number = value;
+    
+    if (type === 'checkbox') {
+      processedValue = checked ? 1 : 0;
+    } else if (type === 'number') {
+      processedValue = value === '' ? 0 : Number(value);
+    }
+    
+    setSettings(prev => ({
+      ...prev,
+      [name]: processedValue
+    }));
+  };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    setIsLoading(true);
-    
-    // تصحيح: تأكد من صحة البيانات قبل الإرسال
-    console.log('بيانات الإعدادات المرسلة:', settings);
-    
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(settings),
-    });
-    
-    const responseData = await response.json();
-    console.log('استجابة الخادم:', responseData);
-    
-    if (!response.ok) throw new Error('فشل في حفظ الإعدادات');
-    
-    setIsEditing(false);
-    fetchSettings(); // إعادة تحميل الإعدادات للتأكد من الحفظ
-  } catch (err) {
-    console.error('خطأ في الحفظ:', err);
-    setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحفظ');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      
+      // تصحيح: تأكد من صحة البيانات قبل الإرسال
+      console.log('بيانات الإعدادات المرسلة:', settings);
+      
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(settings),
+      });
+      
+      const responseData = await response.json();
+      console.log('استجابة الخادم:', responseData);
+      
+      if (!response.ok) throw new Error('فشل في حفظ الإعدادات');
+      
+      setIsEditing(false);
+      fetchSettings(); // إعادة تحميل الإعدادات للتأكد من الحفظ
+    } catch (err) {
+      console.error('خطأ في الحفظ:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحفظ');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
