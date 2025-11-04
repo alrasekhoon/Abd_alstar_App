@@ -42,8 +42,18 @@ export default function NewsManagement() {
       setIsLoading(true);
       setError('');
       
+      const timestamp = Date.now();
+      
       // جلب الأخبار
-      const newsResponse = await fetch(`${API_URL}?action=get_news`);
+      const newsResponse = await fetch(`${API_URL}?action=get_news&refresh=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!newsResponse.ok) {
         throw new Error(`فشل في جلب الأخبار: ${newsResponse.status}`);
@@ -53,7 +63,15 @@ export default function NewsManagement() {
       setNewsItems(newsData);
       
       // جلب الاشتراكات من جدول ashtrak
-      const subsResponse = await fetch(`${API_URL}?action=get_subscriptions`);
+      const subsResponse = await fetch(`${API_URL}?action=get_subscriptions&refresh=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!subsResponse.ok) {
         throw new Error(`فشل في جلب الاشتراكات: ${subsResponse.status}`);
@@ -74,8 +92,17 @@ export default function NewsManagement() {
     if (!confirm('هل أنت متأكد من حذف هذا الخبر؟')) return;
     
     try {
-      const response = await fetch(`${API_URL}?action=delete_news&id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=delete_news&id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) throw new Error('فشل في حذف الخبر');
@@ -93,12 +120,17 @@ export default function NewsManagement() {
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const action = editingItem.id ? 'update_news' : 'add_news';
-      const url = `${API_URL}?action=${action}${editingItem.id ? `&id=${editingItem.id}` : ''}`;
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=${action}${editingItem.id ? `&id=${editingItem.id}` : ''}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(editingItem),
       });
