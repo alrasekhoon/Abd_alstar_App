@@ -632,22 +632,23 @@ export default function BillManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{bill.total}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full 
-                          ${bill.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                            bill.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                            'bg-yellow-100 text-yellow-800'}`}
-                        value={bill.status}
-                        onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="pending">قيد الانتظار</option>
-                        <option value="processing">قيد المعالجة</option>
-                        <option value="completed">مكتملة</option>
-                        <option value="cancelled">ملغاة</option>
-                      </select>
-                    </td>
+                   <td className="px-6 py-4 whitespace-nowrap">
+  <select
+    className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full 
+      ${bill.status === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' : 
+        bill.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' : 
+        bill.status === 'processing' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
+        'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}
+    value={bill.status}
+    onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
+    onClick={(e) => e.stopPropagation()}
+  >
+    <option value="pending">قيد الانتظار</option>
+    <option value="processing">قيد المعالجة</option>
+    <option value="completed">مكتملة</option>
+    <option value="cancelled">ملغاة</option>
+  </select>
+</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         
