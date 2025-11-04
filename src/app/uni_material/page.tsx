@@ -70,7 +70,10 @@ export default function UniMaterialPage() {
       
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
-      setMaterials(result);
+      
+      // ترتيب البيانات حسب الأفضلية من الأصغر إلى الأكبر
+      const sortedMaterials = result.sort((a: UniMaterial, b: UniMaterial) => a.pro - b.pro);
+      setMaterials(sortedMaterials);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
@@ -134,7 +137,7 @@ export default function UniMaterialPage() {
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Cache-Control': 'no-cache, no-store, max-age-0, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
         },
@@ -164,7 +167,7 @@ export default function UniMaterialPage() {
         method: 'DELETE',
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Cache-Control': 'no-cache, no-store, max-age-0, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
         }
@@ -180,9 +183,12 @@ export default function UniMaterialPage() {
     }
   };
 
-  const filteredMaterials = materials.filter(material => {
-    return selectedYearFilter === 'all' || material.year1 === selectedYearFilter;
-  });
+  // تصفية وترتيب البيانات حسب الأفضلية من الأصغر إلى الأكبر
+  const filteredMaterials = materials
+    .filter(material => {
+      return selectedYearFilter === 'all' || material.year1 === selectedYearFilter;
+    })
+    .sort((a, b) => a.pro - b.pro);
 
   if (isLoading && materials.length === 0) return (
     <div className="flex items-center justify-center min-h-screen">
