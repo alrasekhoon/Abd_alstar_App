@@ -491,9 +491,9 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
       />
     </div>
 
-    {/* سعر المقرر */}
+    {/* سعر اسئلة تدريبية */}
     <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">المقرر:</label>
+      <label className="w-10 text-sm text-gray-700">اسئلة تدريبية:</label>
       <input
         type="text"
         className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -502,9 +502,9 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
       />
     </div>
 
-    {/* سعر الكويز */}
+    {/* سعر ملغى */}
     <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الكويز:</label>
+      <label className="w-10 text-sm text-gray-700">ملغى:</label>
       <input
         type="text"
         className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -681,7 +681,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">المقرر:</span>
+                          <span className="text-xs text-gray-600 w-16">اسئلة تدريبية:</span>
                           <input
                             type="text"
                             className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -690,7 +690,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">الكويز:</span>
+                          <span className="text-xs text-gray-600 w-16">ملغى:</span>
                           <input
                             type="text"
                             className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -714,10 +714,10 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           <span className="font-medium">الوحدة:</span> {item.unit_price}
                         </div>
                         <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">المقرر:</span> {item.quizall_price}
+                          <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
                         </div>
                         <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">الكويز:</span> {item.quiz_price}
+                          <span className="font-medium">ملغى:</span> {item.quiz_price}
                         </div>
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">الصوت:</span> {item.voice_price}
