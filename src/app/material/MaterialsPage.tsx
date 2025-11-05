@@ -716,11 +716,12 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         <div className="text-sm text-gray-500 mb-2">
                           <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
                         </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">ملغى:</span> {item.quiz_price}
-                        </div>
+                        
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">الصوت:</span> {item.voice_price}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          <span className="font-medium">ملغى:</span> {item.quiz_price}
                         </div>
                       </div>
                     )}
