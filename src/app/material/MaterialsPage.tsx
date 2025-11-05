@@ -457,7 +457,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
     {/* عدد الصفحات */}
     <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الصفحات:</label>
+      <label className="w-10 text-sm text-gray-700">الصفحات :</label>
       <input
         type="number"
         className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
