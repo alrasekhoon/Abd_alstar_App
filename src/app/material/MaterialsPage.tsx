@@ -14,12 +14,14 @@ type MaterialItem = {
   year1: number;
   unit_price: string;
   quizall_price: string;
+  quiz_price: string;
   voice_price: string;
   category_name?: string;
   // الحقول الجديدة
   page_count: number;
   active: number;
   mokarar_active: number;
+  quiz_active: number;
   voice_active: number;
 };
 
@@ -28,6 +30,7 @@ type CategoryItem = {
   category_name: string;
   // الحقول الجديدة للأسعار الافتراضية
   mokarar_price: string;
+  quiz_price: string;
   voice_price: string;
 };
 
@@ -57,11 +60,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     year1: 1,
     unit_price: '',
     quizall_price: '',
+    quiz_price: '',
     voice_price: '',
     // القيم الافتراضية للحقول الجديدة
     page_count: 0,
     active: 1,
     mokarar_active: 1,
+    quiz_active: 1,
     voice_active: 1
   });
 
@@ -93,11 +98,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     if (category) {
       return {
         quizall_price: category.mokarar_price || '',
+        quiz_price: category.quiz_price || '',
         voice_price: category.voice_price || ''
       };
     }
     return {
       quizall_price: '',
+      quiz_price: '',
       voice_price: ''
     };
   };
@@ -261,10 +268,12 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         year1: 1,
         unit_price: '',
         quizall_price: '',
+        quiz_price: '',
         voice_price: '',
         page_count: 0,
         active: 1,
         mokarar_active: 1,
+        quiz_active: 1,
         voice_active: 1
       });
       fetchData();
@@ -292,12 +301,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     setNewItem(prev => {
       const updatedItem = { ...prev, [field]: value };
       
-      // إذا تم تغيير الفئة، قم بتحديد الأسعار الافتراضية تلقائياً
+      // إذا تم تغيير الفئة، قم بتحديث الأسعار الافتراضية تلقائياً
       if (field === 'category_id' && value !== 0) {
         const defaultPrices = getDefaultPricesFromCategory(Number(value));
         return {
           ...updatedItem,
           quizall_price: defaultPrices.quizall_price,
+          quiz_price: defaultPrices.quiz_price,
           voice_price: defaultPrices.voice_price
         };
       }
@@ -457,7 +467,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
     {/* عدد الصفحات */}
     <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الصفحات :</label>
+      <label className="w-10 text-sm text-gray-700">الصفحات:</label>
       <input
         type="number"
         className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -489,6 +499,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
         value={newItem.quizall_price || ''}
         onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
+      />
+    </div>
+
+    {/* سعر ملغى */}
+    <div className="flex items-center gap-3">
+      <label className="w-10 text-sm text-gray-700">ملغى:</label>
+      <input
+        type="text"
+        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+        value={newItem.quiz_price || ''}
+        onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
       />
     </div>
 
@@ -524,6 +545,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         className="px-2 py-1 border border-gray-300 rounded text-sm"
                         value={newItem.mokarar_active || 1}
                         onChange={(e) => handleNewItemChange('mokarar_active', parseInt(e.target.value))}
+                      >
+                        <option value={1}>نعم</option>
+                        <option value={0}>لا</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600">كويز:</span>
+                      <select
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.quiz_active || 1}
+                        onChange={(e) => handleNewItemChange('quiz_active', parseInt(e.target.value))}
                       >
                         <option value={1}>نعم</option>
                         <option value={0}>لا</option>
@@ -658,6 +690,15 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           />
                         </div>
                         <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-600 w-16">ملغى:</span>
+                          <input
+                            type="text"
+                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                            value={item.quiz_price}
+                            onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-600 w-16">الصوت:</span>
                           <input
                             type="text"
@@ -675,8 +716,12 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         <div className="text-sm text-gray-500 mb-2">
                           <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
                         </div>
+                        
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">الصوت:</span> {item.voice_price}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          <span className="font-medium">ملغى:</span> {item.quiz_price}
                         </div>
                       </div>
                     )}
@@ -709,6 +754,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           </select>
                         </div>
                         <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-600 w-16">كويز:</span>
+                          <select
+                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                            value={item.quiz_active}
+                            onChange={(e) => handleInputChange(item.id!, 'quiz_active', parseInt(e.target.value))}
+                          >
+                            <option value={1}>نعم</option>
+                            <option value={0}>لا</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-600 w-16">صوت:</span>
                           <select
                             className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -727,6 +783,9 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         </div>
                         <div className="text-sm text-gray-500 mb-2">
                           <span className="font-medium">مقرر:</span> {item.mokarar_active ? 'نعم' : 'لا'}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          <span className="font-medium">كويز:</span> {item.quiz_active ? 'نعم' : 'لا'}
                         </div>
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">صوت:</span> {item.voice_active ? 'نعم' : 'لا'}
