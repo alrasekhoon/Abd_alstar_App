@@ -57,7 +57,7 @@ export default function UniMaterialPage() {
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -67,10 +67,10 @@ export default function UniMaterialPage() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
-      
+
       // ترتيب البيانات حسب الأفضلية من الأصغر إلى الأكبر
       const sortedMaterials = result.sort((a: UniMaterial, b: UniMaterial) => a.pro - b.pro);
       setMaterials(sortedMaterials);
@@ -126,9 +126,9 @@ export default function UniMaterialPage() {
     e.preventDefault();
     try {
       setIsLoading(true);
-      
+
       const timestamp = Date.now();
-      const url = editingMaterial 
+      const url = editingMaterial
         ? `${API_URL}?id=${editingMaterial.id}&refresh=${timestamp}`
         : `${API_URL}?refresh=${timestamp}`;
 
@@ -143,9 +143,9 @@ export default function UniMaterialPage() {
         },
         body: JSON.stringify(formData),
       });
-      
+
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
-      
+
       closeModal();
       fetchMaterials();
     } catch (err) {
@@ -162,7 +162,7 @@ export default function UniMaterialPage() {
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'DELETE',
         cache: 'no-store',
@@ -172,9 +172,9 @@ export default function UniMaterialPage() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في حذف البيانات');
-      
+
       fetchMaterials();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -204,7 +204,7 @@ export default function UniMaterialPage() {
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
         <p className="font-bold">خطأ</p>
         <p>{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="mt-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
         >
@@ -279,9 +279,8 @@ export default function UniMaterialPage() {
                     {material.c_code}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      material.sumary === 1 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${material.sumary === 1 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      }`}>
                       {material.sumary === 1 ? 'فصل 1' : 'فصل 2'}
                     </span>
                   </td>
@@ -291,20 +290,19 @@ export default function UniMaterialPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      material.year1 === 1 ? 'bg-blue-100 text-blue-800' :
-                      material.year1 === 2 ? 'bg-green-100 text-green-800' :
-                      material.year1 === 3 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-purple-100 text-purple-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${material.year1 === 1 ? 'bg-blue-100 text-blue-800' :
+                        material.year1 === 2 ? 'bg-green-100 text-green-800' :
+                          material.year1 === 3 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-purple-100 text-purple-800'
+                      }`}>
                       السنة {material.year1}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     {material.url1 ? (
-                      <a 
-                        href={material.url1} 
-                        target="_blank" 
+                      <a
+                        href={material.url1}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
                         title={material.url1}
@@ -372,7 +370,7 @@ export default function UniMaterialPage() {
               <h2 className="text-xl font-bold text-gray-800">
                 {editingMaterial ? 'تعديل المادة' : 'إضافة مادة جديدة'}
               </h2>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -381,7 +379,7 @@ export default function UniMaterialPage() {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -460,7 +458,7 @@ export default function UniMaterialPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">رابط المادة</label>
                 <input
-                  type="url"
+                  type="text"
                   name="url1"
                   value={formData.url1}
                   onChange={handleInputChange}

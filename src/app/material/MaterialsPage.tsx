@@ -14,12 +14,14 @@ type MaterialItem = {
   year1: number;
   unit_price: string;
   quizall_price: string;
+  quiz_price: string;
   voice_price: string;
   category_name?: string;
   // الحقول الجديدة
   page_count: number;
   active: number;
   mokarar_active: number;
+  quiz_active: number;
   voice_active: number;
 };
 
@@ -28,6 +30,7 @@ type CategoryItem = {
   category_name: string;
   // الحقول الجديدة للأسعار الافتراضية
   mokarar_price: string;
+  quiz_price: string;
   voice_price: string;
 };
 
@@ -57,11 +60,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     year1: 1,
     unit_price: '',
     quizall_price: '',
+    quiz_price: '',
     voice_price: '',
     // القيم الافتراضية للحقول الجديدة
     page_count: 0,
     active: 1,
     mokarar_active: 1,
+    quiz_active: 1,
     voice_active: 1
   });
 
@@ -75,15 +80,15 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
   useEffect(() => {
     let result = data;
-    
+
     if (selectedCategory !== 'all') {
       result = result.filter(item => item.category_id === selectedCategory);
     }
-    
+
     if (selectedYear !== 'all') {
       result = result.filter(item => item.year1 === selectedYear);
     }
-    
+
     setFilteredData(result);
   }, [selectedCategory, selectedYear, data]);
 
@@ -93,11 +98,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     if (category) {
       return {
         quizall_price: category.mokarar_price || '',
+        quiz_price: category.quiz_price || '',
         voice_price: category.voice_price || ''
       };
     }
     return {
       quizall_price: '',
+      quiz_price: '',
       voice_price: ''
     };
   };
@@ -105,10 +112,10 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      
+
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
@@ -121,13 +128,13 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
           tags: ['materials'] // إذا كنت ستستخدم revalidateTag لاحقاً
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!Array.isArray(result.data)) {
         throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
       }
@@ -146,7 +153,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     try {
       const timestamp = Date.now();
       const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
@@ -159,7 +166,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
           tags: ['categories'] // إذا كنت ستستخدم revalidateTag لاحقاً
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -171,11 +178,11 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
   const handleDelete = async (id: number) => {
     if (!confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
-    
+
     try {
       const timestamp = Date.now();
       const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'DELETE',
         cache: 'no-store',
@@ -185,9 +192,9 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في حذف المادة');
-      
+
       fetchData();
       alert('تم حذف المادة بنجاح');
     } catch (err) {
@@ -261,10 +268,12 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         year1: 1,
         unit_price: '',
         quizall_price: '',
+        quiz_price: '',
         voice_price: '',
         page_count: 0,
         active: 1,
         mokarar_active: 1,
+        quiz_active: 1,
         voice_active: 1
       });
       fetchData();
@@ -281,8 +290,8 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   };
 
   const handleInputChange = (id: number, field: string, value: string | number) => {
-    setData(prevData => 
-      prevData.map(item => 
+    setData(prevData =>
+      prevData.map(item =>
         item.id === id ? { ...item, [field]: value } : item
       )
     );
@@ -291,17 +300,18 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   const handleNewItemChange = (field: string, value: string | number) => {
     setNewItem(prev => {
       const updatedItem = { ...prev, [field]: value };
-      
-      // إذا تم تغيير الفئة، قم بتحديد الأسعار الافتراضية تلقائياً
+
+      // إذا تم تغيير الفئة، قم بتحديث الأسعار الافتراضية تلقائياً
       if (field === 'category_id' && value !== 0) {
         const defaultPrices = getDefaultPricesFromCategory(Number(value));
         return {
           ...updatedItem,
           quizall_price: defaultPrices.quizall_price,
+          quiz_price: defaultPrices.quiz_price,
           voice_price: defaultPrices.voice_price
         };
       }
-      
+
       return updatedItem;
     });
   };
@@ -324,7 +334,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
         <p className="font-bold">خطأ</p>
         <p>{error}</p>
-        <button 
+        <button
           onClick={() => setError('')}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
@@ -341,7 +351,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl font-bold text-gray-800">إدارة المواد</h1>
-            
+
             {/* قائمة تصفية الفئات */}
             <div className="relative">
               <select
@@ -398,112 +408,123 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
             <tbody className="bg-white divide-y divide-gray-200">
               {/* Add new row */}
               <tr className="bg-blue-50">
-                 <td className="px-4 py-4">
-    <div className="space-y-3">
-      {/* كود المادة */}
-      <div className="flex items-center gap-3">
-        <label className="w-10 text-sm text-gray-700">كود المادة:</label>
-        <input
-          type="text"
-          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-          value={newItem.material_code || ''}
-          onChange={(e) => handleNewItemChange('material_code', e.target.value)}
-        />
-      </div>
-
-      {/* اسم المادة */}
-      <div className="flex items-center gap-3">
-        <label className="w-10 text-sm text-gray-700">اسم المادة:</label>
-        <input
-          type="text"
-          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-          value={newItem.material_name || ''}
-          onChange={(e) => handleNewItemChange('material_name', e.target.value)}
-        />
-      </div>
-    </div>
-  </td>
                 <td className="px-4 py-4">
-  <div className="space-y-3">
-    {/* الفئة */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الفئة:</label>
-      <select
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.category_id || 0}
-        onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
-      >
-        <option value="0">اختر الفئة</option>
-        {categories.map(category => (
-          <option key={category.id} value={category.id}>{category.category_name}</option>
-        ))}
-      </select>
-    </div>
+                  <div className="space-y-3">
+                    {/* كود المادة */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">كود المادة:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.material_code || ''}
+                        onChange={(e) => handleNewItemChange('material_code', e.target.value)}
+                      />
+                    </div>
 
-    {/* السنة */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">السنة:</label>
-      <select
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.year1 || 1}
-        onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
-      >
-        <option value="1">السنة 1</option>
-        <option value="2">السنة 2</option>
-        <option value="3">السنة 3</option>
-        <option value="4">السنة 4</option>
-      </select>
-    </div>
+                    {/* اسم المادة */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">اسم المادة:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.material_name || ''}
+                        onChange={(e) => handleNewItemChange('material_name', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="space-y-3">
+                    {/* الفئة */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">الفئة:</label>
+                      <select
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.category_id || 0}
+                        onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
+                      >
+                        <option value="0">اختر الفئة</option>
+                        {categories.map(category => (
+                          <option key={category.id} value={category.id}>{category.category_name}</option>
+                        ))}
+                      </select>
+                    </div>
 
-    {/* عدد الصفحات */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الصفحات :</label>
-      <input
-        type="number"
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.page_count || 0}
-        onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
-      />
-    </div>
-  </div>
-</td>
+                    {/* السنة */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">السنة:</label>
+                      <select
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.year1 || 1}
+                        onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
+                      >
+                        <option value="1">السنة 1</option>
+                        <option value="2">السنة 2</option>
+                        <option value="3">السنة 3</option>
+                        <option value="4">السنة 4</option>
+                      </select>
+                    </div>
+
+                    {/* عدد الصفحات */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">الصفحات:</label>
+                      <input
+                        type="number"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.page_count || 0}
+                        onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+                </td>
 
                 <td className="px-4 py-4">
-  <div className="space-y-3">
-    {/* سعر المقرر */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">المقرر:</label>
-      <input
-        type="text"
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.unit_price || ''}
-        onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-      />
-    </div>
+                  <div className="space-y-3">
+                    {/* سعر المقرر */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">المقرر:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.unit_price || ''}
+                        onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
+                      />
+                    </div>
 
-    {/* سعر اسئلة تدريبية */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">اسئلة تدريبية:</label>
-      <input
-        type="text"
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.quizall_price || ''}
-        onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-      />
-    </div>
+                    {/* سعر اسئلة تدريبية */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">اسئلة تدريبية:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.quizall_price || ''}
+                        onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
+                      />
+                    </div>
 
-    {/* سعر الصوت */}
-    <div className="flex items-center gap-3">
-      <label className="w-10 text-sm text-gray-700">الصوت:</label>
-      <input
-        type="text"
-        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-        value={newItem.voice_price || ''}
-        onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-      />
-    </div>
-  </div>
-</td>
+                    {/* سعر ملغى */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">ملغى:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.quiz_price || ''}
+                        onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+                      />
+                    </div>
+
+                    {/* سعر الصوت */}
+                    <div className="flex items-center gap-3">
+                      <label className="w-10 text-sm text-gray-700">الصوت:</label>
+                      <input
+                        type="text"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.voice_price || ''}
+                        onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </td>
 
                 <td className="px-4 py-4">
                   <div className="space-y-2">
@@ -524,6 +545,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         className="px-2 py-1 border border-gray-300 rounded text-sm"
                         value={newItem.mokarar_active || 1}
                         onChange={(e) => handleNewItemChange('mokarar_active', parseInt(e.target.value))}
+                      >
+                        <option value={1}>نعم</option>
+                        <option value={0}>لا</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-600">كويز:</span>
+                      <select
+                        className="px-2 py-1 border border-gray-300 rounded text-sm"
+                        value={newItem.quiz_active || 1}
+                        onChange={(e) => handleNewItemChange('quiz_active', parseInt(e.target.value))}
                       >
                         <option value={1}>نعم</option>
                         <option value={0}>لا</option>
@@ -589,7 +621,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                       </div>
                     )}
                   </td>
-                  
+
                   {/* التصنيف والمعلومات الأساسية */}
                   <td className="px-4 py-4">
                     {editingId === item.id ? (
@@ -634,7 +666,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                       </div>
                     )}
                   </td>
-                  
+
                   {/* الأسعار */}
                   <td className="px-4 py-4">
                     {editingId === item.id ? (
@@ -658,6 +690,15 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           />
                         </div>
                         <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-600 w-16">ملغى:</span>
+                          <input
+                            type="text"
+                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                            value={item.quiz_price}
+                            onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-600 w-16">الصوت:</span>
                           <input
                             type="text"
@@ -675,13 +716,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         <div className="text-sm text-gray-500 mb-2">
                           <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
                         </div>
+
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">الصوت:</span> {item.voice_price}
+                        </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          <span className="font-medium">ملغى:</span> {item.quiz_price}
                         </div>
                       </div>
                     )}
                   </td>
-                  
+
                   {/* الحالة */}
                   <td className="px-4 py-4">
                     {editingId === item.id ? (
@@ -709,6 +754,17 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                           </select>
                         </div>
                         <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-600 w-16">كويز:</span>
+                          <select
+                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                            value={item.quiz_active}
+                            onChange={(e) => handleInputChange(item.id!, 'quiz_active', parseInt(e.target.value))}
+                          >
+                            <option value={1}>نعم</option>
+                            <option value={0}>لا</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-600 w-16">صوت:</span>
                           <select
                             className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -728,13 +784,16 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                         <div className="text-sm text-gray-500 mb-2">
                           <span className="font-medium">مقرر:</span> {item.mokarar_active ? 'نعم' : 'لا'}
                         </div>
+                        <div className="text-sm text-gray-500 mb-2">
+                          <span className="font-medium">كويز:</span> {item.quiz_active ? 'نعم' : 'لا'}
+                        </div>
                         <div className="text-sm text-gray-500">
                           <span className="font-medium">صوت:</span> {item.voice_active ? 'نعم' : 'لا'}
                         </div>
                       </div>
                     )}
                   </td>
-                  
+
                   {/* الإجراءات */}
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex flex-col space-y-2">
@@ -807,7 +866,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
             <h3 className="mt-4 text-lg font-medium text-gray-900">لا توجد مواد</h3>
             <p className="mt-1 text-sm text-gray-500">
               {selectedCategory === 'all' && selectedYear === 'all'
-                ? 'ابدأ بإضافة مادة جديدة من الصف الأول في الجدول' 
+                ? 'ابدأ بإضافة مادة جديدة من الصف الأول في الجدول'
                 : 'لا توجد مواد تطابق معايير التصفية المحددة'}
             </p>
           </div>

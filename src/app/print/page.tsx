@@ -17,6 +17,16 @@ type TprintItem = {
   voice_free: number;
 };
 
+type SubscriptionData = {
+  userid: string;
+  materialCode: string;
+  subscriptionTypes: {
+    mokarar: boolean;
+    quiz: boolean;
+    voice: boolean;
+  };
+};
+
 export default function TprintManagement() {
   const [data, setData] = useState<TprintItem[]>([]);
   const [filteredData, setFilteredData] = useState<TprintItem[]>([]);
@@ -28,6 +38,17 @@ export default function TprintManagement() {
     type: '',
     year: ''
   });
+  // حالة modal الاشتراكات المجانية
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
+    userid: '',
+    materialCode: '',
+    subscriptionTypes: {
+      mokarar: false,
+      quiz: false,
+      voice: false
+    }
+  });
 
   const API_URL = '/api/proxy/cp_tprint.php';
 
@@ -38,15 +59,15 @@ export default function TprintManagement() {
   useEffect(() => {
     const applyFilters = () => {
       let result = [...data];
-      
+
       if (filters.type) {
         result = result.filter(item => item.type1 === filters.type);
       }
-      
+
       if (filters.year) {
         result = result.filter(item => item.year1.toString() === filters.year);
       }
-      
+
       setFilteredData(result);
     };
 
@@ -58,7 +79,7 @@ export default function TprintManagement() {
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -68,13 +89,13 @@ export default function TprintManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!Array.isArray(result.data)) {
         throw new Error('تنسيق البيانات غير صحيح');
       }
@@ -105,11 +126,11 @@ export default function TprintManagement() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('هل أنت متأكد من الحذف؟')) return;
-    
+
     try {
       const timestamp = Date.now();
       const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'DELETE',
         cache: 'no-store',
@@ -151,7 +172,7 @@ export default function TprintManagement() {
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         // عرض رسالة الخطأ من السيرفر إن وجدت
         throw new Error(result.message || 'فشل في حفظ البيانات');
@@ -164,14 +185,14 @@ export default function TprintManagement() {
 
       setEditingItem(null);
       fetchData();
-      
+
       // عرض رسالة نجاح
       alert(result.message || 'تمت العملية بنجاح');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'حدث خطأ غير متوقع';
       setError(errorMessage);
       console.error('Error details:', err);
-      
+
       // عرض رسالة الخطأ للمستخدم
       alert(errorMessage);
     }
@@ -182,7 +203,7 @@ export default function TprintManagement() {
   };
 
   const openAddForm = () => {
-    setEditingItem({ 
+    setEditingItem({
       m_name: '',
       m_code: '',
       sy_price: '',
@@ -195,6 +216,99 @@ export default function TprintManagement() {
       quiz_free: 0,
       voice_free: 0
     });
+  };
+
+  // دوال معالجة الاشتراكات المجانية
+  const openSubscriptionModal = (materialCode: string) => {
+    setSubscriptionData({
+      userid: '',
+      materialCode: materialCode,
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+    setIsSubscriptionModalOpen(true);
+  };
+
+  const closeSubscriptionModal = () => {
+    setIsSubscriptionModalOpen(false);
+    setSubscriptionData({
+      userid: '',
+      materialCode: '',
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+  };
+
+  const handleSubscriptionSubmit = async () => {
+    // التحقق من البيانات
+    if (!subscriptionData.userid.trim()) {
+      alert('يرجى إدخال معرف المستخدم');
+      return;
+    }
+
+    const { mokarar, quiz, voice } = subscriptionData.subscriptionTypes;
+    if (!mokarar && !quiz && !voice) {
+      alert('يرجى اختيار نوع واحد على الأقل من الاشتراكات');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // البحث عن المادة بناءً على الكود للحصول على materialid
+      const material = data.find(item => item.m_code === subscriptionData.materialCode);
+      if (!material || !material.id) {
+        alert('لم يتم العثور على المادة');
+        return;
+      }
+
+      // إنشاء قائمة بأنواع الاشتراكات المحددة
+      const types: string[] = [];
+      if (mokarar) types.push('مقرر');
+      if (quiz) types.push('اختبار');
+      if (voice) types.push('صوت');
+
+      // إرسال طلب لكل نوع اشتراك
+      for (const type of types) {
+        const timestamp = Date.now();
+        const response = await fetch(`/api/proxy/add_subscription.php?refresh=${timestamp}`, {
+          method: 'POST',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({
+            userid: parseInt(subscriptionData.userid),
+            materialid: material.id,
+            type: type,
+            price: 0 // اشتراك مجاني
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `فشل في إضافة اشتراك ${type}`);
+        }
+      }
+
+      alert(`تم إضافة ${types.length} اشتراك مجاني بنجاح للمستخدم ${subscriptionData.userid}`);
+      closeSubscriptionModal();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء إضافة الاشتراك';
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) return (
@@ -215,7 +329,7 @@ export default function TprintManagement() {
     </div>
   );
 
- return (
+  return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-8">
@@ -248,7 +362,7 @@ export default function TprintManagement() {
                 <option value="مقرر ذهبي">مقرر ذهبي</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
               <select
@@ -264,7 +378,7 @@ export default function TprintManagement() {
                 <option value="4">السنة الرابعة</option>
               </select>
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={resetFilters}
@@ -289,7 +403,7 @@ export default function TprintManagement() {
                   </svg>
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -298,61 +412,61 @@ export default function TprintManagement() {
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.m_name}
-                      onChange={(e) => setEditingItem({...editingItem, m_name: e.target.value})}
+                      onChange={(e) => setEditingItem({ ...editingItem, m_name: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">الكود</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.m_code}
-                      onChange={(e) => setEditingItem({...editingItem, m_code: e.target.value})}
+                      onChange={(e) => setEditingItem({ ...editingItem, m_code: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">السعر المحلي ل.س</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.sy_price}
-                      onChange={(e) => setEditingItem({...editingItem, sy_price: e.target.value})}
+                      onChange={(e) => setEditingItem({ ...editingItem, sy_price: e.target.value })}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">السعر العالمي $</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.d_price}
-                      onChange={(e) => setEditingItem({...editingItem, d_price: e.target.value})}
+                      onChange={(e) => setEditingItem({ ...editingItem, d_price: e.target.value })}
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.type1}
-                      onChange={(e) => setEditingItem({...editingItem, type1: e.target.value})}
+                      onChange={(e) => setEditingItem({ ...editingItem, type1: e.target.value })}
                       required
                     >
                       <option value="كتاب جامعي">كتاب جامعي</option>
                       <option value="مقرر ذهبي">مقرر ذهبي</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.year1}
-                      onChange={(e) => setEditingItem({...editingItem, year1: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, year1: parseInt(e.target.value) })}
                       required
                     >
                       <option value="1">السنة الأولى</option>
@@ -361,25 +475,25 @@ export default function TprintManagement() {
                       <option value="4">السنة الرابعة</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">الفصل</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.semester}
-                      onChange={(e) => setEditingItem({...editingItem, semester: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, semester: parseInt(e.target.value) })}
                     >
                       <option value="1">الفصل الأول</option>
                       <option value="2">الفصل الثاني</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.active}
-                      onChange={(e) => setEditingItem({...editingItem, active: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, active: parseInt(e.target.value) })}
                     >
                       <option value="1">نشط</option>
                       <option value="0">غير نشط</option>
@@ -392,38 +506,38 @@ export default function TprintManagement() {
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.mokarar_free}
-                      onChange={(e) => setEditingItem({...editingItem, mokarar_free: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, mokarar_free: parseInt(e.target.value) })}
                     >
                       <option value="0">لا</option>
                       <option value="1">نعم</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">اختبار مجاني</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.quiz_free}
-                      onChange={(e) => setEditingItem({...editingItem, quiz_free: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, quiz_free: parseInt(e.target.value) })}
                     >
                       <option value="0">لا</option>
                       <option value="1">نعم</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">صوت مجاني</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.voice_free}
-                      onChange={(e) => setEditingItem({...editingItem, voice_free: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingItem({ ...editingItem, voice_free: parseInt(e.target.value) })}
                     >
                       <option value="0">لا</option>
                       <option value="1">نعم</option>
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -484,30 +598,26 @@ export default function TprintManagement() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${item.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
                       {item.active ? 'نشط' : 'غير نشط'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      item.mokarar_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${item.mokarar_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
                       {item.mokarar_free ? 'نعم' : 'لا'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      item.quiz_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${item.quiz_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
                       {item.quiz_free ? 'نعم' : 'لا'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      item.voice_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${item.voice_free ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
                       {item.voice_free ? 'نعم' : 'لا'}
                     </span>
                   </td>
@@ -531,6 +641,16 @@ export default function TprintManagement() {
                         </svg>
                         حذف
                       </button>
+                      <button
+                        onClick={() => openSubscriptionModal(item.m_code)}
+                        className="text-green-600 hover:text-green-900 flex items-center text-xs"
+                        title="إضافة اشتراك مجاني لطالب"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                        </svg>
+                        اشتراك مجاني
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -549,6 +669,119 @@ export default function TprintManagement() {
           </div>
         )}
       </div>
+
+      {/* Modal الاشتراكات المجانية */}
+      {isSubscriptionModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إضافة اشتراك مجاني</h2>
+              <button
+                onClick={closeSubscriptionModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* عرض كود المادة */}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">كود المادة:</p>
+                <p className="text-lg font-bold text-blue-800">{subscriptionData.materialCode}</p>
+              </div>
+
+              {/* إدخال معرف المستخدم */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">معرف المستخدم *</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={subscriptionData.userid}
+                  onChange={(e) => setSubscriptionData({ ...subscriptionData, userid: e.target.value })}
+                  placeholder="أدخل معرف المستخدم"
+                />
+              </div>
+
+              {/* اختيار أنواع الاشتراكات */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">أنواع الاشتراكات *</label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.mokarar}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          mokarar: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">مقرر</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.quiz}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          quiz: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">اختبار</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.voice}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          voice: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">صوت</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* أزرار الإجراءات */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeSubscriptionModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubscriptionSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {isLoading ? 'جاري الإضافة...' : 'إضافة اشتراك'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

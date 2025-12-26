@@ -30,15 +30,28 @@ type BillDetailItem = {
 type MaterialItem = {
   id: number;
   m_name: string;
+  m_code: string;
   mokarar_free: string;
   quiz_free: string;
   voice_free: string;
+};
+
+type SubscriptionData = {
+  userid: number;
+  materialid: number;
+  materialName: string;
+  subscriptionTypes: {
+    mokarar: boolean;
+    quiz: boolean;
+    voice: boolean;
+  };
 };
 
 export default function BillManagement() {
   const [bills, setBills] = useState<BillItem[]>([]);
   const [filteredBills, setFilteredBills] = useState<BillItem[]>([]);
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
+  const [realMaterials, setRealMaterials] = useState<any[]>([]); // مواد Tmaterial من cp_material.php
   const [editingBill, setEditingBill] = useState<BillItem | null>(null);
   const [newDetail, setNewDetail] = useState<BillDetailItem>({
     billId: '',
@@ -50,6 +63,18 @@ export default function BillManagement() {
   const [error, setError] = useState('');
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  // حالة modal الاشتراكات المجانية
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
+    userid: 0,
+    materialid: 0,
+    materialName: '',
+    subscriptionTypes: {
+      mokarar: false,
+      quiz: false,
+      voice: false
+    }
+  });
 
   const API_URL = '/api/proxy/cp_bills.php';
   const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
@@ -57,6 +82,7 @@ export default function BillManagement() {
   useEffect(() => {
     fetchData();
     fetchMaterials();
+    fetchRealMaterials(); // جلب مواد Tmaterial
   }, []);
 
   useEffect(() => {
@@ -72,7 +98,7 @@ export default function BillManagement() {
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -82,7 +108,7 @@ export default function BillManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setBills(result);
@@ -97,7 +123,7 @@ export default function BillManagement() {
     try {
       const timestamp = Date.now();
       const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -107,7 +133,7 @@ export default function BillManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب تفاصيل الفاتورة');
       const result = await response.json();
       return result.details || [];
@@ -121,7 +147,7 @@ export default function BillManagement() {
     try {
       const timestamp = Date.now();
       const url = `${MATERIALS_API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -131,7 +157,7 @@ export default function BillManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب المواد');
       const result = await response.json();
       setMaterials(result);
@@ -140,13 +166,46 @@ export default function BillManagement() {
     }
   };
 
+  const fetchRealMaterials = async () => {
+    try {
+      const timestamp = Date.now();
+      const url = `/api/proxy/cp_material.php?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب مواد Tmaterial');
+      const result = await response.json();
+
+      // التأكد من أن النتيجة array - البيانات في result.data
+      if (result.data && Array.isArray(result.data)) {
+        setRealMaterials(result.data);
+        console.log('Loaded real materials:', result.data.length);
+      } else {
+        console.error('cp_material.php did not return data array:', result);
+        setRealMaterials([]);
+      }
+    } catch (err) {
+      console.error('Error fetching real materials:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب مواد Tmaterial');
+      setRealMaterials([]);
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) return;
-    
+
     try {
       const timestamp = Date.now();
       const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'DELETE',
         cache: 'no-store',
@@ -156,9 +215,9 @@ export default function BillManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في حذف الفاتورة');
-      
+
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -202,7 +261,7 @@ export default function BillManagement() {
 
       const timestamp = Date.now();
       const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'PUT',
         cache: 'no-store',
@@ -228,26 +287,26 @@ export default function BillManagement() {
 
   const addDetail = () => {
     if (!editingBill || !newDetail.m_id || newDetail.m_price <= 0) return;
-    
+
     const material = materials.find(m => m.id === newDetail.m_id);
     const detailToAdd = {
       ...newDetail,
       billId: editingBill.billId,
       m_name: material?.m_name || ''
     };
-    
+
     setEditingBill(prev => ({
       ...prev!,
       details: [...(prev?.details || []), detailToAdd]
     }));
-    
+
     // Update total
     const newTotal = parseFloat(editingBill.total || '0') + newDetail.m_price;
     setEditingBill(prev => ({
       ...prev!,
       total: newTotal.toString()
     }));
-    
+
     // Reset new detail form
     setNewDetail({
       billId: editingBill.billId,
@@ -259,11 +318,11 @@ export default function BillManagement() {
 
   const removeDetail = (index: number) => {
     if (!editingBill || !editingBill.details) return;
-    
+
     const detailToRemove = editingBill.details[index];
     const newDetails = [...editingBill.details];
     newDetails.splice(index, 1);
-    
+
     setEditingBill(prev => ({
       ...prev!,
       details: newDetails,
@@ -292,16 +351,118 @@ export default function BillManagement() {
 
       // Fetch details from API
       const details = await fetchBillDetails(bill.billId);
-      
+
       // Update the bill with details
-      setBills(prev => prev.map(b => 
+      setBills(prev => prev.map(b =>
         b.id === billId ? { ...b, details } : b
       ));
-      
+
       // Expand the row
       setExpandedRows(prev => ({ ...prev, [billId]: true }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب التفاصيل');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // دوال معالجة الاشتراكات المجانية
+  const openSubscriptionModal = (materialid: number, materialName: string, userId: number) => {
+    setSubscriptionData({
+      userid: userId,
+      materialid: materialid,
+      materialName: materialName,
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+    setIsSubscriptionModalOpen(true);
+  };
+
+  const closeSubscriptionModal = () => {
+    setIsSubscriptionModalOpen(false);
+    setSubscriptionData({
+      userid: 0,
+      materialid: 0,
+      materialName: '',
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+  };
+
+  const handleSubscriptionSubmit = async () => {
+    // التحقق من البيانات
+    if (!subscriptionData.userid || subscriptionData.userid <= 0) {
+      alert('معرف المستخدم غير صحيح');
+      return;
+    }
+
+    const { mokarar, quiz, voice } = subscriptionData.subscriptionTypes;
+    if (!mokarar && !quiz && !voice) {
+      alert('يرجى اختيار نوع واحد على الأقل من الاشتراكات');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // التحقق من أن realMaterials هو array
+      if (!Array.isArray(realMaterials) || realMaterials.length === 0) {
+        alert('لم يتم تحميل بيانات المواد بعد. يرجى المحاولة مرة أخرى');
+        setIsLoading(false);
+        return;
+      }
+
+      // البحث عن معرف المادة من Tmaterial باستخدام اسم المادة
+      const realMaterial = realMaterials.find(m => m.material_name === subscriptionData.materialName);
+      if (!realMaterial || !realMaterial.id) {
+        alert('لم يتم العثور على المادة في Tmaterial');
+        return;
+      }
+
+      // إنشاء قائمة بأنواع الاشتراكات المحددة
+      const types: string[] = [];
+      if (mokarar) types.push('مقرر');
+      if (quiz) types.push('اختبار');
+      if (voice) types.push('صوت');
+
+      // إرسال طلب لكل نوع اشتراك
+      for (const type of types) {
+        const timestamp = Date.now();
+        const response = await fetch(`/api/proxy/add_subscribe.php?refresh=${timestamp}`, {
+          method: 'POST',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({
+            userid: subscriptionData.userid,
+            materialid: realMaterial.id,
+            type: type,
+            price: 0
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `فشل في إضافة اشتراك ${type}`);
+        }
+      }
+
+      alert(`تم إضافة ${types.length} اشتراك مجاني بنجاح للمستخدم ${subscriptionData.userid}`);
+      closeSubscriptionModal();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء إضافة الاشتراك';
+      setError(errorMessage);
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -358,7 +519,7 @@ export default function BillManagement() {
                 <h2 className="text-2xl font-bold text-gray-800">
                   تعديل الفاتورة
                 </h2>
-                <button 
+                <button
                   onClick={() => setEditingBill(null)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -367,7 +528,7 @@ export default function BillManagement() {
                   </svg>
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -379,13 +540,13 @@ export default function BillManagement() {
                       readOnly
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">حالة الفاتورة</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.status}
-                      onChange={(e) => setEditingBill({...editingBill, status: e.target.value})}
+                      onChange={(e) => setEditingBill({ ...editingBill, status: e.target.value })}
                       required
                     >
                       <option value="pending">قيد الانتظار</option>
@@ -394,24 +555,24 @@ export default function BillManagement() {
                       <option value="cancelled">ملغاة</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">معرف المستخدم</label>
                     <input
                       type="number"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.user_id}
-                      onChange={(e) => setEditingBill({...editingBill, user_id: parseInt(e.target.value)})}
+                      onChange={(e) => setEditingBill({ ...editingBill, user_id: parseInt(e.target.value) })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">نوع التوصيل</label>
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.delv_type}
-                      onChange={(e) => setEditingBill({...editingBill, delv_type: e.target.value})}
+                      onChange={(e) => setEditingBill({ ...editingBill, delv_type: e.target.value })}
                       required
                     >
                       <option value="">اختر نوع التوصيل</option>
@@ -420,40 +581,40 @@ export default function BillManagement() {
                       <option value="pickup">استلام من المتجر</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.delv_price}
-                      onChange={(e) => setEditingBill({...editingBill, delv_price: e.target.value})}
+                      onChange={(e) => setEditingBill({ ...editingBill, delv_price: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستلم</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.rec_name}
-                      onChange={(e) => setEditingBill({...editingBill, rec_name: e.target.value})}
+                      onChange={(e) => setEditingBill({ ...editingBill, rec_name: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">هاتف المستلم</label>
                     <input
                       type="text"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingBill.rec_phone}
-                      onChange={(e) => setEditingBill({...editingBill, rec_phone: e.target.value})}
+                      onChange={(e) => setEditingBill({ ...editingBill, rec_phone: e.target.value })}
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">المجموع</label>
                     <input
@@ -464,28 +625,28 @@ export default function BillManagement() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
                   <textarea
                     rows={2}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     value={editingBill.note}
-                    onChange={(e) => setEditingBill({...editingBill, note: e.target.value})}
+                    onChange={(e) => setEditingBill({ ...editingBill, note: e.target.value })}
                   />
                 </div>
-                
+
                 {/* Bill Details Section */}
                 <div className="border-t border-gray-200 pt-6">
                   <h3 className="text-lg font-medium text-gray-800 mb-4">تفاصيل الفاتورة</h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
                       <select
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={newDetail.m_id}
-                        onChange={(e) => setNewDetail({...newDetail, m_id: parseInt(e.target.value)})}
+                        onChange={(e) => setNewDetail({ ...newDetail, m_id: parseInt(e.target.value) })}
                       >
                         <option value="0">اختر مادة</option>
                         {materials.map(material => (
@@ -493,19 +654,19 @@ export default function BillManagement() {
                         ))}
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">السعر</label>
                       <input
                         type="number"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={newDetail.m_price}
-                        onChange={(e) => setNewDetail({...newDetail, m_price: parseFloat(e.target.value)})}
+                        onChange={(e) => setNewDetail({ ...newDetail, m_price: parseFloat(e.target.value) })}
                         min="0"
                         step="0.01"
                       />
                     </div>
-                    
+
                     <div className="flex items-end">
                       <button
                         type="button"
@@ -516,7 +677,7 @@ export default function BillManagement() {
                       </button>
                     </div>
                   </div>
-                  
+
                   {editingBill.details && editingBill.details.length > 0 && (
                     <div className="overflow-x-auto rounded-lg border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -555,7 +716,7 @@ export default function BillManagement() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -598,16 +759,16 @@ export default function BillManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredBills.map((bill) => (
                 <>
-                  <tr 
-                    key={bill.id} 
+                  <tr
+                    key={bill.id}
                     className="hover:bg-gray-50 transition cursor-pointer"
                     onClick={() => bill.id && toggleRow(bill.id)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        className={`h-5 w-5 transform transition-transform ${expandedRows[bill.id!] ? 'rotate-180' : ''}`} 
-                        viewBox="0 0 20 20" 
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-5 w-5 transform transition-transform ${expandedRows[bill.id!] ? 'rotate-180' : ''}`}
+                        viewBox="0 0 20 20"
                         fill="currentColor"
                       >
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -632,34 +793,34 @@ export default function BillManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{bill.total}</div>
                     </td>
-                   <td className="px-6 py-4 whitespace-nowrap">
-  <select
-    className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full 
-      ${bill.status === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' : 
-        bill.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' : 
-        bill.status === 'processing' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
-        'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}
-    value={bill.status}
-    onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
-    onClick={(e) => e.stopPropagation()}
-  >
-    <option value="pending">قيد الانتظار</option>
-    <option value="processing">قيد المعالجة</option>
-    <option value="completed">مكتملة</option>
-    <option value="cancelled">ملغاة</option>
-  </select>
-</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full 
+      ${bill.status === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' :
+                            bill.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
+                              bill.status === 'processing' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}
+                        value={bill.status}
+                        onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <option value="pending">قيد الانتظار</option>
+                        <option value="processing">قيد المعالجة</option>
+                        <option value="completed">مكتملة</option>
+                        <option value="cancelled">ملغاة</option>
+                      </select>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
 
-                              if (bill.id) {
-                                handleDelete(bill.id);
-                                 }
-                            
+                            if (bill.id) {
+                              handleDelete(bill.id);
+                            }
+
                           }}
                           className="text-red-600 hover:text-red-900 flex items-center"
                         >
@@ -685,34 +846,52 @@ export default function BillManagement() {
                                 <p className="text-sm"><span className="font-medium">ملاحظات:</span> {bill.note || 'لا توجد ملاحظات'}</p>
                               </div>
                             </div>
-                            
+
                             <div className="md:col-span-2">
-  <h4 className="font-medium text-red-500 mb-2">تفاصيل الفاتورة</h4>
-  {bill.details && bill.details.length > 0 ? (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {bill.details.map((detail, index) => (
-            <tr key={index}>
-              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">{index + 1}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_name}</td>
-              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_price}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : (
-    <p className="text-gray-500">لا توجد تفاصيل متاحة</p>
-  )}
-</div>
+                              <h4 className="font-medium text-red-500 mb-2">تفاصيل الفاتورة</h4>
+                              {bill.details && bill.details.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {bill.details.map((detail, index) => (
+                                        <tr key={index}>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">{index + 1}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_name}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_price}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (detail.m_id && bill.user_id) {
+                                                  openSubscriptionModal(detail.m_id, detail.m_name || '', bill.user_id);
+                                                }
+                                              }}
+                                              className="text-green-600 hover:text-green-900 flex items-center text-xs"
+                                              title="إضافة اشتراك مجاني للطالب"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                              </svg>
+                                              اشتراك مجاني
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-gray-500">لا توجد تفاصيل متاحة</p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -734,6 +913,113 @@ export default function BillManagement() {
           </div>
         )}
       </div>
+
+      {/* Modal الاشتراكات المجانية */}
+      {isSubscriptionModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إضافة اشتراك مجاني</h2>
+              <button
+                onClick={closeSubscriptionModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* عرض معلومات الاشتراك */}
+              <div className="bg-blue-50 p-3 rounded-lg space-y-2">
+                <div>
+                  <p className="text-sm text-gray-600">اسم المادة:</p>
+                  <p className="text-lg font-bold text-blue-800">{subscriptionData.materialName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">معرف المستخدم:</p>
+                  <p className="text-lg font-bold text-blue-800">{subscriptionData.userid}</p>
+                </div>
+              </div>
+
+              {/* اختيار أنواع الاشتراكات */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">أنواع الاشتراكات *</label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.mokarar}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          mokarar: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">مقرر</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.quiz}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          quiz: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">اختبار</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.voice}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          voice: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">صوت</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* أزرار الإجراءات */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeSubscriptionModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubscriptionSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {isLoading ? 'جاري الإضافة...' : 'إضافة اشتراك'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

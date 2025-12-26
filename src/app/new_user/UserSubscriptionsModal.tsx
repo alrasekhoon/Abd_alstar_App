@@ -24,11 +24,20 @@ type UserSubscriptionsModalProps = {
 const SUBSCRIPTION_TYPES = ['مقرر', 'أسئلة', 'صوت'] as const;
 type SubscriptionType = typeof SUBSCRIPTION_TYPES[number];
 
-export default function UserSubscriptionsModal({ 
-  isOpen, 
-  onClose, 
-  userId, 
-  userName 
+type MaterialOption = {
+  id: number;
+  material_name: string;
+  material_code: string;
+  unit_price: string;    // سعر المقرر
+  quizall_price: string; // سعر الأسئلة
+  voice_price: string;   // سعر الصوت
+};
+
+export default function UserSubscriptionsModal({
+  isOpen,
+  onClose,
+  userId,
+  userName
 }: UserSubscriptionsModalProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,18 +48,75 @@ export default function UserSubscriptionsModal({
   // حالة النموذج الجديد
   const [newSubscription, setNewSubscription] = useState({
     materialid: '',
+    materialName: '',
     type1: '' as SubscriptionType | '',
     price1: '',
-    dolar: ''
+    dolar: '0'
   });
+
+  const [availableMaterials, setAvailableMaterials] = useState<MaterialOption[]>([]);
+  const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState('');
 
   const API_URL = '/api/proxy/cp_user_subscriptions.php';
 
   useEffect(() => {
     if (isOpen && userId) {
       fetchSubscriptions();
+      fetchAvailableMaterials();
     }
   }, [isOpen, userId]);
+
+  const fetchAvailableMaterials = async () => {
+    try {
+      setIsMaterialsLoading(true);
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/proxy/cp_material.php?refresh=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب المواد');
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        setAvailableMaterials(result.data);
+      } else if (Array.isArray(result.data)) {
+        setAvailableMaterials(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching materials:', err);
+    } finally {
+      setIsMaterialsLoading(false);
+    }
+  };
+
+  // تحديث السعر تلقائياً عند تغيير المادة أو النوع
+  useEffect(() => {
+    if (newSubscription.materialid && newSubscription.type1) {
+      const material = availableMaterials.find(m => m.id === parseInt(newSubscription.materialid));
+      if (material) {
+        let price = '0';
+        switch (newSubscription.type1) {
+          case 'مقرر':
+            price = material.unit_price || '0';
+            break;
+          case 'أسئلة':
+            price = material.quizall_price || '0';
+            break;
+          case 'صوت':
+            price = material.voice_price || '0';
+            break;
+        }
+        setNewSubscription(prev => ({ ...prev, price1: price }));
+      }
+    }
+  }, [newSubscription.materialid, newSubscription.type1, availableMaterials]);
 
   const fetchSubscriptions = useCallback(async () => {
     try {
@@ -67,17 +133,17 @@ export default function UserSubscriptionsModal({
         },
         cache: 'no-store' as RequestCache
       });
-      
+
       if (!response.ok) {
         throw new Error(`فشل في جلب البيانات: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'حدث خطأ غير متوقع');
       }
-      
+
       setSubscriptions(result.subscriptions || []);
     } catch (err) {
       console.error('Error fetching subscriptions:', err);
@@ -94,26 +160,33 @@ export default function UserSubscriptionsModal({
         return;
       }
 
-      const response = await fetch(API_URL, {
+      const timestamp = Date.now();
+      const response = await fetch(`/api/proxy/add_subscribe.php?refresh=${timestamp}`, {
         method: 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
-        cache: 'no-store' as RequestCache,
         body: JSON.stringify({
           userid: userId,
           materialid: parseInt(newSubscription.materialid),
-          type1: newSubscription.type1,
-          price1: newSubscription.price1 || '0',
-          dolar: newSubscription.dolar || '0'
+          type: newSubscription.type1,
+          price: parseFloat(newSubscription.price1) || 0
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'حدث خطأ أثناء الإضافة');
+      }
+
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'حدث خطأ أثناء الإضافة');
+      if (result.status === 'error') {
+        throw new Error(result.message || 'حدث خطأ أثناء الإضافة');
       }
 
       // إعادة تحميل الاشتراكات
@@ -121,7 +194,7 @@ export default function UserSubscriptionsModal({
       setShowAddForm(false);
       resetForm();
       setError('');
-      
+
     } catch (err) {
       console.error('Error adding subscription:', err);
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
@@ -146,14 +219,14 @@ export default function UserSubscriptionsModal({
 
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'حدث خطأ أثناء الحذف');
+      if (result.success === false || result.status === 'error') {
+        throw new Error(result.error || result.message || 'حدث خطأ أثناء الحذف');
       }
 
       // إعادة تحميل الاشتراكات
       await fetchSubscriptions();
       setError('');
-      
+
     } catch (err) {
       console.error('Error deleting subscription:', err);
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
@@ -169,23 +242,23 @@ export default function UserSubscriptionsModal({
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
         cache: 'no-store' as RequestCache,
-        body: JSON.stringify({ 
-          id, 
-          type1: newType 
+        body: JSON.stringify({
+          subscription_id: id, // الـ PHP يتوقع subscription_id وليس id
+          type1: newType
         })
       });
 
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'حدث خطأ أثناء التحديث');
+      if (result.success === false || result.status === 'error') {
+        throw new Error(result.error || result.message || 'حدث خطأ أثناء التحديث');
       }
 
       // إعادة تحميل الاشتراكات
       await fetchSubscriptions();
       setEditingSubscription(null);
       setError('');
-      
+
     } catch (err) {
       console.error('Error updating subscription:', err);
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
@@ -195,10 +268,12 @@ export default function UserSubscriptionsModal({
   const resetForm = () => {
     setNewSubscription({
       materialid: '',
+      materialName: '',
       type1: '',
       price1: '',
-      dolar: ''
+      dolar: '0'
     });
+    setMaterialSearch('');
   };
 
   const formatDate = (dateString: string) => {
@@ -250,8 +325,19 @@ export default function UserSubscriptionsModal({
             </p>
           </div>
           <div className="flex gap-2">
-            
-            <button 
+            <button
+              onClick={() => {
+                setShowAddForm(true);
+                fetchAvailableMaterials();
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              إضافة اشتراك
+            </button>
+            <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition"
             >
@@ -267,21 +353,59 @@ export default function UserSubscriptionsModal({
           <div className="p-6 border-b border-gray-200 bg-blue-50">
             <h3 className="text-lg font-bold text-gray-800 mb-4">إضافة اشتراك جديد</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">معرف المادة</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
                 <input
-                  type="number"
-                  value={newSubscription.materialid}
-                  onChange={(e) => setNewSubscription({...newSubscription, materialid: e.target.value})}
+                  type="text"
+                  value={materialSearch || newSubscription.materialName}
+                  onChange={(e) => {
+                    setMaterialSearch(e.target.value);
+                    if (newSubscription.materialid) {
+                      setNewSubscription(prev => ({ ...prev, materialid: '', materialName: '' }));
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="أدخل معرف المادة"
+                  placeholder="ابحث عن مادة..."
                 />
+                {(materialSearch && !newSubscription.materialid) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {isMaterialsLoading ? (
+                      <div className="p-2 text-sm text-gray-500">جاري التحميل...</div>
+                    ) : availableMaterials.filter(m =>
+                      m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
+                      m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
+                    ).length === 0 ? (
+                      <div className="p-2 text-sm text-gray-500">لا توجد نتائج</div>
+                    ) : (
+                      availableMaterials.filter(m =>
+                        m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
+                        m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
+                      ).slice(0, 10).map(material => (
+                        <div
+                          key={material.id}
+                          onClick={() => {
+                            setNewSubscription({
+                              ...newSubscription,
+                              materialid: material.id.toString(),
+                              materialName: material.material_name
+                            });
+                            setMaterialSearch(material.material_name);
+                          }}
+                          className="p-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 last:border-0"
+                        >
+                          <div className="font-medium">{material.material_name}</div>
+                          <div className="text-xs text-gray-500">{material.material_code}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">نوع الاشتراك</label>
                 <select
                   value={newSubscription.type1}
-                  onChange={(e) => setNewSubscription({...newSubscription, type1: e.target.value as SubscriptionType})}
+                  onChange={(e) => setNewSubscription({ ...newSubscription, type1: e.target.value as SubscriptionType })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">اختر النوع</option>
@@ -296,8 +420,8 @@ export default function UserSubscriptionsModal({
                   type="number"
                   step="0.01"
                   value={newSubscription.price1}
-                  onChange={(e) => setNewSubscription({...newSubscription, price1: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => setNewSubscription({ ...newSubscription, price1: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-800"
                   placeholder="السعر بالليرة"
                 />
               </div>
@@ -307,7 +431,7 @@ export default function UserSubscriptionsModal({
                   type="number"
                   step="0.01"
                   value={newSubscription.dolar}
-                  onChange={(e) => setNewSubscription({...newSubscription, dolar: e.target.value})}
+                  onChange={(e) => setNewSubscription({ ...newSubscription, dolar: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="السعر بالدولار"
                 />
@@ -410,7 +534,7 @@ export default function UserSubscriptionsModal({
                             ))}
                           </select>
                         ) : (
-                          <span 
+                          <span
                             className="cursor-pointer hover:text-blue-600 hover:underline"
                             onClick={() => setEditingSubscription(subscription)}
                           >
@@ -471,7 +595,7 @@ export default function UserSubscriptionsModal({
                     }, 0).toString())}
                   </span>
                 </div>
-                
+
               </div>
             </div>
           )}

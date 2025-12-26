@@ -31,7 +31,19 @@ export default function UniLinksPage() {
   const fetchLinks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setLinks(result);
@@ -79,21 +91,26 @@ export default function UniLinksPage() {
     e.preventDefault();
     try {
       setIsLoading(true);
-      
-      const url = editingLink 
-        ? `${API_URL}?id=${editingLink.id}`
-        : API_URL;
+
+      const timestamp = Date.now();
+      const url = editingLink
+        ? `${API_URL}?id=${editingLink.id}&refresh=${timestamp}`
+        : `${API_URL}?refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method: editingLink ? 'PUT' : 'POST',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify(formData),
       });
-      
+
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
-      
+
       closeModal();
       fetchLinks();
     } catch (err) {
@@ -108,12 +125,21 @@ export default function UniLinksPage() {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
+
+      const response = await fetch(url, {
         method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
-      
+
       if (!response.ok) throw new Error('فشل في حذف البيانات');
-      
+
       fetchLinks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -124,16 +150,23 @@ export default function UniLinksPage() {
 
   const toggleShow = async (id: number, currentShow: number) => {
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
+
+      const response = await fetch(url, {
         method: 'PATCH',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         body: JSON.stringify({ show1: currentShow === 1 ? 0 : 1 }),
       });
-      
+
       if (!response.ok) throw new Error('فشل في تحديث الحالة');
-      
+
       fetchLinks();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
@@ -154,7 +187,7 @@ export default function UniLinksPage() {
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
         <p className="font-bold">خطأ</p>
         <p>{error}</p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="mt-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
         >
@@ -201,9 +234,9 @@ export default function UniLinksPage() {
                     <div className="text-sm font-medium text-gray-900">{link.url_name}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <a 
-                      href={link.url} 
-                      target="_blank" 
+                    <a
+                      href={link.url}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
                       title={link.url}
@@ -214,11 +247,10 @@ export default function UniLinksPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button
                       onClick={() => toggleShow(link.id, link.show1)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        link.show1 === 1 
-                          ? 'bg-green-100 text-green-800' 
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${link.show1 === 1
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
+                        }`}
                     >
                       {link.show1 === 1 ? 'مفعل' : 'معطل'}
                     </button>
@@ -270,7 +302,7 @@ export default function UniLinksPage() {
               <h2 className="text-xl font-bold text-gray-800">
                 {editingLink ? 'تعديل الرابط' : 'إضافة رابط جديد'}
               </h2>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -279,7 +311,7 @@ export default function UniLinksPage() {
                 </svg>
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">اسم الرابط *</label>
