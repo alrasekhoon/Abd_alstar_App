@@ -11,7 +11,7 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "next": "15.3.2",
+    "next": "^16.0.7",
     "puppeteer": "^24.27.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
