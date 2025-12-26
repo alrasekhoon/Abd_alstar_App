@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.CUSTOM_API_URL ;//|| 'http://alraskun.atwebpages.com';
+const API_BASE_URL = process.env.CUSTOM_API_URL;//|| 'http://alraskun.atwebpages.com';
 
 // رؤوس افتراضية لمنع التخزين المؤقت للردود JSON
 const NO_CACHE_JSON_HEADERS = {
@@ -22,11 +22,11 @@ function buildTargetUrl(request: NextRequest, path: string[]) {
 async function handleFileUpload(request: NextRequest, path: string[]) {
   try {
     const targetUrl = buildTargetUrl(request, path);
-    
+
     const formData = await request.formData();
-    
+
     console.log('File upload to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'POST',
       body: formData,
@@ -36,13 +36,13 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-  const data = await response.json();
-  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
-    
+    const data = await response.json();
+    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+
   } catch (error) {
     console.error('File upload error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'فشل في رفع الملف',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -55,9 +55,9 @@ async function handleFileUpload(request: NextRequest, path: string[]) {
 async function handleFileRequest(request: NextRequest, path: string[]) {
   try {
     const targetUrl = buildTargetUrl(request, path);
-    
+
     console.log('File request to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'GET',
       cache: 'no-store'
@@ -69,10 +69,10 @@ async function handleFileRequest(request: NextRequest, path: string[]) {
 
     // الحصول على نوع المحتوى من الاستجابة
     const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    
+
     // إنشاء الاستجابة مع البيانات الثنائية
     const arrayBuffer = await response.arrayBuffer();
-    
+
     // إذا كانت الملفات من مجلد uploads (صور المستخدم/بطاقات) نمنع الكاش لكي تعكس التغييرات فوراً
     const isUploads = path[0] === 'uploads';
     const cacheHeader = isUploads ? 'no-store, no-cache, must-revalidate, max-age=0' : 'public, max-age=3600';
@@ -93,11 +93,11 @@ async function handleFileRequest(request: NextRequest, path: string[]) {
       status: 200,
       headers: fileHeaders,
     });
-    
+
   } catch (error) {
     console.error('File request error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'فشل في جلب الملف',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -112,21 +112,21 @@ export async function GET(
 ) {
   try {
     const { path } = await params;
-    
+
     // إذا كان الطلب لملف (صور، إلخ)
-    const isFileRequest = path[0] === 'uploads' || 
-                         path[path.length - 1].includes('.') || 
-                         request.headers.get('accept')?.includes('image');
-    
+    const isFileRequest = path[0] === 'uploads' ||
+      path[path.length - 1].includes('.') ||
+      request.headers.get('accept')?.includes('image');
+
     if (isFileRequest) {
       return handleFileRequest(request, path);
     }
 
     // للطلبات العادية (JSON)
     const targetUrl = buildTargetUrl(request, path);
-    
+
     console.log('GET Proxying to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'GET',
       headers: {
@@ -139,13 +139,13 @@ export async function GET(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-  const data = await response.json();
-  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
-    
+    const data = await response.json();
+    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+
   } catch (error) {
     console.error('Proxy GET error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'فشل في الاتصال بالسيرفر',
         message: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -168,9 +168,9 @@ export async function POST(
 
     const targetUrl = buildTargetUrl(request, path);
     const body = await request.text();
-    
+
     console.log('POST Proxying to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
@@ -183,9 +183,9 @@ export async function POST(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-  const data = await response.json();
-  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
-    
+    const data = await response.json();
+    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+
   } catch (error) {
     console.error('Proxy POST error:', error);
     return NextResponse.json(
@@ -203,9 +203,9 @@ export async function PUT(
     const { path } = await params;
     const targetUrl = buildTargetUrl(request, path);
     const body = await request.text();
-    
+
     console.log('PUT Proxying to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'PUT',
       headers: {
@@ -218,9 +218,9 @@ export async function PUT(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-  const data = await response.json();
-  return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
-    
+    const data = await response.json();
+    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+
   } catch (error) {
     console.error('Proxy PUT error:', error);
     return NextResponse.json(
@@ -237,14 +237,16 @@ export async function DELETE(
   try {
     const { path } = await params;
     const targetUrl = buildTargetUrl(request, path);
-    
+    const body = await request.text();
+
     console.log('DELETE Proxying to:', targetUrl);
-    
+
     const response = await fetch(targetUrl, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: body,
     });
 
     if (!response.ok) {
@@ -253,7 +255,7 @@ export async function DELETE(
 
     const data = await response.json();
     return NextResponse.json(data);
-    
+
   } catch (error) {
     console.error('Proxy DELETE error:', error);
     return NextResponse.json(
