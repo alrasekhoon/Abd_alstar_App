@@ -56,7 +56,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   const [selectedUnitNum, setSelectedUnitNum] = useState<number | null>(initialUnitNum || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // حالات الفلترة الجديدة
   const [filteredQuizzes, setFilteredQuizzes] = useState<QuizItem[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
@@ -129,7 +129,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -139,24 +139,24 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!Array.isArray(result.data)) {
         throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
       }
 
       setMaterials(result.data);
-      
+
       // استخراج السنوات المتاحة من المواد
       const availableYears = Array.from(new Set(result.data.map((m: MaterialItem) => m.year1)))
         .sort() as number[];
       setYears(availableYears);
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
       console.error('Error fetching materials:', err);
@@ -170,7 +170,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
     try {
       const timestamp = Date.now();
       const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -180,7 +180,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في جلب الفئات');
       const result = await response.json();
       setCategories(result);
@@ -194,7 +194,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${QUIZ_API_URL}?material_id=${materialId}&unit_num=${unitNum}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -204,14 +204,14 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `فشل في جلب الأسئلة - حالة الخطأ: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       // التصحيح: التحقق من أن البيانات مصفوفة مباشرة
       if (!Array.isArray(result)) {
         throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
@@ -219,14 +219,14 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
 
       setQuizzes(result);
       setSelectedUnitNum(unitNum);
-      
+
       // تحديث حالة السؤال الجديد
       setNewQuiz(prev => ({
         ...prev,
         material_id: materialId,
         unit_num: unitNum
       }));
-      
+
     } catch (err) {
       console.error('Error fetching quizzes:', err);
       setQuizzes([]);
@@ -241,7 +241,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       setIsLoading(true);
       const timestamp = Date.now();
       const url = `${QUIZ_API_URL}?material_id=${materialId}&refresh=${timestamp}`;
-      
+
       const response = await fetch(url, {
         method: 'GET',
         cache: 'no-store',
@@ -251,21 +251,21 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `فشل في جلب الأسئلة - حالة الخطأ: ${response.status}`);
       }
 
       const result = await response.json();
-      
+
       if (!Array.isArray(result)) {
         throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
       }
 
       setQuizzes(result);
       setSelectedUnitNum(null);
-      
+
     } catch (err) {
       console.error('Error fetching all quizzes:', err);
       setQuizzes([]);
@@ -277,7 +277,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
 
   const applyFilters = () => {
     let result = quizzes;
-    
+
     // فلترة حسب السنة
     if (selectedYear !== 'all') {
       const material = materials.find(m => m.id === selectedMaterial);
@@ -285,7 +285,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         result = [];
       }
     }
-    
+
     // فلترة حسب الفئة
     if (selectedCategory !== 'all') {
       const material = materials.find(m => m.id === selectedMaterial);
@@ -293,7 +293,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         result = [];
       }
     }
-    
+
     // البحث حسب رمز السؤال
     if (searchTerm.trim() !== '') {
       const searchText = searchTerm.toLowerCase();
@@ -302,7 +302,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         const qCode = String(quiz.q_code || '');
         const codeQNumber = String(quiz.code_q_number || '');
         const combinedCode = qCode && codeQNumber ? `${qCode}/${codeQNumber}` : qCode || codeQNumber;
-        
+
         return (
           combinedCode.toLowerCase().includes(searchText) ||
           qCode.toLowerCase().includes(searchText) ||
@@ -310,7 +310,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         );
       });
     }
-    
+
     setFilteredQuizzes(result);
   };
 
@@ -340,7 +340,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         setIsLoading(true);
         const timestamp = Date.now();
         const url = `${QUIZ_API_URL}?id=${id}&refresh=${timestamp}`;
-        
+
         const response = await fetch(url, {
           method: 'DELETE',
           cache: 'no-store',
@@ -354,7 +354,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         });
 
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.message || `حدث خطأ: ${response.status}`);
         }
@@ -370,7 +370,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
             await fetchQuizzes(selectedMaterial, selectedUnitNum);
           }
         }
-        
+
       } catch (err) {
         console.error('Error deleting quiz:', err);
         setMessage(err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء الحذف');
@@ -379,8 +379,59 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         setIsLoading(false);
       }
     };
-    
+
     showConfirmation('هل أنت متأكد من حذف هذا السؤال؟', onDelete);
+  };
+
+  const handleDeleteAllQuizzes = async () => {
+    if (selectedMaterial === 'all' || selectedMaterial === null) return;
+
+    const onDeleteAll = async () => {
+      setShowConfirm(false);
+      try {
+        setIsLoading(true);
+        const timestamp = Date.now();
+        const url = `${QUIZ_API_URL}?material_id=${selectedMaterial}&refresh=${timestamp}`;
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+          cache: 'no-store',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || `حدث خطأ: ${response.status}`);
+        }
+
+        if (!data.success) {
+          throw new Error(data.message || 'فشل في حذف الأسئلة');
+        }
+
+        setMessage(data.message || 'تم حذف جميع أسئلة المادة بنجاح');
+        setIsError(false);
+
+        // تحديث القائمة
+        setQuizzes([]);
+        setFilteredQuizzes([]);
+
+      } catch (err) {
+        console.error('Error deleting all quizzes:', err);
+        setMessage(err instanceof Error ? err.message : 'حدث خطأ غير متوقع أثناء الحذف الجماعي');
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    showConfirmation(`هل أنت متأكد من حذف جميع أسئلة هذه المادة؟ (سيتم حذف ${quizzes.length} سؤال). \n\nتنبيه: لن تتمكن من التراجع عن هذه العملية في المستقبل!`, onDeleteAll);
   };
 
   const handleQuizSave = async (quiz: QuizItem) => {
@@ -449,7 +500,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       }
 
       setEditingId(null);
-      
+
       // إعادة تحميل البيانات
       if (selectedMaterial !== 'all' && selectedMaterial !== null) {
         if (showAllQuizzes) {
@@ -458,10 +509,10 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           await fetchQuizzes(selectedMaterial, selectedUnitNum);
         }
       }
-      
+
       setMessage('تم حفظ السؤال بنجاح');
       setIsError(false);
-      
+
     } catch (err) {
       console.error('Error saving quiz:', err);
       setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
@@ -529,11 +580,11 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
       try {
         const responseText = await response.text();
         console.log('Raw response:', responseText);
-        
+
         if (responseText.trim() === '') {
           throw new Error('استجابة فارغة من السيرفر');
         }
-        
+
         result = JSON.parse(responseText);
       } catch (jsonError) {
         console.error('JSON parsing error:', jsonError);
@@ -570,7 +621,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
           await fetchQuizzes(selectedMaterial, selectedUnitNum);
         }
       }
-      
+
     } catch (err) {
       console.error('Error adding quiz:', err);
       setMessage(`حدث خطأ: ${err instanceof Error ? err.message : 'خطأ غير معروف'}`);
@@ -579,8 +630,8 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
   };
 
   const handleInputChange = (id: number, field: string, value: string | number) => {
-    setQuizzes(prevQuizzes => 
-      prevQuizzes.map(quiz => 
+    setQuizzes(prevQuizzes =>
+      prevQuizzes.map(quiz =>
         quiz.id === id ? { ...quiz, [field]: value } : quiz
       )
     );
@@ -648,7 +699,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
                 {showConfirm ? (
                   <div className="mt-4 flex justify-around">
                     <button
-                      onClick={confirmAction || (() => {})}
+                      onClick={confirmAction || (() => { })}
                       className="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md hover:bg-green-600"
                     >
                       تأكيد
@@ -677,7 +728,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl font-bold text-gray-800">إدارة الأسئلة</h1>
-            
+
             {/* قائمة تصفية الفئات */}
             <div className="relative">
               <select
@@ -731,7 +782,7 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
               >
                 <option value="all">اختر المادة</option>
                 {materials
-                  .filter(material => 
+                  .filter(material =>
                     (selectedCategory === 'all' || material.category_id === selectedCategory) &&
                     (selectedYear === 'all' || material.year1 === selectedYear)
                   )
@@ -791,6 +842,19 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
                   <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
                 </svg>
                 العودة للوحدة
+              </button>
+            )}
+
+            {/* زر حذف جميع الأسئلة */}
+            {selectedMaterial !== 'all' && selectedMaterial !== null && quizzes.length > 0 && (
+              <button
+                onClick={handleDeleteAllQuizzes}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                حذف جميع الأسئلة
               </button>
             )}
           </div>
@@ -1072,14 +1136,13 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
                           <option value={3}>عالية</option>
                         </select>
                       ) : (
-                        <div className={`text-sm font-medium ${
-                          quiz.importance === 3 ? 'text-red-600' : 
-                          quiz.importance === 2 ? 'text-yellow-600' : 
-                          'text-green-600'
-                        }`}>
-                          {quiz.importance === 3 ? 'عالية' : 
-                           quiz.importance === 2 ? 'متوسطة' : 
-                           'عادية'}
+                        <div className={`text-sm font-medium ${quiz.importance === 3 ? 'text-red-600' :
+                          quiz.importance === 2 ? 'text-yellow-600' :
+                            'text-green-600'
+                          }`}>
+                          {quiz.importance === 3 ? 'عالية' :
+                            quiz.importance === 2 ? 'متوسطة' :
+                              'عادية'}
                         </div>
                       )}
                     </td>

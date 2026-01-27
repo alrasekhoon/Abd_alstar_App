@@ -179,17 +179,50 @@ export async function POST(
       body: body,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const responseText = await response.text();
+    let responseData;
+    let isJson = false;
+
+    try {
+      responseData = JSON.parse(responseText);
+      isJson = true;
+    } catch (e) {
+      responseData = null;
     }
 
-    const data = await response.json();
-    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: 'فشل في الاتصال بالسيرفر (Backend Error)',
+          status: response.status,
+          backendError: isJson ? responseData : {
+            error: 'Failed to parse error response as JSON',
+            rawResponse: responseText.substring(0, 1000)
+          }
+        },
+        { status: response.status, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    if (!isJson) {
+      return NextResponse.json(
+        {
+          error: 'فشل في معالجة الرد من السيرفر (Not JSON)',
+          rawResponse: responseText.substring(0, 1000)
+        },
+        { status: 500, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    return NextResponse.json(responseData, { headers: NO_CACHE_JSON_HEADERS });
 
   } catch (error) {
     console.error('Proxy POST error:', error);
     return NextResponse.json(
-      { error: 'فشل في الاتصال بالسيرفر' },
+      {
+        error: 'فشل في الاتصال بالسيرفر (Proxy Error)',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
@@ -214,17 +247,50 @@ export async function PUT(
       body: body,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const responseText = await response.text();
+    let responseData;
+    let isJson = false;
+
+    try {
+      responseData = JSON.parse(responseText);
+      isJson = true;
+    } catch (e) {
+      responseData = null;
     }
 
-    const data = await response.json();
-    return NextResponse.json(data, { headers: NO_CACHE_JSON_HEADERS });
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: 'فشل في الاتصال بالسيرفر (Backend Error)',
+          status: response.status,
+          backendError: isJson ? responseData : {
+            error: 'Failed to parse error response as JSON',
+            rawResponse: responseText.substring(0, 1000)
+          }
+        },
+        { status: response.status, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    if (!isJson) {
+      return NextResponse.json(
+        {
+          error: 'فشل في معالجة الرد من السيرفر (Not JSON)',
+          rawResponse: responseText.substring(0, 1000)
+        },
+        { status: 500, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    return NextResponse.json(responseData, { headers: NO_CACHE_JSON_HEADERS });
 
   } catch (error) {
     console.error('Proxy PUT error:', error);
     return NextResponse.json(
-      { error: 'فشل في الاتصال بالسيرفر' },
+      {
+        error: 'فشل في الاتصال بالسيرفر (Proxy Error)',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
@@ -249,18 +315,51 @@ export async function DELETE(
       body: body,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const responseText = await response.text();
+    let responseData;
+    let isJson = false;
+
+    try {
+      responseData = JSON.parse(responseText);
+      isJson = true;
+    } catch (e) {
+      responseData = null;
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    if (!response.ok) {
+      return NextResponse.json(
+        {
+          error: 'فشل في الاتصال بالسيرفر (Backend Error)',
+          status: response.status,
+          backendError: isJson ? responseData : {
+            error: 'Failed to parse error response as JSON',
+            rawResponse: responseText.substring(0, 1000)
+          }
+        },
+        { status: response.status, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    if (!isJson) {
+      return NextResponse.json(
+        {
+          error: 'فشل في معالجة الرد من السيرفر (Not JSON)',
+          rawResponse: responseText.substring(0, 1000)
+        },
+        { status: 500, headers: NO_CACHE_JSON_HEADERS }
+      );
+    }
+
+    return NextResponse.json(responseData, { headers: NO_CACHE_JSON_HEADERS });
 
   } catch (error) {
     console.error('Proxy DELETE error:', error);
     return NextResponse.json(
-      { error: 'فشل في الاتصال بالسيرفر' },
-      { status: 500 }
+      {
+        error: 'فشل في الاتصال بالسيرفر (Proxy Error)',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500, headers: NO_CACHE_JSON_HEADERS }
     );
   }
 }

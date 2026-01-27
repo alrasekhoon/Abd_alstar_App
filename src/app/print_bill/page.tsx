@@ -428,7 +428,7 @@ export default function BillManagement() {
       // إنشاء قائمة بأنواع الاشتراكات المحددة
       const types: string[] = [];
       if (mokarar) types.push('مقرر');
-      if (quiz) types.push('اختبار');
+      if (quiz) types.push('اسئلة');
       if (voice) types.push('صوت');
 
       // إرسال طلب لكل نوع اشتراك
@@ -975,7 +975,7 @@ export default function BillManagement() {
                         }
                       })}
                     />
-                    <span className="mr-2 text-sm text-gray-700">اختبار</span>
+                    <span className="mr-2 text-sm text-gray-700">اسئلة</span>
                   </label>
                   <label className="flex items-center">
                     <input

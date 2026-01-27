@@ -21,7 +21,7 @@ type UserSubscriptionsModalProps = {
 };
 
 // أنواع الاشتراك المتاحة
-const SUBSCRIPTION_TYPES = ['مقرر', 'أسئلة', 'صوت'] as const;
+const SUBSCRIPTION_TYPES = ['مقرر', 'اسئلة', 'صوت'] as const;
 type SubscriptionType = typeof SUBSCRIPTION_TYPES[number];
 
 type MaterialOption = {
@@ -29,7 +29,7 @@ type MaterialOption = {
   material_name: string;
   material_code: string;
   unit_price: string;    // سعر المقرر
-  quizall_price: string; // سعر الأسئلة
+  quizall_price: string; // سعر الاسئلة
   voice_price: string;   // سعر الصوت
 };
 
@@ -106,7 +106,7 @@ export default function UserSubscriptionsModal({
           case 'مقرر':
             price = material.unit_price || '0';
             break;
-          case 'أسئلة':
+          case 'اسئلة':
             price = material.quizall_price || '0';
             break;
           case 'صوت':
