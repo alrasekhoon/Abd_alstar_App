@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 
 type BillItem = {
   id?: number;
@@ -16,6 +16,7 @@ type BillItem = {
   name: string;
   phone: string;
   details?: BillDetailItem[];
+  address: string;
 };
 
 type BillDetailItem = {
@@ -758,9 +759,8 @@ export default function BillManagement() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredBills.map((bill) => (
-                <>
+                <Fragment key={bill.id}>
                   <tr
-                    key={bill.id}
                     className="hover:bg-gray-50 transition cursor-pointer"
                     onClick={() => bill.id && toggleRow(bill.id)}
                   >
@@ -841,6 +841,8 @@ export default function BillManagement() {
                               <h4 className="font-medium text-red-500 mb-2">معلومات التوصيل</h4>
                               <div className="space-y-2">
                                 <p className="text-sm"><span className="font-medium">نوع التوصيل:</span> {bill.delv_type}</p>
+                                <p className="text-sm"><span className="font-medium">العنوان:</span> {bill.address}</p>
+
                                 <p className="text-sm"><span className="font-medium">اسم المستلم:</span> {bill.rec_name}</p>
                                 <p className="text-sm"><span className="font-medium">رقم المستلم:</span> {bill.rec_phone}</p>
                                 <p className="text-sm"><span className="font-medium">ملاحظات:</span> {bill.note || 'لا توجد ملاحظات'}</p>
@@ -897,7 +899,7 @@ export default function BillManagement() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
