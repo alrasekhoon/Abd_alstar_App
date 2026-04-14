@@ -19,7 +19,7 @@ export default function AdvManagement() {
   const [uploading, setUploading] = useState(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const API_URL = '/api/proxy/cp_adv.php';
   const UPLOAD_URL = '/api/proxy/upload_adv.php';
 
@@ -28,45 +28,37 @@ export default function AdvManagement() {
   }, []);
 
   const fetchData = async () => {
-  try {
-    setIsLoading(true);
-    
-    const timestamp = Date.now();
-    const url = `${API_URL}?refresh=${timestamp}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
-      headers: {
-        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      },
-      next: {
-        tags: ['ads'] // إذا كنت ستستخدم revalidateTag لاحقاً
-      }
-    });
-    
-    if (!response.ok) throw new Error('فشل في جلب البيانات');
-    const result = await response.json();
-    setData(result);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      setIsLoading(true);
+
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        next: {
+          tags: ['ads'] // إذا كنت ستستخدم revalidateTag لاحقاً
+        }
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب البيانات');
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const errors: { [key: string]: string } = {};
-
-    if (!editingItem?.title.trim()) {
-      errors.title = 'العنوان مطلوب';
-    }
-
-    if (!editingItem?.description.trim()) {
-      errors.description = 'الوصف مطلوب';
-    }
 
     if (!editingItem?.image_path.trim()) {
       errors.image = 'صورة الإعلان مطلوبة';
@@ -121,7 +113,7 @@ export default function AdvManagement() {
       setUploading(true);
       setFormErrors(prev => ({ ...prev, image: '' }));
       const fileName = await handleFileUpload(file);
-      
+
       if (editingItem) {
         setEditingItem({
           ...editingItem,
@@ -140,7 +132,7 @@ export default function AdvManagement() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
-    
+
     try {
       const timestamp = Date.now();
       const response = await fetch(`${API_URL}?id=${id}&refresh=${timestamp}`, {
@@ -152,9 +144,9 @@ export default function AdvManagement() {
           'Expires': '0'
         }
       });
-      
+
       if (!response.ok) throw new Error('فشل في حذف العنصر');
-      
+
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -173,10 +165,10 @@ export default function AdvManagement() {
     try {
       const method = editingItem.id ? 'PUT' : 'POST';
       const url = editingItem.id ? `${API_URL}?id=${editingItem.id}` : API_URL;
-      
+
       const timestamp = Date.now();
       const finalUrl = `${url}${url.includes('?') ? '&' : '?'}refresh=${timestamp}`;
-      
+
       const response = await fetch(finalUrl, {
         method,
         headers: {
@@ -233,7 +225,7 @@ export default function AdvManagement() {
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
         <p className="font-bold">خطأ</p>
         <p>{error}</p>
-        <button 
+        <button
           onClick={() => setError('')}
           className="mt-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
         >
@@ -261,13 +253,13 @@ export default function AdvManagement() {
 
         {/* Modal for Add/Edit */}
         {editingItem && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">
                   {editingItem.id ? 'تعديل الإعلان' : 'إضافة إعلان جديد'}
                 </h2>
-                <button 
+                <button
                   onClick={() => setEditingItem(null)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -276,32 +268,21 @@ export default function AdvManagement() {
                   </svg>
                 </button>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      العنوان <span className="text-red-500">*</span>
+                      العنوان
                     </label>
                     <input
                       type="text"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                        formErrors.title ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingItem.title}
-                      onChange={(e) => {
-                        setEditingItem({...editingItem, title: e.target.value});
-                        if (e.target.value.trim()) {
-                          setFormErrors(prev => ({ ...prev, title: '' }));
-                        }
-                      }}
-                      required
+                      onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
                     />
-                    {formErrors.title && (
-                      <p className="mt-1 text-sm text-red-600">{formErrors.title}</p>
-                    )}
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       صورة الإعلان <span className="text-red-500">*</span>
@@ -312,9 +293,8 @@ export default function AdvManagement() {
                         ref={fileInputRef}
                         accept="image/*"
                         onChange={handleImageChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                          formErrors.image ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${formErrors.image ? 'border-red-500' : 'border-gray-300'
+                          }`}
                         required={!editingItem.image_path}
                       />
                       {formErrors.image && (
@@ -329,7 +309,7 @@ export default function AdvManagement() {
                       {editingItem.image_path && (
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-3">
-                            <Image 
+                            <Image
                               src={`/api/proxy/img/adv/${editingItem.image_path}`}
                               alt="Preview"
                               width={48}
@@ -355,37 +335,26 @@ export default function AdvManagement() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    الوصف <span className="text-red-500">*</span>
+                    الوصف
                   </label>
                   <textarea
                     rows={3}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                      formErrors.description ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     value={editingItem.description}
-                    onChange={(e) => {
-                      setEditingItem({...editingItem, description: e.target.value});
-                      if (e.target.value.trim()) {
-                        setFormErrors(prev => ({ ...prev, description: '' }));
-                      }
-                    }}
-                    required
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
                   />
-                  {formErrors.description && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
-                  )}
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
                   <textarea
                     rows={2}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     value={editingItem.note}
-                    onChange={(e) => setEditingItem({...editingItem, note: e.target.value})}
+                    onChange={(e) => setEditingItem({ ...editingItem, note: e.target.value })}
                   />
                 </div>
 
@@ -398,12 +367,12 @@ export default function AdvManagement() {
                     </div>
                     <div className="mr-3">
                       <p className="text-sm text-yellow-700">
-                        <span className="font-medium">ملاحظة:</span> الحقول التي تحمل علامة (*) إلزامية. يجب إضافة صورة للإعلان.
+                        <span className="font-medium">ملاحظة:</span> يجب إضافة صورة للإعلان.
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -445,7 +414,7 @@ export default function AdvManagement() {
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {item.image_path && (
-                      <Image 
+                      <Image
                         src={`/api/proxy/img/adv/${item.image_path}`}
                         alt={item.title}
                         width={64}

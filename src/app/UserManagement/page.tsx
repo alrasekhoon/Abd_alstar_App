@@ -13,8 +13,35 @@ type User = {
   note: string;
   last_login?: string;
   created_at?: string;
-  password?: string; // أضف هذا السطر
+  password?: string;
+  permissions?: string[];
 };
+
+const AVAILABLE_PERMISSIONS = [
+  { id: '/adv', name: 'الاعلانات', group: 'الواجهة الرئيسية' },
+  { id: '/home_work', name: 'الوظائف', group: 'الواجهة الرئيسية' },
+  { id: '/news', name: 'الأخبار', group: 'الواجهة الرئيسية' },
+  { id: '/Notification', name: 'الاشعارات', group: 'الواجهة الرئيسية' },
+  { id: '/uni_link', name: 'الروابط الجامعة', group: 'الواجهة الرئيسية' },
+  { id: '/uni_material', name: 'مواد الجامعة', group: 'الواجهة الرئيسية' },
+  { id: '/ashtrak', name: 'انواع الاشتراكات', group: 'المقررات' },
+  { id: '/material', name: 'المواد الدراسية', group: 'المقررات' },
+  { id: '/quiz', name: 'إستخراج الاسئلة', group: 'المقررات' },
+  { id: '/voice', name: 'الأصوات', group: 'المقررات' },
+  { id: '/quiz_questions', name: 'استفسارات الاختبارات', group: 'المقررات' },
+  { id: '/print', name: 'الطباعة', group: 'الطباعة والتوصيل' },
+  { id: '/delv', name: 'التوصيل والشحن', group: 'الطباعة والتوصيل' },
+  { id: '/print_bill', name: 'الفواتير', group: 'الطباعة والتوصيل' },
+  { id: '/users', name: 'المستخدمين', group: 'المستخدمين والمالية' },
+  { id: '/mony1', name: 'الدفعات المالية', group: 'المستخدمين والمالية' },
+  { id: '/new_user', name: 'إدارة المستخدمين', group: 'المستخدمين والمالية' },
+  { id: '/verify_users', name: 'مراجعة وتوثيق الحسابات', group: 'المستخدمين والمالية' },
+  { id: '/finance', name: 'الجدوى المالية', group: 'المستخدمين والمالية' },
+  { id: '/settings', name: 'الإعدادات', group: 'إدارة النظام' },
+  { id: '/UserManagement', name: 'ادارة لوحة التحكم', group: 'إدارة النظام' },
+  { id: '/support_chat', name: 'الدردشة المباشرة', group: 'إدارة النظام' }
+];
+
 
 type Role = {
   id: number;
@@ -48,7 +75,11 @@ export default function UserManagement() {
       const response = await fetch(API_URL);
       if (!response.ok) throw new Error('فشل في جلب بيانات المستخدمين');
       const result = await response.json();
-      setUsers(result);
+      const parsedUsers = result.map((u: any) => ({
+        ...u,
+        permissions: typeof u.permissions === 'string' ? JSON.parse(u.permissions || "[]") : (u.permissions || [])
+      }));
+      setUsers(parsedUsers);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
@@ -151,7 +182,8 @@ export default function UserManagement() {
       phone: '', 
       role: '', 
       block_status: false, 
-      note: '' 
+      note: '',
+      permissions: []
     });
     setShowPasswordFields(true);
     setPassword('');
@@ -219,7 +251,7 @@ export default function UserManagement() {
         {/* Modal for Add/Edit */}
         {editingUser && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">
                   {editingUser.id ? 'تعديل المستخدم' : 'إضافة مستخدم جديد'}
@@ -350,6 +382,44 @@ export default function UserManagement() {
                   />
                 </div>
                 
+                {/* قسم الصلاحيات المخصصة */}
+                <div className="mt-8 border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                     صلاحيات الوصول للقوائم (Custom Permissions)
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    ملاحظة: إذا كان اسم الدور "admin" أو "owner"، فلن يتأثر المستخدم بهذه الاختيارات وسيتمكن من رؤية كل شيء، لكن يمكنك تخصيص الصلاحيات لبقية الأدوار.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from(new Set(AVAILABLE_PERMISSIONS.map(p => p.group))).map(group => (
+                      <div key={group} className="bg-gray-50 bg-opacity-50 border border-gray-100 rounded-lg p-4 shadow-sm">
+                        <h4 className="font-semibold text-indigo-800 mb-3 border-b border-indigo-100 pb-2">{group}</h4>
+                        <div className="space-y-2">
+                          {AVAILABLE_PERMISSIONS.filter(p => p.group === group).map(perm => (
+                            <label key={perm.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-1 rounded transition">
+                              <input 
+                                type="checkbox"
+                                className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                                checked={(editingUser.permissions || []).includes(perm.id)}
+                                onChange={(e) => {
+                                  const currentPerms = editingUser.permissions || [];
+                                  if (e.target.checked) {
+                                    setEditingUser({ ...editingUser, permissions: [...currentPerms, perm.id] });
+                                  } else {
+                                    setEditingUser({ ...editingUser, permissions: currentPerms.filter(id => id !== perm.id) });
+                                  }
+                                }}
+                              />
+                              <span className="text-sm font-medium text-gray-700">{perm.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"

@@ -191,7 +191,7 @@ export default function UserNotificationsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -299,7 +299,7 @@ export default function UserNotificationsModal({
 
         {/* Add Notification Modal */}
         {isAddModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-60">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-xl font-bold text-gray-800">إضافة إشعار جديد</h3>
@@ -371,7 +371,7 @@ export default function UserNotificationsModal({
 
         {/* Edit Notification Modal */}
         {editingNotification && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-60">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-xl font-bold text-gray-800">تعديل الإشعار</h3>

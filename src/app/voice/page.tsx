@@ -34,6 +34,14 @@ export default function MaterialManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingVoice, setEditingVoice] = useState<Tvoice | null>(null);
+  const [linkingVoice, setLinkingVoice] = useState<Tvoice | null>(null);
+  const [linkFormData, setLinkFormData] = useState({
+    material_id: '',
+    unit_num: '',
+    page_num: '',
+    note: '',
+    voice_name: ''
+  });
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
@@ -512,6 +520,60 @@ export default function MaterialManagement() {
     clearRecording();
   };
 
+  const openLinkModal = (voice: Tvoice) => {
+    setLinkingVoice(voice);
+    setLinkFormData({
+      material_id: voice.material_id?.toString() || '',
+      unit_num: voice.unit_num?.toString() || '',
+      page_num: voice.page_num?.toString() || '',
+      note: voice.note || '',
+      voice_name: voice.voice_name || ''
+    });
+  };
+
+  const closeLinkModal = () => {
+    setLinkingVoice(null);
+  };
+
+  const submitLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkingVoice) return;
+    
+    if (!linkFormData.material_id || !linkFormData.unit_num || !linkFormData.page_num) {
+      alert('الرجاء اختيار المادة والوحدة والصفحة');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('material_id', linkFormData.material_id);
+    formData.append('unit_num', linkFormData.unit_num);
+    formData.append('page_num', linkFormData.page_num);
+    formData.append('note', linkFormData.note);
+    formData.append('voice_name', linkFormData.voice_name);
+    // Include voice_path from the source voice
+    formData.append('voice_path', linkingVoice.voice_path);
+    
+    const maxOrder = Math.max(...tvoices.map(v => v.order_show), 0);
+    formData.append('order_show', (maxOrder + 1).toString());
+
+    try {
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
+        method: 'POST',
+        body: formData,
+        cache: 'no-store'
+      });
+
+      if (!response.ok) throw new Error('فشل في ربط الصوت');
+      
+      closeLinkModal();
+      fetchData();
+      alert('تم ربط الصوت بالوحدة المحددة بنجاح');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ');
+    }
+  };
+
   const handleDelete = async (id: number) => {
     if (!confirm('هل أنت متأكد من حذف هذا الصوت؟')) return;
     
@@ -837,7 +899,17 @@ export default function MaterialManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-y-2 max-w-[150px]">
+                          <button
+                            onClick={() => openLinkModal(voice)}
+                            className="text-blue-600 hover:text-blue-900 flex items-center"
+                            title="ربط الوحدة بصفحات أخرى"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                            </svg>
+                            ربط
+                          </button>
                           <button
                             onClick={() => openEditForm(voice)}
                             className="text-yellow-600 hover:text-yellow-900 flex items-center"
@@ -1119,6 +1191,115 @@ export default function MaterialManagement() {
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                     حفظ التغييرات
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal for Linking Voice */}
+        {linkingVoice && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg my-8 max-h-[90vh] overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">ربط الصوت بموقع جديد</h2>
+                <button onClick={closeLinkModal} className="text-gray-500 hover:text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <p className="text-sm text-blue-800">
+                  سيتم تعيين نسخة مرتبطة من الملف الصوتي <strong>{linkingVoice.voice_name}</strong> للوحدة والصفحة الجديدة دون الحاجة لإعادة رفعه.
+                </p>
+              </div>
+
+              <form onSubmit={submitLink} className="space-y-6 overflow-y-auto pr-2 max-h-[60vh]">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">المادة الجديدة</label>
+                  <select
+                    value={linkFormData.material_id}
+                    onChange={(e) => setLinkFormData({...linkFormData, material_id: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">اختر المادة</option>
+                    {materials.map(material => (
+                      <option key={material.id} value={material.id}>
+                        {material.material_name} (السنة {material.year1})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">الوحدة الجديدة</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={linkFormData.unit_num}
+                      onChange={(e) => setLinkFormData({...linkFormData, unit_num: e.target.value})}
+                      placeholder="أدخل رقم الوحدة"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">الصفحة الجديدة</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={linkFormData.page_num}
+                      onChange={(e) => setLinkFormData({...linkFormData, page_num: e.target.value})}
+                      placeholder="أدخل رقم الصفحة"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات العرض الجديدة</label>
+                  <textarea
+                    rows={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={linkFormData.note}
+                    onChange={(e) => setLinkFormData({...linkFormData, note: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">اسم العرض للملف</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={linkFormData.voice_name}
+                    onChange={(e) => setLinkFormData({...linkFormData, voice_name: e.target.value})}
+                    placeholder="اسم الملف المعروض"
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 space-x-reverse pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={closeLinkModal}
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                    </svg>
+                    تنفيذ الربط
                   </button>
                 </div>
               </form>

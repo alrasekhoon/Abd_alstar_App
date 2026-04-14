@@ -296,17 +296,21 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
 
     // البحث حسب رمز السؤال
     if (searchTerm.trim() !== '') {
-      const searchText = searchTerm.toLowerCase();
+      // توحيد محددات البحث بحيث يتطابق الشرطة (-) مع السلاش (/)
+      const searchText = searchTerm.toLowerCase().replace(/-/g, '/');
+      
       result = result.filter(quiz => {
-        // تحويل جميع القيم إلى نص بأمان
-        const qCode = String(quiz.q_code || '');
-        const codeQNumber = String(quiz.code_q_number || '');
-        const combinedCode = qCode && codeQNumber ? `${qCode}/${codeQNumber}` : qCode || codeQNumber;
+        // تحويل جميع القيم إلى نص واستبدال الشرطة بالسلاش
+        const qCode = String(quiz.q_code || '').toLowerCase().replace(/-/g, '/');
+        const codeQNumber = String(quiz.code_q_number || '').toLowerCase().replace(/-/g, '/');
+        const combinedCode = quiz.q_code && quiz.code_q_number 
+          ? `${qCode}/${codeQNumber}` 
+          : qCode || codeQNumber;
 
         return (
-          combinedCode.toLowerCase().includes(searchText) ||
-          qCode.toLowerCase().includes(searchText) ||
-          codeQNumber.toLowerCase().includes(searchText)
+          combinedCode.includes(searchText) ||
+          qCode.includes(searchText) ||
+          codeQNumber.includes(searchText)
         );
       });
     }

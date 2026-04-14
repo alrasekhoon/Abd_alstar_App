@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 export default function Sidebar() {
   const pathname = usePathname()
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const router = useRouter()
@@ -33,7 +34,8 @@ export default function Sidebar() {
           { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
           { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
           { name: 'إستخراج الاسئلة', href: '/quiz', roles: ['admin', 'editor'] },
-          { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] }
+          { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] },
+          { name: 'استفسارات الاختبارات', href: '/quiz_questions', roles: ['admin', 'editor'] }
         ]
       },
       {
@@ -51,7 +53,9 @@ export default function Sidebar() {
         items: [
           { name: 'المستخدمين', href: '/users', roles: ['admin'] },
           { name: 'الدفعات المالية', href: '/mony1', roles: ['admin'] },
-          { name: 'users', href: '/new_user', roles: ['admin'] }
+          { name: 'إدارة المستخدمين', href: '/new_user', roles: ['admin'] },
+          { name: 'مراجعة وتوثيق الحسابات', href: '/verify_users', roles: ['admin'] },
+          { name: 'الجدوى المالية', href: '/finance', roles: ['admin'] }
         ]
       },
       {
@@ -59,7 +63,8 @@ export default function Sidebar() {
         name: 'إدارة النظام',
         items: [
           { name: 'الإعدادات', href: '/settings', roles: ['admin'] },
-          { name: 'ادارة لوحة التحكم', href: '/UserManagement', roles: ['admin'] }
+          { name: 'ادارة لوحة التحكم', href: '/UserManagement', roles: ['admin'] },
+          { name: 'الدردشة المباشرة', href: '/support_chat', roles: ['admin', 'editor'] }
         ]
       }
     ]
@@ -67,29 +72,38 @@ export default function Sidebar() {
     
     return sections.map(section => ({
       ...section,
-      items: section.items.filter(item =>
-        item.roles.includes(userRole || '') ||
-        (userRole === null && item.roles.includes('viewer'))
-      )
+      items: section.items.filter(item => {
+        if (userRole === 'admin' || userRole === 'owner') return true;
+        if (userPermissions && userPermissions.includes(item.href)) return true;
+        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
+        // but now we rely on custom permissions.
+        return false;
+      })
     })).filter(section => section.items.length > 0)
-  }, [userRole])
+  }, [userRole, userPermissions])
 
   useEffect(() => {
     const role = localStorage.getItem('userRole')
     setUserRole(role)
 
+    try {
+      const perms = localStorage.getItem('userPermissions')
+      if (perms) setUserPermissions(JSON.parse(perms))
+    } catch(e) {}
+
     const savedState = localStorage.getItem('sidebarState')
     if (savedState) {
       setExpandedSections(JSON.parse(savedState))
     } else {
-      const menuSections = getMenuSections()
-      const initialExpanded: {[key: string]: boolean} = {}
-      menuSections.forEach(section => {
-        initialExpanded[section.id] = false
+      setExpandedSections({
+        main: false,
+        education: false,
+        printing: false,
+        financial: false,
+        administration: false
       })
-      setExpandedSections(initialExpanded)
     }
-  }, [getMenuSections])
+  }, [])
 
   const toggleSection = (sectionId: string) => {
     const newState = {

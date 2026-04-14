@@ -44,10 +44,12 @@ export default function LoginPage() {
     console.log('Token received:', data.token);
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('userRole', data.user.role);
+    localStorage.setItem('userPermissions', JSON.stringify(data.user.permissions || []));
     
     // تعيين الكوكيز
     document.cookie = `authToken=${data.token}; path=/; max-age=${8 * 60 * 60}`;
     document.cookie = `userRole=${data.user.role}; path=/; max-age=${8 * 60 * 60}`;
+    document.cookie = `userPermissions=${encodeURIComponent(JSON.stringify(data.user.permissions || []))}; path=/; max-age=${8 * 60 * 60}`;
     
     router.push('/dashboard');
     router.refresh();

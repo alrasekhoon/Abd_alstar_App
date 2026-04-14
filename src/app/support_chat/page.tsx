@@ -30,6 +30,9 @@ export default function SupportChatManagement() {
   const [selectedUser, setSelectedUser] = useState<ChatListItem | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<ChatListItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // جلب قائمة المحادثات
@@ -116,6 +119,55 @@ export default function SupportChatManagement() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // بحث عن مستخدم
+  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim().length === 0) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/proxy/cp_chat_search_users.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: query })
+      });
+      const data = await response.json();
+      if (data.success && data.users) {
+        setSearchResults(data.users.map((u: any) => ({
+          ...u,
+          last_message: 'محادثة جديدة',
+          last_message_time: new Date().toISOString(),
+          last_sender: '',
+          unread_count: 0
+        })));
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // عند اختيار مستخدم من البحث
+  const handleSelectSearchedUser = (user: ChatListItem) => {
+    // تبديل الواجهة لإنهاء البحث
+    setSearchQuery('');
+    setSearchResults([]);
+    
+    // هل المستخدم موجود مسبقاً في القائمة؟
+    const exists = chats.find(c => c.user_id === user.user_id);
+    if (!exists) {
+      setChats([user, ...chats]);
+    }
+    setSelectedUser(user);
+  };
+
   // الاستماع لاختيار مستخدم
   useEffect(() => {
     if (selectedUser) {
@@ -150,22 +202,64 @@ export default function SupportChatManagement() {
   }, [selectedUser]); // نضيف selectedUser كمراقب ليقرأ منه الرسائل إذا تغير
 
   return (
-    <div className="flex h-[calc(100vh-80px)] bg-gray-50 font-sans" dir="rtl">
+    <div className="container mx-auto p-6 max-w-7xl font-sans" dir="rtl">
       <Head>
         <title>الدردشة المباشرة مع الطلاب</title>
       </Head>
 
-      {/* قائمة المحادثات (Sidebar) */}
-      <div className="w-1/3 bg-white border-l border-gray-200 flex flex-col h-full shadow-lg z-10">
-        <div className="p-4 border-b border-gray-200 bg-blue-600 text-white">
-          <h2 className="text-xl font-bold">الرسائل النشطة</h2>
+      <div className="bg-white rounded-lg shadow-md overflow-hidden flex h-[calc(100vh-140px)] border border-gray-200">
+        
+        {/* قائمة المحادثات (Sidebar) */}
+        <div className="w-1/3 bg-gray-50 border-l border-gray-200 flex flex-col h-full z-10">
+          <div className="p-4 border-b border-gray-200 bg-white flex flex-col space-y-3">
+            <h2 className="text-xl font-bold text-gray-800">المحادثات</h2>
+            
+            {/* مربع البحث */}
+            <div className="relative">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="ابحث عن مستخدم بالاسم أو الرقم لتنشاء محادثة..." 
+                className="w-full text-gray-800 bg-gray-100 rounded-lg px-4 py-2 pr-10 outline-none text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+              />
+            <svg className="w-5 h-5 absolute right-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            {isSearching && (
+               <span className="absolute left-3 top-2.5 w-5 h-5 border-2 border-white border-t-blue-500 rounded-full animate-spin"></span>
+            )}
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          {chats.length === 0 ? (
-            <p className="text-gray-500 text-center p-6">لا توجد محادثات حالياً</p>
+          {searchQuery.trim().length > 0 ? (
+            /* نتائج البحث */
+            searchResults.length === 0 && !isSearching ? (
+               <p className="text-gray-500 text-center p-6">لا توجد نتائج بحث</p>
+            ) : (
+              searchResults.map((chat) => (
+                <div 
+                  key={`search-${chat.user_id}`}
+                  onClick={() => handleSelectSearchedUser(chat)}
+                  className="p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-green-50 flex justify-between items-center"
+                >
+                  <div className="flex flex-col">
+                    <h3 className="font-semibold text-green-800 text-lg">
+                      {chat.first_name || chat.last_name ? `${chat.first_name || ''} ${chat.last_name || ''}` : chat.user_name || 'مستخدم غير معروف'}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1">{chat.user_phone}</p>
+                    <p className="text-xs text-green-600 mt-1 font-bold">+ بدء محادثة جديدة</p>
+                  </div>
+                </div>
+              ))
+            )
           ) : (
-            chats.map((chat) => (
+            /* القائمة العادية */
+            chats.length === 0 ? (
+              <p className="text-gray-500 text-center p-6">لا توجد محادثات حالياً</p>
+            ) : (
+              chats.map((chat) => (
               <div 
                 key={chat.user_id}
                 onClick={() => setSelectedUser(chat)}
@@ -193,7 +287,8 @@ export default function SupportChatManagement() {
                 </div>
               </div>
             ))
-          )}
+          )
+        )}
         </div>
       </div>
 
@@ -295,6 +390,7 @@ export default function SupportChatManagement() {
           </div>
         )}
       </div>
+     </div>
     </div>
   );
 }

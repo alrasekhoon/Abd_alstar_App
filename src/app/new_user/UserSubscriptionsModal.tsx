@@ -45,6 +45,13 @@ export default function UserSubscriptionsModal({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
+  // حالة الإشعار السريع للإضافة
+  const [quickNotification, setQuickNotification] = useState({
+    isOpen: false,
+    title: '',
+    body: ''
+  });
+
   // حالة النموذج الجديد
   const [newSubscription, setNewSubscription] = useState({
     materialid: '',
@@ -189,11 +196,24 @@ export default function UserSubscriptionsModal({
         throw new Error(result.message || 'حدث خطأ أثناء الإضافة');
       }
 
+      // حالة حفظ اسم المادة والنوع لاستخدامها في الإشعار
+      const savedMaterialName = newSubscription.materialName;
+      const savedType = newSubscription.type1;
+
       // إعادة تحميل الاشتراكات
       await fetchSubscriptions();
       setShowAddForm(false);
       resetForm();
       setError('');
+
+      // رسالة التأكيد لإرسال الإشعار
+      if (window.confirm('تم إضافة الاشتراك بنجاح. هل تريد إرسال إشعار للطالب لإخباره بتفعيل الاشتراك؟')) {
+        setQuickNotification({
+          isOpen: true,
+          title: 'تفعيل اشتراك جديد',
+          body: `مرحباً، تم تفعيل اشتراكك ( ${savedType} ) في مادة ${savedMaterialName} بنجاح.`
+        });
+      }
 
     } catch (err) {
       console.error('Error adding subscription:', err);
@@ -265,6 +285,36 @@ export default function UserSubscriptionsModal({
     }
   };
 
+  const handleSendQuickNotification = async () => {
+    try {
+      setError('');
+      setIsLoading(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          title: quickNotification.title,
+          body: quickNotification.body,
+          url1: '',
+          note1: ''
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert('تم إرسال الإشعار للطالب بنجاح!');
+        setQuickNotification({ isOpen: false, title: '', body: '' });
+      } else {
+        throw new Error(result.error || 'فشل في إرسال الإشعار');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ أثناء الإرسال');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setNewSubscription({
       materialid: '',
@@ -314,7 +364,7 @@ export default function UserSubscriptionsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
         {/* الهيدر */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
@@ -611,6 +661,53 @@ export default function UserSubscriptionsModal({
           </button>
         </div>
       </div>
+
+      {quickNotification.isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">إرسال إشعار للطالب</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  value={quickNotification.title}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">محتوى الإشعار</label>
+                <textarea
+                  value={quickNotification.body}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6 space-x-3">
+              <button
+                onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                تخطي / إلغاء
+              </button>
+              <button
+                onClick={handleSendQuickNotification}
+                disabled={isLoading || !quickNotification.title || !quickNotification.body}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -30,6 +30,8 @@ type User = {
   date1: string;
   device_uuid: string;
   global_account: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type PaginationInfo = {
@@ -262,6 +264,15 @@ const [transactionsModal, setTransactionsModal] = useState({
     if (!dateString) return '-';
     try {
       return new Date(dateString).toLocaleDateString('ar-EG');
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatDateTime = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleString('ar-EG');
     } catch {
       return dateString;
     }
@@ -597,7 +608,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
         {/* مودال تفاصيل المستخدم */}
 
 {isUserModalOpen && selectedUser && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
     <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">تفاصيل المستخدم</h2>
@@ -732,12 +743,27 @@ const openNotificationsModal = (userId: number, userName: string) => {
                 </span>
               </p>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">رمز التفعيل (OTP)</label>
+              <p className="text-blue-900 bg-blue-50 p-2 rounded-lg border border-blue-200 font-bold tracking-widest text-center">{selectedUser.auth || '-'}</p>
+            </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التسجيل</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التسجيل القديم</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{formatDate(selectedUser.date1)}</p>
             </div>
             
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">وقت إنشاء الحساب</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">آخر تحديث للحساب</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الجهاز</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs font-mono">{selectedUser.device_uuid || '-'}</p>

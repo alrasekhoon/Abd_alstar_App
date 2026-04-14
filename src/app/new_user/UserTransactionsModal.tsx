@@ -40,6 +40,14 @@ export default function UserTransactionsModal({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isSendingNotif, setIsSendingNotif] = useState(false);
+  
+  // حالة الإشعار السريع
+  const [quickNotification, setQuickNotification] = useState({
+    isOpen: false,
+    title: '',
+    body: ''
+  });
   
   const [newTransaction, setNewTransaction] = useState({
     mony: '',
@@ -161,6 +169,17 @@ export default function UserTransactionsModal({
       // إعادة تحميل البيانات فوراً بعد الإضافة
       await fetchData();
       
+      const transactionTypeStr = requestBody.type === 'deposit' ? 'إيداع' : 'سحب';
+      const verbStr = requestBody.type === 'deposit' ? 'إضافة' : 'خصم';
+      
+      if (window.confirm('تمت العملية المالية بنجاح. هل تريد إرسال إشعار للطالب لتنبيهه بالحركة المالية؟')) {
+        setQuickNotification({
+          isOpen: true,
+          title: `تم ${verbStr} مبلغ في حسابك`,
+          body: `مرحباً، تم ${verbStr} مبلغ ${Number(requestBody.mony).toLocaleString()} في دفتترك المالي (عملية ${transactionTypeStr}).\nتفاصيل: ${requestBody.note || '-'}`
+        });
+      }
+
       setNewTransaction({
         mony: '',
         type: 'deposit',
@@ -172,6 +191,36 @@ export default function UserTransactionsModal({
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
     } finally {
       setIsAdding(false);
+    }
+  };
+
+  const handleSendQuickNotification = async () => {
+    try {
+      setError('');
+      setIsSendingNotif(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          title: quickNotification.title,
+          body: quickNotification.body,
+          url1: '',
+          note1: ''
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert('تم إرسال الإشعار للطالب بنجاح!');
+        setQuickNotification({ isOpen: false, title: '', body: '' });
+      } else {
+        throw new Error(result.error || 'فشل في إرسال الإشعار');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ أثناء الإرسال');
+    } finally {
+      setIsSendingNotif(false);
     }
   };
 
@@ -214,7 +263,7 @@ const handleDeleteTransaction = async (transactionId: number) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl overflow-hidden flex flex-col max-h-[95vh]">
         {/* رأس المودال */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
@@ -442,6 +491,53 @@ const handleDeleteTransaction = async (transactionId: number) => {
           </button>
         </div>
       </div>
+
+      {quickNotification.isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[70]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">إرسال إشعار للطالب</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  value={quickNotification.title}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">محتوى الإشعار</label>
+                <textarea
+                  value={quickNotification.body}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6 space-x-3">
+              <button
+                onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                تخطي / إلغاء
+              </button>
+              <button
+                onClick={handleSendQuickNotification}
+                disabled={isSendingNotif || !quickNotification.title || !quickNotification.body}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {isSendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

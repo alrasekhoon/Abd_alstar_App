@@ -77,6 +77,27 @@ export default function BillManagement() {
     }
   });
 
+  // حالات الدفعات المالية
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    user_id: 0,
+    mony: '',
+    type: 'deposit',
+    dolar: 'no',
+    note: ''
+  });
+
+  // حالات الإشعارات
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [notifData, setNotifData] = useState({
+    user_id: 0,
+    title: '',
+    body: '',
+    url1: '',
+    note1: ''
+  });
+  const [selectedUserName, setSelectedUserName] = useState('');
+
   const API_URL = '/api/proxy/cp_bills.php';
   const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
 
@@ -469,6 +490,88 @@ export default function BillManagement() {
     }
   };
 
+  // دوال الدفعة المالية
+  const openPaymentModal = (bill: BillItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPaymentData({
+      user_id: bill.user_id,
+      mony: '',
+      type: 'deposit',
+      dolar: 'no',
+      note: `دفعة بخصوص الفاتورة رقم ${bill.id}`
+    });
+    setSelectedUserName(bill.name || bill.rec_name);
+    setIsPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => setIsPaymentModalOpen(false);
+
+  const handlePaymentSubmit = async () => {
+    if (!paymentData.mony || parseFloat(paymentData.mony) <= 0) {
+      alert('الرجاء إدخال مبلغ صحيح');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const payload = {
+        ...paymentData,
+        admin_user: 1 
+      };
+      const response = await fetch('/api/proxy/cp_money.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
+      alert('تمت إضافة الدفعة بنجاح!');
+      closePaymentModal();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // دوال الإشعارات
+  const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotifData({
+      user_id: bill.user_id,
+      title: 'تحديث بخصوص طلب الطباعة',
+      body: `فاتورتك رقم ${bill.id} قيد التحضير والتوصيل ...`,
+      url1: '',
+      note1: ''
+    });
+    setSelectedUserName(bill.name || bill.rec_name);
+    setIsNotifModalOpen(true);
+  };
+
+  const closeNotifModal = () => setIsNotifModalOpen(false);
+
+  const handleNotifSubmit = async () => {
+    if (!notifData.title || !notifData.body) {
+      alert('الرجاء تعبئة العنوان والمحتوى');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifData)
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      alert('تم إرسال الإشعار بنجاح!');
+      closeNotifModal();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
@@ -487,11 +590,106 @@ export default function BillManagement() {
     </div>
   );
 
+  // --- Summary Calculations ---
+  const billsStats = {
+    total: bills.length,
+    pending: bills.filter(b => b.status === 'pending').length,
+    processing: bills.filter(b => b.status === 'processing').length,
+    completed: bills.filter(b => b.status === 'completed').length,
+    cancelled: bills.filter(b => b.status === 'cancelled').length,
+  };
+
+  const materialsToPrint: Record<string, number> = {};
+  bills.filter(b => b.status === 'processing').forEach(bill => {
+    if (bill.details) {
+      bill.details.forEach(detail => {
+        if (detail.m_name) {
+          materialsToPrint[detail.m_name] = (materialsToPrint[detail.m_name] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  const materialsToPrintArray = Object.entries(materialsToPrint).map(([name, count]) => ({
+    name, count
+  })).sort((a, b) => b.count - a.count);
+  // ----------------------------
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-gray-800">إدارة الفواتير</h1>
+        </div>
+
+        {/* Dashboard Summary Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-700 mb-4">ملخص الإحصائيات</h2>
+          
+          {/* Status Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-blue-500 text-sm font-semibold mb-1">إجمالي الفواتير</div>
+              <div className="text-2xl font-bold text-blue-800">{billsStats.total}</div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-yellow-600 text-sm font-semibold mb-1">قيد الانتظار</div>
+              <div className="text-2xl font-bold text-yellow-800">{billsStats.pending}</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-purple-600 text-sm font-semibold mb-1">قيد المعالجة</div>
+              <div className="text-2xl font-bold text-purple-800">{billsStats.processing}</div>
+            </div>
+            <div className="bg-green-50 border border-green-100 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-green-600 text-sm font-semibold mb-1">مكتملة</div>
+              <div className="text-2xl font-bold text-green-800">{billsStats.completed}</div>
+            </div>
+            <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-center shadow-sm">
+              <div className="text-red-500 text-sm font-semibold mb-1">ملغاة</div>
+              <div className="text-2xl font-bold text-red-800">{billsStats.cancelled}</div>
+            </div>
+          </div>
+
+          {/* Materials needed to print */}
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex items-center justify-between">
+              <h3 className="text-md font-semibold text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                المواد المطلوب طباعتها (للفواتير قيد المعالجة)
+              </h3>
+              <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                {materialsToPrintArray.length} مواد مختلفة
+              </span>
+            </div>
+            <div className="p-0 overflow-x-auto max-h-60 overflow-y-auto">
+              {materialsToPrintArray.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-white sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسخ المطلوبة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {materialsToPrintArray.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                          <span className="font-bold text-gray-800">{item.count}</span> نسخة
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  لا توجد فواتير قيد المعالجة تتطلب طباعة في الوقت الحالي.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Filter Section */}
@@ -814,6 +1012,28 @@ export default function BillManagement() {
                       <div className="flex space-x-2">
 
                         <button
+                          onClick={(e) => openPaymentModal(bill, e)}
+                          className="text-green-600 hover:text-green-900 flex items-center bg-green-50 hover:bg-green-100 px-2 py-1 rounded"
+                          title="إضافة دفعة مالية"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          دفعة
+                        </button>
+                        
+                        <button
+                          onClick={(e) => openNotifModal(bill, e)}
+                          className="text-blue-600 hover:text-blue-900 flex items-center bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded"
+                          title="إرسال إشعار"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                          إشعار
+                        </button>
+
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
 
@@ -822,7 +1042,7 @@ export default function BillManagement() {
                             }
 
                           }}
-                          className="text-red-600 hover:text-red-900 flex items-center"
+                          className="text-red-600 hover:text-red-900 flex items-center px-1"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1022,6 +1242,174 @@ export default function BillManagement() {
           </div>
         </div>
       )}
+
+      {/* Modal إضافة الدفعة المالية */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إضافة دفعة مالية</h2>
+              <button
+                onClick={closePaymentModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg text-sm text-gray-700">
+                إضافة دفعة للعميل: <span className="font-bold">{selectedUserName}</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  value={paymentData.mony}
+                  onChange={(e) => setPaymentData({ ...paymentData, mony: e.target.value })}
+                  placeholder="أدخل المبلغ"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">نوع العملية</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    value={paymentData.type}
+                    onChange={(e) => setPaymentData({ ...paymentData, type: e.target.value })}
+                  >
+                    <option value="deposit">إيداع (دفعة مقدمة)</option>
+                    <option value="withdraw">سحب</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">العملة</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    value={paymentData.dolar}
+                    onChange={(e) => setPaymentData({ ...paymentData, dolar: e.target.value })}
+                  >
+                    <option value="no">محلي (سوري)</option>
+                    <option value="yes">دولار أمريكي</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">الملاحظات / البيان</label>
+                <textarea
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  value={paymentData.note}
+                  onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closePaymentModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePaymentSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري الحفظ...' : 'حفظ الدفعة'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal إرسال الإشعار */}
+      {isNotifModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إرسال إشعار للمستخدم</h2>
+              <button
+                onClick={closeNotifModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg text-sm text-gray-700">
+                إرسال إشعار للعميل: <span className="font-bold">{selectedUserName}</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار *</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={notifData.title}
+                  onChange={(e) => setNotifData({ ...notifData, title: e.target.value })}
+                  placeholder="مثال: تم شحن طلبك"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">محتوى الإشعار (الرسالة) *</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={notifData.body}
+                  onChange={(e) => setNotifData({ ...notifData, body: e.target.value })}
+                  placeholder="نص الرسالة المرسلة..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">رابط مرفق (اختياري)</label>
+                <input
+                  type="url"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-left"
+                  value={notifData.url1}
+                  onChange={(e) => setNotifData({ ...notifData, url1: e.target.value })}
+                  dir="ltr"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeNotifModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNotifSubmit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

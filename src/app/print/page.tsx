@@ -50,6 +50,14 @@ export default function TprintManagement() {
     }
   });
 
+  // حالة modal اعادة تسعير الكل
+  const [isBulkRepriceModalOpen, setIsBulkRepriceModalOpen] = useState(false);
+  const [bulkRepriceData, setBulkRepriceData] = useState({
+    sy_price: '',
+    d_price: ''
+  });
+  const [isBulkRepricing, setIsBulkRepricing] = useState(false);
+
   const API_URL = '/api/proxy/cp_tprint.php';
 
   useEffect(() => {
@@ -311,7 +319,38 @@ export default function TprintManagement() {
     }
   };
 
-  if (isLoading) return (
+  const handleBulkRepriceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bulkRepriceData.sy_price || !bulkRepriceData.d_price) {
+      alert('يرجى تعبئة كلا الحقلين للسعر.');
+      return;
+    }
+    if (!confirm('هل أنت متأكد من تغيير أسعار كافة المطبوعات دفعة واحدة؟')) return;
+
+    try {
+      setIsBulkRepricing(true);
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=bulk_reprice&refresh=${timestamp}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bulkRepriceData)
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'فشل إعادة التسعير');
+
+      alert(`نجاح: ${data.message || 'تم تحديث جميع الأسعار'}`);
+      setIsBulkRepriceModalOpen(false);
+      setBulkRepriceData({ sy_price: '', d_price: '' });
+      fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ أثناء إجراء التسعير الشامل');
+    } finally {
+      setIsBulkRepricing(false);
+    }
+  };
+
+  if (isLoading && data.length === 0) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -334,15 +373,26 @@ export default function TprintManagement() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">إدارة مواد الطباعة</h1>
-          <button
-            onClick={openAddForm}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition duration-300 flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            إضافة جديد
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={openAddForm}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition duration-300 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              إضافة جديد
+            </button>
+            <button
+              onClick={() => setIsBulkRepriceModalOpen(true)}
+              className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg shadow hover:from-purple-600 hover:to-purple-700 transition duration-300 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              إعادة تسعير الكل
+            </button>
+          </div>
         </div>
 
         {/* واجهة الفلترة */}
@@ -672,7 +722,7 @@ export default function TprintManagement() {
 
       {/* Modal الاشتراكات المجانية */}
       {isSubscriptionModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">إضافة اشتراك مجاني</h2>
@@ -782,6 +832,78 @@ export default function TprintManagement() {
           </div>
         </div>
       )}
+
+      {/* مودال إعادة تسعير الكل */}
+      {isBulkRepriceModalOpen && (
+        <div className="fixed inset-0 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96 relative border-t-8 border-purple-600">
+            <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              إعادة تسعير المطبوعات الشامل
+            </h3>
+            <p className="text-gray-500 mb-4 text-sm leading-relaxed">
+              تحدد هذه الأداة الأسعار المدخلة لجميع المطبوعات المحفوظة بالنظام <strong className="text-red-500">دفعة واحدة وتستبدل أسعارها الحالية</strong>.
+            </p>
+
+            <form onSubmit={handleBulkRepriceSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">تعميم السعر بالعملة المحلية (ل.س)</label>
+                  <input
+                    type="number"
+                    value={bulkRepriceData.sy_price}
+                    onChange={(e) => setBulkRepriceData({ ...bulkRepriceData, sy_price: e.target.value })}
+                    placeholder="مثال: 15000"
+                    className="w-full px-4 py-2 border rounded focus:ring-purple-500 focus:border-purple-500 bg-purple-50 font-mono text-lg"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">تعميم السعر بالدولار ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={bulkRepriceData.d_price}
+                    onChange={(e) => setBulkRepriceData({ ...bulkRepriceData, d_price: e.target.value })}
+                    placeholder="مثال: 5.50"
+                    className="w-full px-4 py-2 border rounded focus:ring-green-500 focus:border-green-500 bg-green-50 font-mono text-lg"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkRepriceModalOpen(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                  disabled={isBulkRepricing}
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition flex items-center"
+                  disabled={isBulkRepricing}
+                >
+                  {isBulkRepricing ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      جاري التنفيذ...
+                    </>
+                  ) : 'تنفيذ  '}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

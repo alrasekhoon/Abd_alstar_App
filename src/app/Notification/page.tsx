@@ -84,6 +84,14 @@ export default function NotificationManagement() {
         note1: item.note1 || null,
         user_type: item.user_type || userTypes[0].value
       }));
+
+      // ترتيب الإشعارات من الأحدث للأقدم
+      cleanedData.sort((a, b) => {
+        const idA = a.id || 0;
+        const idB = b.id || 0;
+        return idB - idA;
+      });
+
       setNotificationItems(cleanedData);
       
     } catch (err) {
@@ -279,8 +287,8 @@ export default function NotificationManagement() {
 
         {/* Modal for Add/Edit Notification */}
         {editingItem && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
                   {editingItem.id ? 'تعديل الإشعار' : 'إضافة إشعار جديد'}

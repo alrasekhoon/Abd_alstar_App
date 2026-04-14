@@ -52,6 +52,21 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Subscribers Modal State
+  const [showSubscribersModal, setShowSubscribersModal] = useState(false);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [isSubscribersLoading, setIsSubscribersLoading] = useState(false);
+  const [selectedMaterialName, setSelectedMaterialName] = useState('');
+  const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(null);
+  const [searchSubscribersQuery, setSearchSubscribersQuery] = useState('');
+
+  // Notification Modal State
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationBody, setNotificationBody] = useState('');
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+
   const [newItem, setNewItem] = useState<Partial<MaterialItem>>({
     category_id: 0,
     material_name: '',
@@ -316,8 +331,101 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     });
   };
 
-  const handleViewUnits = (materialId: number) => {
-    onNavigate('units', { materialId });
+  const handleViewSubscribers = async (item: MaterialItem) => {
+    setSelectedMaterialName(item.material_name);
+    setSelectedMaterialId(item.id!);
+    setSearchSubscribersQuery('');
+    setShowSubscribersModal(true);
+    setIsSubscribersLoading(true);
+    try {
+      const response = await fetch(`/api/proxy/cp_material_subscribers.php?material_id=${item.id}&refresh=${Date.now()}`);
+      if (!response.ok) throw new Error('فشل في جلب البيانات من الخادم');
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل في جلب المشتركين');
+      setSubscribers(data.subscribers || []);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsSubscribersLoading(false);
+    }
+  };
+
+  const handleDeleteAllSubscribers = async () => {
+    if (!selectedMaterialId) return;
+    if (!window.confirm('تحذير نهائي: سيتم حذف جميع المشتركين بهذه المادة نهائياً ولا يمكن التراجع! هل أنت متأكد من الاستمرار؟')) return;
+
+    try {
+      const response = await fetch(`/api/proxy/cp_material_subscribers.php?action=delete_all&material_id=${selectedMaterialId}`, {
+        method: 'DELETE',
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'فشل في حذف المشتركين');
+      
+      alert(data.message || 'تم حذف جميع المشتركين بنجاح');
+      setSubscribers([]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    }
+  };
+
+  const handleDeleteSubscriber = async (subId: number) => {
+    if (!window.confirm('هل أنت متأكد من حذف اشتراك هذا المستخدم؟')) return;
+
+    try {
+      const response = await fetch(`/api/proxy/cp_material_subscribers.php?action=delete_single&sub_id=${subId}`, {
+        method: 'DELETE',
+        cache: 'no-store'
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'فشل الحذف');
+      
+      setSubscribers(prev => prev.filter(s => s.sub_id !== subId));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    }
+  };
+
+  const filteredSubscribers = subscribers.filter(sub => 
+    (sub.name && sub.name.toLowerCase().includes(searchSubscribersQuery.toLowerCase())) ||
+    (sub.phone && sub.phone.includes(searchSubscribersQuery))
+  );
+
+  const handleOpenNotificationModal = (item: MaterialItem) => {
+    setSelectedMaterialId(item.id!);
+    setSelectedMaterialName(item.material_name);
+    setNotificationTitle('');
+    setNotificationBody('');
+    setShowNotificationModal(true);
+  };
+
+  const handleSendNotification = async () => {
+    if (!notificationTitle.trim() || !notificationBody.trim()) {
+      alert('الرجاء إدخال عنوان ونص الإشعار');
+      return;
+    }
+    
+    setIsSendingNotification(true);
+    try {
+      const response = await fetch('/api/proxy/cp_material_subscribers.php?action=send_notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          material_id: selectedMaterialId,
+          title: notificationTitle,
+          body: notificationBody
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      
+      alert(`نجاح: ${data.message}`);
+      setShowNotificationModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsSendingNotification(false);
+    }
   };
 
   if (isLoading) return (
@@ -346,6 +454,194 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b bg-amber-50">
+              <h3 className="text-lg font-bold text-amber-800 flex items-center">
+                إرسال إشعار لمشتركي المادة
+              </h3>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-amber-500 hover:bg-amber-100 p-1 rounded-full transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm mb-4">
+                سيتم إرسال الإشعار لجميع المشتركين النشطين في مادة: <span className="font-bold">{selectedMaterialName}</span>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  value={notificationTitle}
+                  onChange={(e) => setNotificationTitle(e.target.value)}
+                  placeholder="أدخل عنواناً جذاباً"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">نص الإشعار</label>
+                <textarea
+                  value={notificationBody}
+                  onChange={(e) => setNotificationBody(e.target.value)}
+                  placeholder="اكتب المحتوى الذي ترغب بإرساله للطلاب..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
+                ></textarea>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleSendNotification}
+                disabled={isSendingNotification}
+                className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition flex items-center"
+              >
+                {isSendingNotification ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                    </svg>
+                    إرسال الإشعار
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscribers Modal */}
+      {showSubscribersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                المشتركون في المادة: <span className="text-blue-600 mr-2">{selectedMaterialName}</span>
+                <span className="bg-gray-200 text-gray-700 text-sm py-1 px-2 rounded-full mr-3">
+                  {subscribers.length} مشترك
+                </span>
+              </h3>
+              <div className="flex items-center gap-3">
+                {subscribers.length > 0 && !isSubscribersLoading && (
+                  <button
+                    onClick={handleDeleteAllSubscribers}
+                    className="flex items-center bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded transition text-sm font-medium"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    حذف جميع المشتركين
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowSubscribersModal(false)}
+                  className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Search Input */}
+            <div className="p-4 border-b bg-white border-gray-100 flex-shrink-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="ابحث عن مشترك بالاسم أو رقم الهاتف..."
+                  value={searchSubscribersQuery}
+                  onChange={(e) => setSearchSubscribersQuery(e.target.value)}
+                  className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
+                  dir="rtl"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 text-right" dir="rtl">
+              {isSubscribersLoading ? (
+                <div className="flex justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : filteredSubscribers.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الهاتف</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدينة</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الاشتراك</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ المدفوع</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الاشتراك</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredSubscribers.map((sub) => (
+                        <tr key={sub.sub_id} className="hover:bg-gray-50 group">
+                          <td className="px-4 py-3 text-sm text-gray-900 font-medium">{sub.name}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600" dir="ltr">{sub.phone}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{sub.city || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs whitespace-nowrap">
+                              {sub.type1 == '1' ? 'مقرر' : sub.type1 == '2' ? 'أسئلة' : sub.type1 == '3' ? 'باقات' : sub.type1}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-green-600 font-bold whitespace-nowrap">{sub.price1}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap" dir="ltr">{new Date(sub.created_at).toLocaleDateString('ar-EG')}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => handleDeleteSubscriber(sub.sub_id)}
+                              className="text-red-500 hover:text-white hover:bg-red-500 p-1.5 rounded transition opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center"
+                              title="حذف المشترك"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : subscribers.length > 0 ? (
+                <div className="text-center p-8 text-gray-500">لا يوجد متطابق في نتائج البحث</div>
+              ) : (
+                <div className="text-center p-8 text-gray-500">لا يوجد مشتركون في هذه المادة حالياً</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md p-6">
         {/* العنوان وقوائم التصفية في سطر واحد */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -838,14 +1134,24 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                             حذف
                           </button>
                           <button
-                            onClick={() => item.id && handleViewUnits(item.id)}
+                            onClick={() => item.id && handleViewSubscribers(item)}
                             className="text-blue-600 hover:text-blue-900 flex items-center justify-center text-xs p-2 border border-blue-600 rounded"
+                            title="عرض المستخدمين المشتركين بالمادة"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
-                              <path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                             </svg>
-                            الوحدات
+                            المشتركون
+                          </button>
+                          <button
+                            onClick={() => item.id && handleOpenNotificationModal(item)}
+                            className="text-amber-600 hover:text-amber-900 flex items-center justify-center text-xs p-2 border border-amber-600 rounded"
+                            title="إرسال إشعار لمشتركي هذه المادة"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                            </svg>
+                            إشعار
                           </button>
                         </>
                       )}
