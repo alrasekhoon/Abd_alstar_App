@@ -54,12 +54,3 @@ main ﴾
     border-bottom: none;
   }
 }
-
-body {
-    background-color: #ffffff;
-}
-
-nav.flex-1 {
-    display: flex !important;
-    flex-direction: row !important;
-}
