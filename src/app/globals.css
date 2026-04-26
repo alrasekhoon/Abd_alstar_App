@@ -54,3 +54,7 @@ main ﴾
     border-bottom: none;
   }
 }
+
+body {
+    background-color: #ffffff;
+}
