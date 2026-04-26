@@ -24,7 +24,7 @@ export default function Sidebar() {
           { name: 'الأخبار', href: '/news', roles: ['admin', 'editor'] },
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
-          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] }
+          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
           { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
         ]
       },
