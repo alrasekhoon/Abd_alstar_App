@@ -59,8 +59,7 @@ body {
     background-color: #ffffff;
 }
 
-.flex-1 {
+nav.flex-1 {
     display: flex !important;
     flex-direction: row !important;
-  }
-  
+}
