@@ -25,11 +25,12 @@ export default function Sidebar() {
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
           { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] }
+          { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
         ]
       },
       {
         id: 'education',
-        name: 'المقررات',
+        name: 'إدارة المقررات',
         items: [
           { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
           { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
