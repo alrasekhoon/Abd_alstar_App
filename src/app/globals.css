@@ -31,7 +31,33 @@ body {
 }
 
 main ﴾
-@media (min-width: 1024px) {
-  margin-right: 16rem;
-  margin-left: 0;
+@media (max-width: 768px) {
+  table {
+    width: 100% !important;
+    display: block;
+  }
+  thead {
+    display: none; /* إخفاء العناوين العلوية في الجوال لتجنب الفوضى */
+  }
+  tbody {
+    display: block;
+    width: 100%;
+  }
+  tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  td {
+    display: block;
+    text-align: right; /* لضبط النص مع اتجاه اللغة العربية */
+    border-bottom: 1px solid #f3f4f6;
+    padding: 10px 5px;
+  }
+  td:last-child {
+    border-bottom: none;
+  }
 }
