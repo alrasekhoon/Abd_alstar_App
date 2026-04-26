@@ -30,8 +30,8 @@ body {
   padding: 0;
 }
 
-main {
-  margin-right: 16rem; /* نفس عرض القائمة الجانبية */
-  margin-left: 0; /* إزالة الهامش الأيسر */
-
+main ﴾
+@media (min-width: 1024px) {
+  margin-right: 16rem;
+  margin-left: 0;
 }
