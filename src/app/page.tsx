@@ -1,3 +1,7 @@
+export default function TestPage() {
+  return <h1 style={{color: 'red', fontSize: '100px', position: 'fixed', top: 0, zIndex: 9999}}>اختبار الظهور</h1>
+}
+
 //page.tsx
 'use client';
 
