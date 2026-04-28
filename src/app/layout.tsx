@@ -16,6 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
+      {/* هنا قمنا بإزالة أي Header أو Sidebar لكي لا تتكرر */}
       <body className={`${inter.className} bg-gray-50`}>
         {children}
       </body>
