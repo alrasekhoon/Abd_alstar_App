@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${inter.className} md:mr-64`}>
+      <body className={inter.className}>
         {children}
       </body>
     </html>
