@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-// سنفترض أن هذه هي مسارات المكونات الجديدة، يمكنك تعديلها حسب مجلداتك
-import Sidebar from '@/components/Sidebar' 
-import TopNavbar from '@/components/TopNavbar' 
+import Sidebar from './components/Sidebar' 
+import TopNavbar from './components/TopNavbar' 
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'الراسخون في القانون', // قمت بتعديل الاسم بناءً على صورتك
+  title: 'الراسخون في القانون',
   description: 'لوحة تحكم الراسخون في القانون',
 }
 
@@ -19,9 +18,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      {/* تمت إزالة md:mr-64 واستخدام flex-col لجعل الصفحة مقسمة 
-        عمودياً (رأس صفحة ثم باقي المحتوى) 
-      */}
       <body className={`${inter.className} bg-gray-50 flex flex-col h-screen overflow-hidden`}>
         
         {/* 1. القائمة العلوية الأفقية */}
@@ -33,7 +29,7 @@ export default function RootLayout({
           {/* القائمة الجانبية (عمودية) */}
           <Sidebar />
 
-          {/* محتوى الصفحة المتغير (الجداول، النماذج، إلخ) */}
+          {/* محتوى الصفحة المتغير */}
           <main className="flex-1 overflow-y-auto p-4 md:p-8">
             {children}
           </main>
