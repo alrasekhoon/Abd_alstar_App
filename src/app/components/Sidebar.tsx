@@ -27,7 +27,10 @@ export default function Sidebar() {
     try {
       const perms = localStorage.getItem('userPermissions')
       if (perms) setUserPermissions(JSON.parse(perms))
-    } catch(e) {}
+    } catch(e) {
+      // تم إضافة هذا السطر لحل مشكلة ESLint في Vercel
+      console.error("Error parsing permissions:", e);
+    }
   }, [])
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
