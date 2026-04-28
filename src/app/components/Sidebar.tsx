@@ -1,239 +1,60 @@
 'use client'
-
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useDashboard } from './DashboardContext'
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [userPermissions, setUserPermissions] = useState<string[]>([])
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const router = useRouter()
-
-  const getMenuSections = useCallback(() => {
-    const sections = [
-      {
-        id: 'main',
-        name: 'الواجهة الرئيسية',
-        items: [
-          { name: 'الاعلانات', href: '/adv', roles: ['admin', 'editor'] },
-          { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
-          { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
-          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
-          { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
-        ]
-      },
-      {
-        id: 'education',
-        name: 'إدارة المقررات',
-        items: [
-          { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
-          { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
-          { name: 'إستخراج الاسئلة', href: '/quiz', roles: ['admin', 'editor'] },
-          { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] },
-          { name: 'استفسارات الاختبارات', href: '/quiz_questions', roles: ['admin', 'editor'] }
-        ]
-      },
-      {
-        id: 'printing',
-        name: 'الطباعة والتوصيل',
-        items: [
-          { name: 'الطباعة', href: '/print', roles: ['admin', 'printer'] },
-          { name: 'التوصيل والشحن', href: '/delv', roles: ['admin', 'printer'] },
-          { name: 'الفواتير', href: '/print_bill', roles: ['admin', 'printer'] }
-        ]
-      },
-      {
-        id: 'financial',
-        name: 'المستخدمين والمالية',
-        items: [
-          { name: 'المستخدمين', href: '/users', roles: ['admin'] },
-          { name: 'الدفعات المالية', href: '/mony1', roles: ['admin'] },
-          { name: 'إدارة المستخدمين', href: '/new_user', roles: ['admin'] },
-          { name: 'مراجعة وتوثيق الحسابات', href: '/verify_users', roles: ['admin'] },
-          { name: 'الجدوى المالية', href: '/finance', roles: ['admin'] }
-        ]
-      },
-      {
-        id: 'administration',
-        name: 'إدارة النظام',
-        items: [
-          { name: 'الإعدادات', href: '/settings', roles: ['admin'] },
-          { name: 'ادارة لوحة التحكم', href: '/UserManagement', roles: ['admin'] },
-          { name: 'الدردشة المباشرة', href: '/support_chat', roles: ['admin', 'editor'] }
-        ]
-      }
-    ]
-
-    
-    return sections.map(section => ({
-      ...section,
-      items: section.items.filter(item => {
-        if (userRole === 'admin' || userRole === 'owner') return true;
-        if (userPermissions && userPermissions.includes(item.href)) return true;
-        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
-        // but now we rely on custom permissions.
-        return false;
-      })
-    })).filter(section => section.items.length > 0)
-  }, [userRole, userPermissions])
-
-  useEffect(() => {
-    const role = localStorage.getItem('userRole')
-    setUserRole(role)
-
-    try {
-      const perms = localStorage.getItem('userPermissions')
-      if (perms) setUserPermissions(JSON.parse(perms))
-    } catch(e) {}
-
-    const savedState = localStorage.getItem('sidebarState')
-    if (savedState) {
-      setExpandedSections(JSON.parse(savedState))
-    } else {
-      setExpandedSections({
-        main: false,
-        education: false,
-        printing: false,
-        financial: false,
-        administration: false
-      })
-    }
-  }, [])
-
-  const toggleSection = (sectionId: string) => {
-    const newState = {
-      ...expandedSections,
-      [sectionId]: !expandedSections[sectionId]
-    }
-    setExpandedSections(newState)
-    localStorage.setItem('sidebarState', JSON.stringify(newState))
-  }
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
-  }
-
-  const handleLinkClick = () => {
-    if (window.innerWidth < 768) {
-      setIsSidebarOpen(false)
-    }
-  }
-
-  const menuSections = getMenuSections()
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken')
-    router.push('/login')
-  }
+  const { filteredSections, activeSection, isSidebarOpen, closeSidebar, userRole, handleLogout } = useDashboard()
+  const currentSection = filteredSections.find(s => s.id === activeSection)
 
   return (
     <>
-      {/* زر فتح القائمة في الهواتف (موجود على اليمين) */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 right-4 z-50 bg-gray-800 text-white p-3 rounded-lg shadow-lg"
-      >
-        {isSidebarOpen ? '✕' : '☰'}
-      </button>
-
-      {/* طبقة التعتيم الخلفية للهواتف */}
       {isSidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+        <div className="md:hidden fixed inset-0 bg-black/50 z-30" onClick={closeSidebar} />
       )}
-
-      {/* القائمة الجانبية على اليمين */}
-      <div className={`
-        w-64 bg-gray-800 text-white h-full flex flex-col transition-transform duration-300 ease-in-out
-        fixed right-0 top-0 z-40
-        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+      <aside className={`
+        w-64 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col
+        fixed top-0 right-0 h-full z-40 shadow-xl
+        transition-transform duration-300 ease-in-out
+        md:relative md:h-auto md:z-auto md:shadow-sm md:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
-        <div className="p-4 text-xl font-bold border-b border-gray-700 flex justify-between items-center">
-          <h1>القائمة الرئيسية</h1>
-          <button
-            onClick={toggleSidebar}
-            className="md:hidden text-white"
-          >
-            ✕
-          </button>
+        <div className="flex items-center justify-between px-4 py-3 bg-blue-600 text-white">
+          <h2 className="font-bold text-sm">{currentSection?.name ?? 'اختر قسماً'}</h2>
+          <button onClick={closeSidebar} className="md:hidden">✕</button>
         </div>
-
-        <div className="p-2 border-b border-gray-600">
-          <button
-            onClick={() => {
-              const allExpanded = Object.values(expandedSections).every(Boolean)
-              const newState: {[key: string]: boolean} = {}
-              menuSections.forEach(section => {
-                newState[section.id] = !allExpanded
-              })
-              setExpandedSections(newState)
-              localStorage.setItem('sidebarState', JSON.stringify(newState))
-            }}
-            className="w-full text-sm p-2 bg-gray-700 rounded hover:bg-gray-600 text-white transition-colors"
-          >
-            {Object.values(expandedSections).every(Boolean) ? 'تقليص الكل' : 'توسيع الكل'}
-          </button>
-        </div>
-
-        <nav className="p-4 flex-1 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuSections.map((section) => (
-              <li key={section.id} className="pb-2">
-                <div
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full flex justify-between items-center p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer select-none mb-2"
-                >
-                  <span className="font-bold text-lg text-gray-800">{section.name}</span>
-                  <svg
-                    className={`w-5 h-5 transform transition-transform text-gray-500 ${
-                      expandedSections[section.id] ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        <nav className="flex-1 overflow-y-auto p-3">
+          {currentSection ? (
+            <ul className="space-y-0.5">
+              {currentSection.items.map(item => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => { if (window.innerWidth < 768) closeSidebar() }}
+                    className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all
+                      ${pathname === item.href
+                        ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600'
+                        : 'text-gray-700 hover:bg-gray-100'}`}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-
-                {expandedSections[section.id] && (
-                  <ul className="space-y-2 bg-gray-50 rounded-lg p-3 shadow-inner">
-                    {section.items.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          onClick={handleLinkClick}
-                          className={`block p-3 rounded-lg transition-all text-gray-700 hover:bg-white hover:shadow-sm hover:text-blue-600 ${
-                            pathname === item.href ? 'bg-white shadow-sm text-blue-600 border-r-4 border-blue-500' : ''
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-400 text-xs text-center mt-10">اختر قسماً من الأعلى</p>
+          )}
         </nav>
-
-        <div className="p-3 border-t border-gray-600 space-y-3">
-          <div className="text-sm">الصلاحيات: {userRole || 'غير معروف'}</div>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors text-sm font-medium"
-          >
+        <div className="p-4 border-t border-gray-100 space-y-2">
+          <p className="text-xs text-gray-400 text-center">
+            الصلاحية: <span className="font-semibold text-gray-600">{userRole ?? 'غير معروف'}</span>
+          </p>
+          <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 rounded-lg">
             تسجيل خروج
           </button>
         </div>
-      </div>
+      </aside>
     </>
   )
 }
