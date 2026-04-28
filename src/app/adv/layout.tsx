@@ -1,7 +1,7 @@
 'use client'
 
 import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
+import TopNavbar from '../components/TopNavbar' // أضفنا القائمة العلوية هنا
 import { usePathname } from 'next/navigation'
 
 export default function DashboardLayout({
@@ -12,16 +12,22 @@ export default function DashboardLayout({
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* عرض الهيدر فقط في صفحة /adv */}
-        {pathname === '/adv' && <Header />}
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+      
+      {/* 1. القائمة العلوية الأفقية تظهر فوق كل شيء */}
+      <TopNavbar />
+
+      <div className="flex flex-1 overflow-hidden">
+        
+        {/* 2. القائمة الجانبية العمودية */}
+        <Sidebar />
+
+        {/* 3. محتوى الصفحة */}
         <main className="flex-1 overflow-y-auto p-4">
           {children}
         </main>
+
       </div>
-      {/* عرض القائمة الجانبية فقط في صفحة /adv */}
-      {pathname === '/adv' && <Sidebar />}
     </div>
   )
 }
