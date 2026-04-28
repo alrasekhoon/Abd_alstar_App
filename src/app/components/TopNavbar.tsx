@@ -26,8 +26,13 @@ export default function TopNavbar() {
     setUserRole(localStorage.getItem('userRole'))
     try {
       const perms = localStorage.getItem('userPermissions')
-      if (perms) setUserPermissions(JSON.parse(perms))
-    } catch(e) {}
+      if (perms) {
+        setUserPermissions(JSON.parse(perms))
+      }
+    } catch (e) {
+      // تم إضافة هذا السطر لتجنب أخطاء ESLint وللمساعدة في التشخيص
+      console.error("Error parsing permissions in TopNavbar:", e);
+    }
   }, [])
 
   const menuSections = getFilteredSections()
@@ -71,7 +76,7 @@ export default function TopNavbar() {
           </ul>
         </nav>
 
-        {/* زر تسجيل الخروج و معلومات المستخدم */}
+        {/* زر تسجيل الخروج ومعلومات المستخدم */}
         <div className="flex items-center gap-4">
            <span className="text-xs text-gray-400 hidden md:block border-l border-gray-600 pl-4">
              {userRole || 'غير معروف'}
