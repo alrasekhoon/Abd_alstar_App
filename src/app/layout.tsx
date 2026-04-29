@@ -1,7 +1,11 @@
-'use client'
 import './globals.css'
 import Sidebar from './components/Sidebar' 
 import TopNavbar from './components/TopNavbar' 
+
+export const metadata = {
+  title: 'الراسخون في القانون - لوحة التحكم',
+  description: 'لوحة تحكم إدارة الراسخون في القانون',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
