@@ -1,18 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 
-export default function Sidebar() {
+export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [userPermissions, setUserPermissions] = useState<string[]>([])
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const router = useRouter()
+  const [activeSectionId, setActiveSectionId] = useState<string>('main')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // نفس الصلاحيات والأقسام الموجودة في نظامك
   const getMenuSections = useCallback(() => {
     const sections = [
       {
@@ -68,14 +68,11 @@ export default function Sidebar() {
       }
     ]
 
-    
     return sections.map(section => ({
       ...section,
       items: section.items.filter(item => {
         if (userRole === 'admin' || userRole === 'owner') return true;
         if (userPermissions && userPermissions.includes(item.href)) return true;
-        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
-        // but now we rely on custom permissions.
         return false;
       })
     })).filter(section => section.items.length > 0)
@@ -89,151 +86,159 @@ export default function Sidebar() {
       const perms = localStorage.getItem('userPermissions')
       if (perms) setUserPermissions(JSON.parse(perms))
     } catch(e) {}
-
-    const savedState = localStorage.getItem('sidebarState')
-    if (savedState) {
-      setExpandedSections(JSON.parse(savedState))
-    } else {
-      setExpandedSections({
-        main: false,
-        education: false,
-        printing: false,
-        financial: false,
-        administration: false
-      })
-    }
   }, [])
 
-  const toggleSection = (sectionId: string) => {
-    const newState = {
-      ...expandedSections,
-      [sectionId]: !expandedSections[sectionId]
+  // تحديد القسم النشط تلقائياً بناءً على الرابط الحالي
+  useEffect(() => {
+    const sections = getMenuSections()
+    for (const section of sections) {
+      if (section.items.some(item => item.href === pathname)) {
+        setActiveSectionId(section.id)
+        break
+      }
     }
-    setExpandedSections(newState)
-    localStorage.setItem('sidebarState', JSON.stringify(newState))
-  }
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
-  }
-
-  const handleLinkClick = () => {
-    if (window.innerWidth < 768) {
-      setIsSidebarOpen(false)
-    }
-  }
-
-  const menuSections = getMenuSections()
+  }, [pathname, getMenuSections])
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
     router.push('/login')
   }
 
+  const sections = getMenuSections()
+  const activeSection = sections.length > 0 ? (sections.find(s => s.id === activeSectionId) || sections[0]) : null
+
   return (
-    <>
-      {/* زر فتح القائمة في الهواتف (موجود على اليمين) */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 right-4 z-50 bg-gray-800 text-white p-3 rounded-lg shadow-lg"
-      >
-        {isSidebarOpen ? '✕' : '☰'}
-      </button>
-
-      {/* طبقة التعتيم الخلفية للهواتف */}
-      {isSidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* القائمة الجانبية على اليمين */}
-      <div className={`
-        w-64 bg-gray-800 text-white h-full flex flex-col transition-transform duration-300 ease-in-out
-        fixed right-0 top-0 z-40
-        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
-      `}>
-        <div className="p-4 text-xl font-bold border-b border-gray-700 flex justify-between items-center">
-          <h1>القائمة الرئيسية</h1>
-          <button
-            onClick={toggleSidebar}
-            className="md:hidden text-white"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="p-2 border-b border-gray-600">
-          <button
-            onClick={() => {
-              const allExpanded = Object.values(expandedSections).every(Boolean)
-              const newState: {[key: string]: boolean} = {}
-              menuSections.forEach(section => {
-                newState[section.id] = !allExpanded
-              })
-              setExpandedSections(newState)
-              localStorage.setItem('sidebarState', JSON.stringify(newState))
-            }}
-            className="w-full text-sm p-2 bg-gray-700 rounded hover:bg-gray-600 text-white transition-colors"
-          >
-            {Object.values(expandedSections).every(Boolean) ? 'تقليص الكل' : 'توسيع الكل'}
-          </button>
-        </div>
-
-        <nav className="p-4 flex-1 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuSections.map((section) => (
-              <li key={section.id} className="pb-2">
-                <div
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full flex justify-between items-center p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer select-none mb-2"
+    <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
+      
+      {/* --- الشريط العلوي (القوائم الرئيسية) --- */}
+      <header className="bg-[#1f2937] text-white shadow-md z-50">
+        <div className="flex items-center justify-between px-6 py-3">
+          
+          <div className="flex items-center space-x-6 space-x-reverse">
+            <h1 className="text-xl font-bold text-white border-l border-gray-600 pl-6">
+              الراسخون في القانون
+            </h1>
+            
+            {/* أزرار الأقسام الرئيسية (تظهر في الشاشات الكبيرة) */}
+            <nav className="hidden md:flex space-x-2 space-x-reverse">
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSectionId(section.id)}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    activeSectionId === section.id
+                      ? 'bg-blue-600 text-white shadow-inner'
+                      : 'hover:bg-gray-700 text-gray-300'
+                  }`}
                 >
-                  <span className="font-bold text-lg text-gray-800">{section.name}</span>
-                  <svg
-                    className={`w-5 h-5 transform transition-transform text-gray-500 ${
-                      expandedSections[section.id] ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  {section.name}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-                {expandedSections[section.id] && (
-                  <ul className="space-y-2 bg-gray-50 rounded-lg p-3 shadow-inner">
-                    {section.items.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          onClick={handleLinkClick}
-                          className={`block p-3 rounded-lg transition-all text-gray-700 hover:bg-white hover:shadow-sm hover:text-blue-600 ${
-                            pathname === item.href ? 'bg-white shadow-sm text-blue-600 border-r-4 border-blue-500' : ''
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
+          <div className="flex items-center space-x-4 space-x-reverse">
+            <div className="text-sm hidden md:block text-gray-300">
+              الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition"
+            >
+              تسجيل خروج
+            </button>
+            {/* زر القائمة للهواتف */}
+            <button 
+              className="md:hidden text-2xl" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              ☰
+            </button>
+          </div>
+        </div>
+
+        {/* قائمة الهواتف المنسدلة للأقسام الرئيسية */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-gray-800 px-4 py-3 border-t border-gray-700 flex flex-col space-y-2">
+            {sections.map(section => (
+              <button
+                key={section.id}
+                onClick={() => {
+                  setActiveSectionId(section.id)
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`text-right px-4 py-2 rounded-md ${
+                  activeSectionId === section.id ? 'bg-blue-600 text-white' : 'text-gray-300'
+                }`}
+              >
+                {section.name}
+              </button>
             ))}
-          </ul>
-        </nav>
+          </div>
+        )}
+      </header>
 
-        <div className="p-3 border-t border-gray-600 space-y-3">
-          <div className="text-sm">الصلاحيات: {userRole || 'غير معروف'}</div>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors text-sm font-medium"
-          >
-            تسجيل خروج
-          </button>
+      {/* --- منطقة المحتوى السفلية (الشريط الجانبي + محتوى الصفحة) --- */}
+      <div className="flex flex-1 overflow-hidden">
+        
+        {/* الشريط الجانبي (القوائم الفرعية للقسم المحدد) */}
+        {activeSection && activeSection.items.length > 0 && (
+          <aside className="w-64 bg-white shadow-xl border-l border-gray-200 z-40 overflow-y-auto hidden md:flex md:flex-col">
+            <div className="p-5 border-b border-gray-100 bg-gray-50">
+              <h2 className="text-lg font-extrabold text-gray-800">{activeSection.name}</h2>
+              <p className="text-xs text-gray-500 mt-1">اختر من القائمة أدناه</p>
+            </div>
+            
+            <nav className="p-3 flex-1">
+              <ul className="space-y-1.5">
+                {activeSection.items.map(item => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
+                        pathname === item.href
+                          ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
+
+        {/* مساحة عرض محتوى الصفحات */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          
+          {/* شريط تمرير فرعي يظهر فقط على الهواتف بدلاً من الشريط الجانبي */}
+          {activeSection && activeSection.items.length > 0 && (
+            <div className="md:hidden bg-white border-b shadow-sm overflow-x-auto whitespace-nowrap p-3">
+              {activeSection.items.map(item => (
+                <Link 
+                  key={item.name} 
+                  href={item.href} 
+                  className={`inline-block px-4 py-2 mx-1 rounded-full text-sm font-medium transition-colors ${
+                    pathname === item.href 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* محتوى الصفحة الفعلي والمكونات الأخرى كالهيدر */}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+          
         </div>
       </div>
-    </>
+    </div>
   )
 }
