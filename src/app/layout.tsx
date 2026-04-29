@@ -1,33 +1,25 @@
 'use client'
+import './globals.css'
+import Sidebar from './components/Sidebar' 
+import TopNavbar from './components/TopNavbar' 
 
-import Sidebar from '../components/Sidebar'
-import TopNavbar from '../components/TopNavbar' // أضفنا القائمة العلوية هنا
-import { usePathname } from 'next/navigation'
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const pathname = usePathname()
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
-      
-      {/* 1. القائمة العلوية الأفقية تظهر فوق كل شيء */}
-      <TopNavbar />
-
-      <div className="flex flex-1 overflow-hidden">
+    <html lang="ar" dir="rtl">
+      <body className="bg-gray-50 flex flex-col h-screen overflow-hidden">
+        {/* الشريط العلوي */}
+        <TopNavbar />
         
-        {/* 2. القائمة الجانبية العمودية */}
-        <Sidebar />
-
-        {/* 3. محتوى الصفحة */}
-        <main className="flex-1 overflow-y-auto p-4">
-          {children}
-        </main>
-
-      </div>
-    </div>
+        <div className="flex flex-1 overflow-hidden">
+          {/* القائمة الجانبية */}
+          <Sidebar />
+          
+          {/* محتوى الصفحة المتغير */}
+          <main className="flex-1 overflow-y-auto p-4">
+            {children}
+          </main>
+        </div>
+      </body>
+    </html>
   )
 }
