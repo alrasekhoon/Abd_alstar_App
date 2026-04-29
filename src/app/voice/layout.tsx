@@ -10,7 +10,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-
+ 
   return (
     <div className="flex h-screen">
       <div className="flex-1 flex flex-col overflow-hidden">
