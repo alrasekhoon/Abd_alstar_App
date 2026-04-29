@@ -1,53 +1,51 @@
-export const SECTIONS_DATA = [
-  {
-    id: 'main',
-    name: 'الواجهة الرئيسية',
-    items: [
-      { name: 'الاعلانات', href: '/adv', roles: ['admin', 'editor'] },
-      { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
-      { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
-      { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
-      { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
-    ]
-  },
-  {
-    id: 'education',
-    name: 'إدارة المقررات',
-    items: [
-      { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
-      { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
-      { name: 'إستخراج الاسئلة', href: '/quiz', roles: ['admin', 'editor'] },
-      { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] },
-      { name: 'استفسارات الاختبارات', href: '/quiz_questions', roles: ['admin', 'editor'] }
-    ]
-  },
-  {
-    id: 'printing',
-    name: 'الطباعة والتوصيل',
-    items: [
-      { name: 'الطباعة', href: '/print', roles: ['admin', 'printer'] },
-      { name: 'التوصيل والشحن', href: '/delv', roles: ['admin', 'printer'] },
-      { name: 'الفواتير', href: '/print_bill', roles: ['admin', 'printer'] }
-    ]
-  },
-  {
-    id: 'financial',
-    name: 'المستخدمين والمالية',
-    items: [
-      { name: 'المستخدمين', href: '/users', roles: ['admin'] },
-      { name: 'الدفعات المالية', href: '/mony1', roles: ['admin'] },
-      { name: 'إدارة المستخدمين', href: '/new_user', roles: ['admin'] },
-      { name: 'مراجعة وتوثيق الحسابات', href: '/verify_users', roles: ['admin'] },
-      { name: 'الجدوى المالية', href: '/finance', roles: ['admin'] }
-    ]
-  },
-  {
-    id: 'administration',
-    name: 'إدارة النظام',
-    items: [
-      { name: 'الإعدادات', href: '/settings', roles: ['admin'] },
-      { name: 'ادارة لوحة التحكم', href: '/UserManagement', roles: ['admin'] },
-      { name: 'الدردشة المباشرة', href: '/support_chat', roles: ['admin', 'editor'] }
-    ]
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+export default function TopNavbar() {
+  const router = useRouter()
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole'))
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    router.push('/login')
   }
-];
+
+  return (
+    <header className="bg-gray-900 text-white w-full shadow-md z-50">
+      <div className="flex justify-between items-center px-4 py-3">
+        {/* اسم النظام */}
+        <div className="font-bold text-xl whitespace-nowrap">
+          الراسخون في القانون
+        </div>
+
+        {/* معلومات المستخدم وأزرار التحكم */}
+        <div className="flex items-center gap-4">
+          {/* زر أدوات المدير يظهر فقط للمشرف */}
+          {userRole === 'admin' && (
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded text-sm font-medium"
+            >
+              أدوات المدير
+            </button>
+          )}
+          <span className="text-xs text-gray-400 border-l border-gray-600 pl-4">
+            {userRole || 'غير معروف'}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm"
+          >
+            خروج
+          </button>
+        </div>
+      </div>
+    </header>
+  )
+}
