@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Sidebar from '../components/Sidebar'
-import Header from '../components/Header'
+
+// التعديل هنا: استخدمنا نقطة واحدة (.) بدلاً من نقطتين (..)
+import Sidebar from './components/Sidebar'
+import Header from './components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'لوحة التحكم', // يمكنك تغيير العنوان هنا
+  title: 'لوحة التحكم',
   description: 'لوحة تحكم التطبيق',
 }
 
