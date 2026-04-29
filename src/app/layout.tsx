@@ -1,27 +1,42 @@
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
 
-export default function DashboardLayout({
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'لوحة التحكم', // يمكنك تغيير العنوان هنا
+  description: 'لوحة تحكم التطبيق',
+}
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      
-      {/* القائمة العلوية الرئيسية أصبحت فوق وتأخذ العرض بالكامل */}
-      <Header /> 
+    <html lang="ar" dir="rtl">
+      <body className={inter.className}>
+        <div className="flex flex-col h-screen bg-gray-100">
+          
+          {/* القائمة العلوية الرئيسية */}
+          <Header />
 
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* القائمة الجانبية الفرعية ستظهر على اليمين */}
-        <Sidebar /> 
-        
-        {/* محتوى الصفحات */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+          <div className="flex-1 flex overflow-hidden">
+            
+            {/* القائمة الجانبية الفرعية */}
+            <Sidebar />
+            
+            {/* محتوى الصفحات */}
+            <main className="flex-1 overflow-y-auto p-4">
+              {children}
+            </main>
+
+          </div>
+        </div>
+      </body>
+    </html>
   )
 }
