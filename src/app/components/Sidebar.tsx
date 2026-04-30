@@ -101,21 +101,11 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     }
   }, [pathname, getMenuSections])
 
-  // ✅ إصلاح #3: عند الضغط على قسم، الانتقال لآخر صفحة تم زيارتها فيه
-  const handleSectionChange = (sectionId: string) => {
+  // عند الضغط على قسم: فقط تغيير القسم النشط دون تنقل تلقائي
+  const handleSectionChange = useCallback((sectionId: string) => {
     setActiveSectionId(sectionId)
     setIsMobileMenuOpen(false)
-    const lastHref = lastVisitedRef.current[sectionId]
-    if (lastHref) {
-      router.push(lastHref)
-    } else {
-      const sections = getMenuSections()
-      const section = sections.find(s => s.id === sectionId)
-      if (section && section.items.length > 0) {
-        router.push(section.items[0].href)
-      }
-    }
-  }
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
@@ -167,7 +157,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
 
-        {/* ✅ إصلاح #2: القائمة المنسدلة للهاتف - لا تأخذ كامل العرض */}
+        {/* ✅ إصلاح #2: القائمة المنسدلة للهاتف - عرض محدود من جهة اليمين */}
         {isMobileMenuOpen && (
           <>
             <div 
@@ -176,8 +166,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             
-            {/* تغيير: من w-full إلى w-72 max-w-xs مع تموضع من اليمين */}
-            <div className="md:hidden absolute top-full right-0 w-72 max-w-xs bg-blue-700 shadow-xl flex flex-col z-50 border border-blue-800 rounded-bl-xl pb-4">
+            <div className="md:hidden absolute top-full right-0 w-72 max-w-[85vw] bg-blue-700 shadow-xl flex flex-col z-50 border border-blue-800 rounded-bl-xl pb-4">
               {sections.map(section => (
                 <button
                   key={section.id}
@@ -209,16 +198,14 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* ✅ إصلاح #4: الشريط الجانبي بعرض ديناميكي يتكيف مع أطول عنصر */}
+        {/* ✅ إصلاح #4: الشريط الجانبي بعرض ديناميكي حسب أطول عنصر */}
         {activeSection && activeSection.items.length > 0 && (
-          <aside className="w-fit min-w-[160px] max-w-xs bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
-            {/* عنوان الشريط الجانبي */}
+          <aside className="w-fit min-w-[10rem] bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
             <div className="p-5 border-b border-[#a89000] bg-[#b39a00] flex-shrink-0">
               <h2 className="text-lg font-extrabold text-black whitespace-nowrap">{activeSection.name}</h2>
               <p className="text-xs text-black/70 mt-1 whitespace-nowrap">اختر من القائمة أدناه</p>
             </div>
             
-            {/* القوائم الفرعية */}
             <nav className="p-3 flex-1 overflow-y-auto min-h-0">
               <ul className="space-y-1.5">
                 {activeSection.items.map(item => (
@@ -238,14 +225,13 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               </ul>
             </nav>
 
-            {/* ذيل الشريط الجانبي */}
             <div className="p-4 border-t border-[#a89000] bg-[#b39a00] flex-shrink-0">
               <div className="text-sm text-black mb-3 text-center whitespace-nowrap">
                 الصلاحيات: <span className="font-bold text-black">{userRole || 'غير معروف'}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm"
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm whitespace-nowrap"
               >
                 تسجيل خروج
               </button>
@@ -256,7 +242,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         {/* مساحة عرض محتوى الصفحات */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
-          {/* شريط الأقسام الفرعية على الهواتف */}
           {activeSection && activeSection.items.length > 0 && (
             <div className="md:hidden bg-[#c4a900] border-b border-[#a89000] shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
               {activeSection.items.map(item => (
@@ -275,23 +260,40 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             </div>
           )}
 
-          {/* محتوى الصفحة */}
           <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6">
             {isCurrentPageInActiveSection ? (
               children
             ) : (
-              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center px-4">
-                <div className="w-20 h-20 mb-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shadow-inner">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] px-4 py-8">
+                {/* أيقونة وعنوان القسم */}
+                <div className="w-16 h-16 mb-4 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  قسم {activeSection?.name}
-                </h3>
-                <p className="text-gray-500 text-lg max-w-md leading-relaxed">
-                  الرجاء اختيار إحدى القوائم للبدء بالعمل وعرض المحتوى.
-                </p>
+                <h2 className="text-2xl font-extrabold text-gray-800 mb-1">{activeSection?.name}</h2>
+                <p className="text-gray-400 text-sm mb-8">اختر أحد الخيارات أدناه للبدء</p>
+
+                {/* بطاقات القائمة الفرعية */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-2xl">
+                  {activeSection?.items.map((item, index) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="group flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5"
+                    >
+                      {/* رقم ترتيبي كأيقونة */}
+                      <div className="w-10 h-10 rounded-xl bg-[#c4a900]/20 group-hover:bg-blue-600 flex items-center justify-center transition-colors duration-200">
+                        <span className="text-[#a89000] group-hover:text-white font-bold text-sm transition-colors duration-200">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <span className="text-gray-700 group-hover:text-blue-700 font-semibold text-sm text-center leading-snug transition-colors duration-200">
+                        {item.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>
