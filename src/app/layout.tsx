@@ -1,18 +1,22 @@
+import './globals.css' // هذا هو السطر السحري الذي يعيد التصميم والألوان!
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 
-export default function DashboardLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    // هنا قمنا بجعل الـ Sidebar يحيط بكل المحتوى لكي يتحكم بالشريط العلوي والجانبي معاً
-    <Sidebar>
-      <Header />
-      <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-        {children}
-      </main>
-    </Sidebar>
+    <html lang="ar" dir="rtl">
+      <body>
+        <Sidebar>
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            {children}
+          </main>
+        </Sidebar>
+      </body>
+    </html>
   )
 }
