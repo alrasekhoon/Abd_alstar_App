@@ -87,6 +87,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     } catch(e) {}
   }, [])
 
+  // تحديث القسم النشط بناءً على الرابط الحالي عند تحميل الصفحة
   useEffect(() => {
     const sections = getMenuSections()
     for (const section of sections) {
@@ -102,7 +103,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     router.push('/login')
   }
 
-  // إخفاء القوائم في صفحة تسجيل الدخول
   if (pathname === '/login') {
     return (
       <div className="min-h-screen font-sans bg-gray-50" dir="rtl">
@@ -113,6 +113,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
   const sections = getMenuSections()
   const activeSection = sections.length > 0 ? (sections.find(s => s.id === activeSectionId) || sections[0]) : null
+
+  // التحقق مما إذا كان الرابط الحالي (محتوى الصفحة) ينتمي للقسم المفتوح في الأعلى
+  const isCurrentPageInActiveSection = activeSection?.items.some(item => item.href === pathname)
 
   return (
     <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
@@ -127,7 +130,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               className="md:hidden text-2xl ml-4 p-1" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              ☰
+              {isMobileMenuOpen ? '✕' : '☰'}
             </button>
             
             {/* أزرار الأقسام الرئيسية (تظهر في الشاشات الكبيرة) */}
@@ -135,13 +138,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               {sections.map(section => (
                 <button
                   key={section.id}
-                  onClick={() => {
-                    setActiveSectionId(section.id)
-                    // الانتقال التلقائي لأول خيار في القسم
-                    if (section.items.length > 0) {
-                      router.push(section.items[0].href)
-                    }
-                  }}
+                  onClick={() => setActiveSectionId(section.id)}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSectionId === section.id
                       ? 'bg-blue-600 text-white shadow-inner'
@@ -155,36 +152,35 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
 
-        {/* قائمة الهواتف المنسدلة (عائمة الجانب) */}
+        {/* قائمة الهواتف المنسدلة (ستارة متصلة بالشريط العلوي) */}
         {isMobileMenuOpen && (
           <>
+            {/* طبقة شفافة للإغلاق عند النقر في الخارج */}
             <div 
-              className="md:hidden fixed inset-0 z-40" 
+              className="md:hidden fixed inset-0 z-40 bg-black/50" 
+              style={{ top: '56px' }}
               onClick={() => setIsMobileMenuOpen(false)}
             />
             
-            <div className="md:hidden absolute top-[52px] right-4 w-60 bg-gray-800 rounded-lg shadow-2xl py-2 border border-gray-700 flex flex-col z-50">
+            {/* القائمة التي تتدلى من الأعلى */}
+            <div className="md:hidden absolute top-full left-0 right-0 w-full bg-[#1f2937] shadow-xl flex flex-col z-50 border-t border-gray-700 pb-4">
               {sections.map(section => (
                 <button
                   key={section.id}
                   onClick={() => {
                     setActiveSectionId(section.id)
                     setIsMobileMenuOpen(false)
-                    // الانتقال التلقائي لأول خيار في القسم (للموبايل أيضاً)
-                    if (section.items.length > 0) {
-                      router.push(section.items[0].href)
-                    }
                   }}
-                  className={`text-right px-4 py-2 mx-2 my-1 rounded-md transition-colors ${
-                    activeSectionId === section.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  className={`text-right px-6 py-3 border-b border-gray-800 transition-colors ${
+                    activeSectionId === section.id ? 'bg-blue-600 text-white font-bold' : 'text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   {section.name}
                 </button>
               ))}
               
-              <div className="mt-2 pt-3 border-t border-gray-700 px-4 pb-2">
-                <div className="text-sm text-gray-400 mb-2">
+              <div className="mt-4 px-6">
+                <div className="text-sm text-gray-400 mb-3">
                   الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
                 </div>
                 <button
@@ -265,9 +261,26 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             </div>
           )}
 
-          {/* محتوى الصفحة الفعلي */}
+          {/* محتوى الصفحة الفعلي أو رسالة الترحيب */}
           <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6">
-            {children}
+            {isCurrentPageInActiveSection ? (
+              children
+            ) : (
+              // رسالة الترحيب التي تظهر عند التنقل بين الأقسام الرئيسية
+              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center px-4">
+                <div className="w-20 h-20 mb-6 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center shadow-inner">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  قسم {activeSection?.name}
+                </h3>
+                <p className="text-gray-500 text-lg max-w-md leading-relaxed">
+                  الرجاء اختيار إحدى القوائم للبدء بالعمل وعرض المحتوى.
+                </p>
+              </div>
+            )}
           </div>
           
         </div>
