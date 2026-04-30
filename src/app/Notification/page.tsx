@@ -16,7 +16,7 @@ type Subscription = {
   id: number;
   category_name: string;
 };
-
+ 
 // تعريف نوع للبيانات القادمة من API
 type ApiNotificationItem = {
   id?: number;
