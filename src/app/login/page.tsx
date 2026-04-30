@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   try {
     
-    const response = await fetch('/api/proxy/cp_login.php', {
+    const response = await fetch('https://alrasekhooninlaw.com/cp_login.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
