@@ -1,112 +1,240 @@
-'use client';
+'use client'
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function Sidebar() {
+  const pathname = usePathname()
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [userPermissions, setUserPermissions] = useState<string[]>([])
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const router = useRouter()
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const getMenuSections = useCallback(() => {
+    const sections = [
+      {
+        id: 'main',
+        name: 'الواجهة الرئيسية',
+        items: [
+          { name: 'الاعلانات', href: '/adv', roles: ['admin', 'editor'] },
+          { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
+          { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
+          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
+          { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
+        ]
+      },
+      {
+        id: 'education',
+        name: 'إدارة المقررات',
+        items: [
+          { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
+          { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
+          { name: 'إستخراج الاسئلة', href: '/quiz', roles: ['admin', 'editor'] },
+          { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] },
+          { name: 'استفسارات الاختبارات', href: '/quiz_questions', roles: ['admin', 'editor'] }
+        ]
+      },
+      {
+        id: 'printing',
+        name: 'الطباعة والتوصيل',
+        items: [
+          { name: 'الطباعة', href: '/print', roles: ['admin', 'printer'] },
+          { name: 'التوصيل والشحن', href: '/delv', roles: ['admin', 'printer'] },
+          { name: 'الفواتير', href: '/print_bill', roles: ['admin', 'printer'] }
+        ]
+      },
+      {
+        id: 'financial',
+        name: 'المستخدمين والمالية',
+        items: [
+          { name: 'المستخدمين', href: '/users', roles: ['admin'] },
+          { name: 'الدفعات المالية', href: '/mony1', roles: ['admin'] },
+          { name: 'إدارة المستخدمين', href: '/new_user', roles: ['admin'] },
+          { name: 'مراجعة وتوثيق الحسابات', href: '/verify_users', roles: ['admin'] },
+          { name: 'الجدوى المالية', href: '/finance', roles: ['admin'] }
+        ]
+      },
+      {
+        id: 'administration',
+        name: 'إدارة النظام',
+        items: [
+          { name: 'الإعدادات', href: '/settings', roles: ['admin'] },
+          { name: 'ادارة لوحة التحكم', href: '/UserManagement', roles: ['admin'] },
+          { name: 'الدردشة المباشرة', href: '/support_chat', roles: ['admin', 'editor'] }
+        ]
+      }
+    ]
+
+    
+    return sections.map(section => ({
+      ...section,
+      items: section.items.filter(item => {
+        if (userRole === 'admin' || userRole === 'owner') return true;
+        if (userPermissions && userPermissions.includes(item.href)) return true;
+        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
+        // but now we rely on custom permissions.
+        return false;
+      })
+    })).filter(section => section.items.length > 0)
+  }, [userRole, userPermissions])
+
+  useEffect(() => {
+    const role = localStorage.getItem('userRole')
+    setUserRole(role)
 
     try {
-      // 💡 التعديل الأول: ضع الرابط الكامل والفعلي لملف PHP الخاص بتسجيل الدخول
-      // تأكد من أن هذا هو الرابط الصحيح للسيرفر الخاص بك
-      const response = await fetch('https://alrasekhooninlaw.com/cp_login.php', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const perms = localStorage.getItem('userPermissions')
+      if (perms) setUserPermissions(JSON.parse(perms))
+    } catch(e) {}
 
-      if (!response.ok) {
-        throw new Error('فشل تسجيل الدخول، تحقق من اسم المستخدم أو كلمة المرور');
-      }
-
-      const data = await response.json();
-      
-      // 💡 التعديل الثاني: حفظ الصلاحيات لكي تسمح لك القائمة الجانبية بالدخول
-      localStorage.setItem('authToken', data.token || 'dummy-token'); // حفظ التوكن
-      localStorage.setItem('userRole', data.role || 'admin'); // إعطاء صلاحية واسعة (أدمن) افتراضياً للوحة
-      if (data.permissions) {
-        localStorage.setItem('userPermissions', JSON.stringify(data.permissions));
-      }
-
-      // توجيهك للصفحة الرئيسية بعد نجاح الدخول
-      router.push('/'); 
-      
-    } catch (err: any) {
-      setError(err.message || 'حدث خطأ في الاتصال بالسيرفر');
-    } finally {
-      setLoading(false);
+    const savedState = localStorage.getItem('sidebarState')
+    if (savedState) {
+      setExpandedSections(JSON.parse(savedState))
+    } else {
+      setExpandedSections({
+        main: false,
+        education: false,
+        printing: false,
+        financial: false,
+        administration: false
+      })
     }
-  };
+  }, [])
+
+  const toggleSection = (sectionId: string) => {
+    const newState = {
+      ...expandedSections,
+      [sectionId]: !expandedSections[sectionId]
+    }
+    setExpandedSections(newState)
+    localStorage.setItem('sidebarState', JSON.stringify(newState))
+  }
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false)
+    }
+  }
+
+  const menuSections = getMenuSections()
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    router.push('/login')
+  }
 
   return (
-    <div dir="rtl" className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black p-4">
-      <div className="max-w-md w-full p-8 bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-amber-500/20 shadow-2xl">
-        
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 mb-4 bg-slate-900 border-2 border-amber-500/40 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-4xl">⚖️</span>
-          </div>
-          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-600">
-            الراسخون في القانون
-          </h1>
-          <p className="text-amber-500/60 text-sm mt-2 flex items-center gap-1">
-            نظام الإدارة القانونية
-          </p>
+    <>
+      {/* زر فتح القائمة في الهواتف (موجود على اليمين) */}
+      <button
+        onClick={toggleSidebar}
+        className="md:hidden fixed top-4 right-4 z-50 bg-gray-800 text-white p-3 rounded-lg shadow-lg"
+      >
+        {isSidebarOpen ? '✕' : '☰'}
+      </button>
+
+      {/* طبقة التعتيم الخلفية للهواتف */}
+      {isSidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* القائمة الجانبية على اليمين */}
+      <div className={`
+        w-64 bg-gray-800 text-white h-full flex flex-col transition-transform duration-300 ease-in-out
+        fixed right-0 top-0 z-40
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+      `}>
+        <div className="p-4 text-xl font-bold border-b border-gray-700 flex justify-between items-center">
+          <h1>القائمة الرئيسية</h1>
+          <button
+            onClick={toggleSidebar}
+            className="md:hidden text-white"
+          >
+            ✕
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center font-bold">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="relative group">
-              <input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="اسم المستخدم"
-                className="w-full px-4 py-3.5 bg-slate-900/60 border border-slate-700 rounded-xl text-slate-200 focus:border-amber-500/50 outline-none transition-all"
-                required
-              />
-            </div>
-
-            <div className="relative group">
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="كلمة المرور"
-                dir="ltr"
-                className="w-full px-4 py-3.5 bg-slate-900/60 border border-slate-700 rounded-xl text-slate-200 focus:border-amber-500/50 outline-none transition-all"
-                required
-              />
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-600 rounded-2xl text-slate-950 font-black text-lg shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+        <div className="p-2 border-b border-gray-600">
+          <button
+            onClick={() => {
+              const allExpanded = Object.values(expandedSections).every(Boolean)
+              const newState: {[key: string]: boolean} = {}
+              menuSections.forEach(section => {
+                newState[section.id] = !allExpanded
+              })
+              setExpandedSections(newState)
+              localStorage.setItem('sidebarState', JSON.stringify(newState))
+            }}
+            className="w-full text-sm p-2 bg-gray-700 rounded hover:bg-gray-600 text-white transition-colors"
           >
-            {loading ? 'جاري التحقق...' : 'دخول المنصة'}
+            {Object.values(expandedSections).every(Boolean) ? 'تقليص الكل' : 'توسيع الكل'}
           </button>
-        </form>
+        </div>
+
+        <nav className="p-4 flex-1 overflow-y-auto">
+          <ul className="space-y-2">
+            {menuSections.map((section) => (
+              <li key={section.id} className="pb-2">
+                <div
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full flex justify-between items-center p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer select-none mb-2"
+                >
+                  <span className="font-bold text-lg text-gray-800">{section.name}</span>
+                  <svg
+                    className={`w-5 h-5 transform transition-transform text-gray-500 ${
+                      expandedSections[section.id] ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {expandedSections[section.id] && (
+                  <ul className="space-y-2 bg-gray-50 rounded-lg p-3 shadow-inner">
+                    {section.items.map((item) => (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={handleLinkClick}
+                          className={`block p-3 rounded-lg transition-all text-gray-700 hover:bg-white hover:shadow-sm hover:text-blue-600 ${
+                            pathname === item.href ? 'bg-white shadow-sm text-blue-600 border-r-4 border-blue-500' : ''
+                          }`}
+                        >
+                          {item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="p-3 border-t border-gray-600 space-y-3">
+          <div className="text-sm">الصلاحيات: {userRole || 'غير معروف'}</div>
+          <button
+            onClick={handleLogout}
+            className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors text-sm font-medium"
+          >
+            تسجيل خروج
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    </>
+  )
 }
+
