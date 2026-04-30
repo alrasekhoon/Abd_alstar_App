@@ -1,17 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
-export default function Sidebar() {
+export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [userRole, setUserRole] = useState<string | null>(null)
   const [userPermissions, setUserPermissions] = useState<string[]>([])
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({})
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const router = useRouter()
+  const [activeSectionId, setActiveSectionId] = useState<string>('main')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // ✅ إصلاح #3: تتبع آخر صفحة تم زيارتها في كل قسم
+  const lastVisitedRef = useRef<Record<string, string>>({})
 
   const getMenuSections = useCallback(() => {
     const sections = [
@@ -23,7 +25,7 @@ export default function Sidebar() {
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
           { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
-          { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
+          // ✅ إصلاح #1: حذف "إدارة واجهة الموقع"
         ]
       },
       {
@@ -68,14 +70,11 @@ export default function Sidebar() {
       }
     ]
 
-    
     return sections.map(section => ({
       ...section,
       items: section.items.filter(item => {
         if (userRole === 'admin' || userRole === 'owner') return true;
         if (userPermissions && userPermissions.includes(item.href)) return true;
-        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
-        // but now we rely on custom permissions.
         return false;
       })
     })).filter(section => section.items.length > 0)
@@ -84,157 +83,211 @@ export default function Sidebar() {
   useEffect(() => {
     const role = localStorage.getItem('userRole')
     setUserRole(role)
-
     try {
       const perms = localStorage.getItem('userPermissions')
       if (perms) setUserPermissions(JSON.parse(perms))
     } catch(e) {}
-
-    const savedState = localStorage.getItem('sidebarState')
-    if (savedState) {
-      setExpandedSections(JSON.parse(savedState))
-    } else {
-      setExpandedSections({
-        main: false,
-        education: false,
-        printing: false,
-        financial: false,
-        administration: false
-      })
-    }
   }, [])
 
-  const toggleSection = (sectionId: string) => {
-    const newState = {
-      ...expandedSections,
-      [sectionId]: !expandedSections[sectionId]
+  // ✅ إصلاح #3: تحديث آخر صفحة مزارة عند تغيير المسار
+  useEffect(() => {
+    const sections = getMenuSections()
+    for (const section of sections) {
+      if (section.items.some(item => item.href === pathname)) {
+        setActiveSectionId(section.id)
+        lastVisitedRef.current[section.id] = pathname
+        break
+      }
     }
-    setExpandedSections(newState)
-    localStorage.setItem('sidebarState', JSON.stringify(newState))
-  }
+  }, [pathname, getMenuSections])
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen)
-  }
-
-  const handleLinkClick = () => {
-    if (window.innerWidth < 768) {
-      setIsSidebarOpen(false)
-    }
-  }
-
-  const menuSections = getMenuSections()
+  // عند الضغط على قسم: فقط تغيير القسم النشط دون تنقل تلقائي
+  const handleSectionChange = useCallback((sectionId: string) => {
+    setActiveSectionId(sectionId)
+    setIsMobileMenuOpen(false)
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
     router.push('/login')
   }
 
+  if (pathname === '/login') {
+    return (
+      <div className="min-h-screen font-sans bg-gray-50" dir="rtl">
+        {children}
+      </div>
+    )
+  }
+
+  const sections = getMenuSections()
+  const activeSection = sections.length > 0 ? (sections.find(s => s.id === activeSectionId) || sections[0]) : null
+  const isCurrentPageInActiveSection = activeSection?.items.some(item => item.href === pathname)
+
   return (
-    <>
-      {/* زر فتح القائمة في الهواتف (موجود على اليمين) */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 right-4 z-50 bg-gray-800 text-white p-3 rounded-lg shadow-lg"
-      >
-        {isSidebarOpen ? '✕' : '☰'}
-      </button>
-
-      {/* طبقة التعتيم الخلفية للهواتف */}
-      {isSidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* القائمة الجانبية على اليمين */}
-      <div className={`
-        w-64 bg-gray-800 text-white h-full flex flex-col transition-transform duration-300 ease-in-out
-        fixed right-0 top-0 z-40
-        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
-      `}>
-        <div className="p-4 text-xl font-bold border-b border-gray-700 flex justify-between items-center">
-          <h1>القائمة الرئيسية</h1>
-          <button
-            onClick={toggleSidebar}
-            className="md:hidden text-white"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="p-2 border-b border-gray-600">
-          <button
-            onClick={() => {
-              const allExpanded = Object.values(expandedSections).every(Boolean)
-              const newState: {[key: string]: boolean} = {}
-              menuSections.forEach(section => {
-                newState[section.id] = !allExpanded
-              })
-              setExpandedSections(newState)
-              localStorage.setItem('sidebarState', JSON.stringify(newState))
-            }}
-            className="w-full text-sm p-2 bg-gray-700 rounded hover:bg-gray-600 text-white transition-colors"
-          >
-            {Object.values(expandedSections).every(Boolean) ? 'تقليص الكل' : 'توسيع الكل'}
-          </button>
-        </div>
-
-        <nav className="p-4 flex-1 overflow-y-auto">
-          <ul className="space-y-2">
-            {menuSections.map((section) => (
-              <li key={section.id} className="pb-2">
-                <div
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full flex justify-between items-center p-4 rounded-xl bg-white shadow-sm hover:shadow-md transition-all cursor-pointer select-none mb-2"
+    <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
+      
+      {/* --- الشريط العلوي --- */}
+      <header className="bg-blue-600 text-white shadow-md z-50 relative">
+        <div className="flex items-center justify-between px-6 py-3">
+          
+          <div className="flex items-center space-x-6 space-x-reverse w-full md:w-auto">
+            <button 
+              className="md:hidden text-2xl ml-4 p-1 text-white hover:text-blue-200 transition-colors" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? '✕' : '☰'}
+            </button>
+            
+            <nav className="hidden md:flex space-x-2 space-x-reverse">
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  onClick={() => handleSectionChange(section.id)}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    activeSectionId === section.id
+                      ? 'bg-blue-800 text-white shadow-inner'
+                      : 'hover:bg-blue-500 text-blue-50'
+                  }`}
                 >
-                  <span className="font-bold text-lg text-gray-800">{section.name}</span>
-                  <svg
-                    className={`w-5 h-5 transform transition-transform text-gray-500 ${
-                      expandedSections[section.id] ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  {section.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* ✅ إصلاح #2: القائمة المنسدلة للهاتف - عرض محدود من جهة اليمين */}
+        {isMobileMenuOpen && (
+          <>
+            <div 
+              className="md:hidden fixed inset-0 z-40 bg-black/50" 
+              style={{ top: '56px' }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            <div className="md:hidden absolute top-full right-0 w-72 max-w-[85vw] bg-blue-700 shadow-xl flex flex-col z-50 border border-blue-800 rounded-bl-xl pb-4">
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  onClick={() => handleSectionChange(section.id)}
+                  className={`text-right px-6 py-3 border-b border-blue-600 transition-colors ${
+                    activeSectionId === section.id ? 'bg-blue-900 text-white font-bold' : 'text-blue-50 hover:bg-blue-600'
+                  }`}
+                >
+                  {section.name}
+                </button>
+              ))}
+              
+              <div className="mt-4 px-6">
+                <div className="text-sm text-blue-200 mb-3">
+                  الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+                >
+                  تسجيل خروج
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </header>
 
-                {expandedSections[section.id] && (
-                  <ul className="space-y-2 bg-gray-50 rounded-lg p-3 shadow-inner">
-                    {section.items.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          onClick={handleLinkClick}
-                          className={`block p-3 rounded-lg transition-all text-gray-700 hover:bg-white hover:shadow-sm hover:text-blue-600 ${
-                            pathname === item.href ? 'bg-white shadow-sm text-blue-600 border-r-4 border-blue-500' : ''
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
+      {/* --- منطقة المحتوى السفلية --- */}
+      <div className="flex flex-1 overflow-hidden">
+        
+        {/* ✅ إصلاح #4: الشريط الجانبي بعرض ديناميكي حسب أطول عنصر */}
+        {activeSection && activeSection.items.length > 0 && (
+          <aside className="w-fit min-w-[10rem] bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
+            <div className="p-5 border-b border-[#a89000] bg-[#b39a00] flex-shrink-0">
+              <h2 className="text-lg font-extrabold text-black whitespace-nowrap">{activeSection.name}</h2>
+              <p className="text-xs text-black/70 mt-1 whitespace-nowrap">اختر من القائمة أدناه</p>
+            </div>
+            
+            <nav className="p-3 flex-1 overflow-y-auto min-h-0">
+              <ul className="space-y-1.5">
+                {activeSection.items.map(item => (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`block px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap ${
+                        pathname === item.href
+                          ? 'bg-white/40 text-black font-extrabold border-r-4 border-black'
+                          : 'text-black hover:bg-white/20 font-medium'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-        <div className="p-3 border-t border-gray-600 space-y-3">
-          <div className="text-sm">الصلاحيات: {userRole || 'غير معروف'}</div>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors text-sm font-medium"
-          >
-            تسجيل خروج
-          </button>
+            <div className="p-4 border-t border-[#a89000] bg-[#b39a00] flex-shrink-0">
+              <div className="text-sm text-black mb-3 text-center whitespace-nowrap">
+                الصلاحيات: <span className="font-bold text-black">{userRole || 'غير معروف'}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm whitespace-nowrap"
+              >
+                تسجيل خروج
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {/* مساحة عرض محتوى الصفحات */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          
+          {activeSection && activeSection.items.length > 0 && (
+            <div className="md:hidden bg-[#c4a900] border-b border-[#a89000] shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
+              {activeSection.items.map(item => (
+                <Link 
+                  key={item.name} 
+                  href={item.href} 
+                  className={`inline-block px-4 py-2 mx-1 rounded-full text-sm font-bold transition-colors ${
+                    pathname === item.href 
+                      ? 'bg-white/50 text-black shadow-md'
+                      : 'bg-transparent text-black border border-black/20 hover:bg-white/20'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6">
+            {isCurrentPageInActiveSection ? (
+              children
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] px-6 text-center">
+                <p className="text-[#a89000] font-bold text-sm tracking-widest mb-3 uppercase">الراسخون في القانون</p>
+                <h2 className="text-3xl font-extrabold text-gray-800 mb-4">
+                  {activeSection?.id === 'main' && 'أهلاً بك في لوحة التحكم'}
+                  {activeSection?.id === 'education' && 'إدارة المقررات والمحتوى التعليمي'}
+                  {activeSection?.id === 'printing' && 'خدمات الطباعة والتوصيل'}
+                  {activeSection?.id === 'financial' && 'إدارة المستخدمين والشؤون المالية'}
+                  {activeSection?.id === 'administration' && 'إعدادات النظام والتحكم'}
+                </h2>
+                <div className="w-16 h-1 rounded-full bg-[#c4a900] mb-6" />
+                <p className="text-gray-500 text-base leading-loose max-w-lg">
+                  {activeSection?.id === 'main' && 'من هذه الواجهة يمكنك إدارة الإعلانات والإشعارات والروابط الجامعية والمواد المرتبطة بها، واستعراض كل ما يخص الواجهة الأمامية للتطبيق.'}
+                  {activeSection?.id === 'education' && 'من هنا تتحكم في كامل المحتوى التعليمي، من إضافة المواد الدراسية وأنواع الاشتراكات إلى استخراج الأسئلة وإدارة الأصوات والاستفسارات.'}
+                  {activeSection?.id === 'printing' && 'تتيح لك هذه الواجهة الإشراف على طلبات الطباعة وعمليات التوصيل والشحن ومتابعة الفواتير الصادرة بشكل منظم.'}
+                  {activeSection?.id === 'financial' && 'من هذا القسم يمكنك استعراض بيانات المستخدمين، ومتابعة الدفعات المالية، ومراجعة الحسابات وتوثيقها، وتحليل الجدوى المالية للتطبيق.'}
+                  {activeSection?.id === 'administration' && 'هنا تجد أدوات إدارة النظام بالكامل، من ضبط الإعدادات العامة إلى إدارة صلاحيات لوحة التحكم ومتابعة الدردشة المباشرة مع المستخدمين.'}
+                </p>
+                <p className="text-gray-400 text-sm mt-6">← اختر من القائمة الجانبية للبدء</p>
+              </div>
+            )}
+          </div>
+          
         </div>
       </div>
-    </>
+    </div>
   )
 }
-
