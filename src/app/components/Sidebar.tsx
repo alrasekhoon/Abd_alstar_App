@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const pathname = usePathname()
@@ -11,6 +11,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [activeSectionId, setActiveSectionId] = useState<string>('main')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // ✅ إصلاح #3: تتبع آخر صفحة تم زيارتها في كل قسم
+  const lastVisitedRef = useRef<Record<string, string>>({})
 
   const getMenuSections = useCallback(() => {
     const sections = [
@@ -22,7 +25,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
           { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
-          { name: 'إدارة واجهة الموقع', href: 'https://alrasekhooninlaw.com/admin.html', roles: ['admin', 'editor'] },
+          // ✅ إصلاح #1: حذف "إدارة واجهة الموقع"
         ]
       },
       {
@@ -80,22 +83,39 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   useEffect(() => {
     const role = localStorage.getItem('userRole')
     setUserRole(role)
-
     try {
       const perms = localStorage.getItem('userPermissions')
       if (perms) setUserPermissions(JSON.parse(perms))
     } catch(e) {}
   }, [])
 
+  // ✅ إصلاح #3: تحديث آخر صفحة مزارة عند تغيير المسار
   useEffect(() => {
     const sections = getMenuSections()
     for (const section of sections) {
       if (section.items.some(item => item.href === pathname)) {
         setActiveSectionId(section.id)
+        lastVisitedRef.current[section.id] = pathname
         break
       }
     }
   }, [pathname, getMenuSections])
+
+  // ✅ إصلاح #3: عند الضغط على قسم، الانتقال لآخر صفحة تم زيارتها فيه
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSectionId(sectionId)
+    setIsMobileMenuOpen(false)
+    const lastHref = lastVisitedRef.current[sectionId]
+    if (lastHref) {
+      router.push(lastHref)
+    } else {
+      const sections = getMenuSections()
+      const section = sections.find(s => s.id === sectionId)
+      if (section && section.items.length > 0) {
+        router.push(section.items[0].href)
+      }
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
@@ -117,7 +137,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
       
-      {/* --- الشريط العلوي (اللون الأزرق) --- */}
+      {/* --- الشريط العلوي --- */}
       <header className="bg-blue-600 text-white shadow-md z-50 relative">
         <div className="flex items-center justify-between px-6 py-3">
           
@@ -133,11 +153,11 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               {sections.map(section => (
                 <button
                   key={section.id}
-                  onClick={() => setActiveSectionId(section.id)}
+                  onClick={() => handleSectionChange(section.id)}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSectionId === section.id
-                      ? 'bg-blue-800 text-white shadow-inner' // لون أزرق داكن للقسم المحدد
-                      : 'hover:bg-blue-500 text-blue-50' // لون أزرق فاتح عند التمرير
+                      ? 'bg-blue-800 text-white shadow-inner'
+                      : 'hover:bg-blue-500 text-blue-50'
                   }`}
                 >
                   {section.name}
@@ -147,7 +167,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
 
-        {/* قائمة الهواتف المنسدلة (الستارة الزرقاء) */}
+        {/* ✅ إصلاح #2: القائمة المنسدلة للهاتف - لا تأخذ كامل العرض */}
         {isMobileMenuOpen && (
           <>
             <div 
@@ -156,14 +176,12 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             
-            <div className="md:hidden absolute top-full left-0 right-0 w-full bg-blue-700 shadow-xl flex flex-col z-50 border-t border-blue-800 pb-4">
+            {/* تغيير: من w-full إلى w-72 max-w-xs مع تموضع من اليمين */}
+            <div className="md:hidden absolute top-full right-0 w-72 max-w-xs bg-blue-700 shadow-xl flex flex-col z-50 border border-blue-800 rounded-bl-xl pb-4">
               {sections.map(section => (
                 <button
                   key={section.id}
-                  onClick={() => {
-                    setActiveSectionId(section.id)
-                    setIsMobileMenuOpen(false)
-                  }}
+                  onClick={() => handleSectionChange(section.id)}
                   className={`text-right px-6 py-3 border-b border-blue-600 transition-colors ${
                     activeSectionId === section.id ? 'bg-blue-900 text-white font-bold' : 'text-blue-50 hover:bg-blue-600'
                   }`}
@@ -191,13 +209,13 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* الشريط الجانبي في شاشة الحاسوب (اللون الذهبي) */}
+        {/* ✅ إصلاح #4: الشريط الجانبي بعرض ديناميكي يتكيف مع أطول عنصر */}
         {activeSection && activeSection.items.length > 0 && (
-          <aside className="w-64 bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
+          <aside className="w-fit min-w-[160px] max-w-xs bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
             {/* عنوان الشريط الجانبي */}
             <div className="p-5 border-b border-[#a89000] bg-[#b39a00] flex-shrink-0">
-              <h2 className="text-lg font-extrabold text-black">{activeSection.name}</h2>
-              <p className="text-xs text-black/70 mt-1">اختر من القائمة أدناه</p>
+              <h2 className="text-lg font-extrabold text-black whitespace-nowrap">{activeSection.name}</h2>
+              <p className="text-xs text-black/70 mt-1 whitespace-nowrap">اختر من القائمة أدناه</p>
             </div>
             
             {/* القوائم الفرعية */}
@@ -207,10 +225,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
+                      className={`block px-4 py-3 rounded-lg transition-all duration-200 whitespace-nowrap ${
                         pathname === item.href
-                          ? 'bg-white/40 text-black font-extrabold border-r-4 border-black' // تحديد قوي باللون الأبيض الشفاف والأسود
-                          : 'text-black hover:bg-white/20 font-medium' // تأثير شفاف عند التمرير
+                          ? 'bg-white/40 text-black font-extrabold border-r-4 border-black'
+                          : 'text-black hover:bg-white/20 font-medium'
                       }`}
                     >
                       {item.name}
@@ -220,9 +238,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               </ul>
             </nav>
 
-            {/* ذيل الشريط الجانبي (تسجيل الخروج) */}
+            {/* ذيل الشريط الجانبي */}
             <div className="p-4 border-t border-[#a89000] bg-[#b39a00] flex-shrink-0">
-              <div className="text-sm text-black mb-3 text-center">
+              <div className="text-sm text-black mb-3 text-center whitespace-nowrap">
                 الصلاحيات: <span className="font-bold text-black">{userRole || 'غير معروف'}</span>
               </div>
               <button
@@ -238,7 +256,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         {/* مساحة عرض محتوى الصفحات */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
-          {/* شريط الأقسام الفرعية يظهر فقط على الهواتف (باللون الذهبي أيضاً) */}
+          {/* شريط الأقسام الفرعية على الهواتف */}
           {activeSection && activeSection.items.length > 0 && (
             <div className="md:hidden bg-[#c4a900] border-b border-[#a89000] shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
               {activeSection.items.map(item => (
@@ -247,8 +265,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   href={item.href} 
                   className={`inline-block px-4 py-2 mx-1 rounded-full text-sm font-bold transition-colors ${
                     pathname === item.href 
-                      ? 'bg-white/50 text-black shadow-md' // زر محدد
-                      : 'bg-transparent text-black border border-black/20 hover:bg-white/20' // زر غير محدد
+                      ? 'bg-white/50 text-black shadow-md'
+                      : 'bg-transparent text-black border border-black/20 hover:bg-white/20'
                   }`}
                 >
                   {item.name}
@@ -257,7 +275,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             </div>
           )}
 
-          {/* محتوى الصفحة الفعلي أو رسالة الترحيب */}
+          {/* محتوى الصفحة */}
           <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6">
             {isCurrentPageInActiveSection ? (
               children
