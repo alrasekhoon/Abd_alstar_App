@@ -102,8 +102,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     router.push('/login')
   }
 
-  // --- الإضافة الجديدة لحل مشكلة صفحة تسجيل الدخول ---
-  // إذا كان الرابط الحالي هو صفحة تسجيل الدخول، اعرض محتوى الصفحة فقط بدون القوائم
+  // إخفاء القوائم في صفحة تسجيل الدخول
   if (pathname === '/login') {
     return (
       <div className="min-h-screen font-sans bg-gray-50" dir="rtl">
@@ -136,7 +135,13 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               {sections.map(section => (
                 <button
                   key={section.id}
-                  onClick={() => setActiveSectionId(section.id)}
+                  onClick={() => {
+                    setActiveSectionId(section.id)
+                    // الانتقال التلقائي لأول خيار في القسم
+                    if (section.items.length > 0) {
+                      router.push(section.items[0].href)
+                    }
+                  }}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSectionId === section.id
                       ? 'bg-blue-600 text-white shadow-inner'
@@ -153,7 +158,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         {/* قائمة الهواتف المنسدلة (عائمة الجانب) */}
         {isMobileMenuOpen && (
           <>
-            {/* طبقة شفافة للإغلاق عند النقر في أي مكان فارغ */}
             <div 
               className="md:hidden fixed inset-0 z-40" 
               onClick={() => setIsMobileMenuOpen(false)}
@@ -166,6 +170,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   onClick={() => {
                     setActiveSectionId(section.id)
                     setIsMobileMenuOpen(false)
+                    // الانتقال التلقائي لأول خيار في القسم (للموبايل أيضاً)
+                    if (section.items.length > 0) {
+                      router.push(section.items[0].href)
+                    }
                   }}
                   className={`text-right px-4 py-2 mx-2 my-1 rounded-md transition-colors ${
                     activeSectionId === section.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
@@ -175,7 +183,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                 </button>
               ))}
               
-              {/* تسجيل الخروج والصلاحيات للموبايل فقط */}
               <div className="mt-2 pt-3 border-t border-gray-700 px-4 pb-2">
                 <div className="text-sm text-gray-400 mb-2">
                   الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
@@ -195,7 +202,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* الشريط الجانبي في شاشة الحاسوب (تم التثبيت لمنع الاختفاء) */}
+        {/* الشريط الجانبي في شاشة الحاسوب */}
         {activeSection && activeSection.items.length > 0 && (
           <aside className="w-64 bg-white shadow-xl border-l border-gray-200 z-40 hidden md:flex flex-col flex-shrink-0">
             <div className="p-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
@@ -222,7 +229,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               </ul>
             </nav>
 
-            {/* تم تثبيت هذا القسم باستخدام flex-shrink-0 ليبقى دائماً ظاهراً */}
             <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
               <div className="text-sm text-gray-600 mb-3 text-center">
                 الصلاحيات: <span className="font-bold text-gray-900">{userRole || 'غير معروف'}</span>
@@ -260,7 +266,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           )}
 
           {/* محتوى الصفحة الفعلي */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto bg-gray-50 p-4 md:p-6">
             {children}
           </div>
           
