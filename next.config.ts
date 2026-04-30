@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   env: {
     CUSTOM_API_URL: process.env.CUSTOM_API_URL,
   },
-  
+   
   experimental: {
     serverComponentsExternalPackages: [],
     // إضافة هذه الإعدادات المهمة
