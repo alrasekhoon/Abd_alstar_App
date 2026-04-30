@@ -6,21 +6,27 @@ const nextConfig: NextConfig = {
     CUSTOM_API_URL: process.env.CUSTOM_API_URL,
   },
   
+  // تم نقل الخيار من experimental إلى الإعدادات الأساسية
+  serverExternalPackages: [],
+
   experimental: {
-    serverComponentsExternalPackages: [],
-    // إضافة هذه الإعدادات المهمة
     staleTimes: {
-      dynamic: 0,  // لا كاش للصفحات الديناميكية
-      static: 60,  // 60 ثانية فقط للصفحات الثابتة
+      dynamic: 0,
+      static: 60,
     },
   },
   
   images: {
-    domains: ['alrasekhooninlaw.com'],
+    // تحديث domains إلى الطريقة الجديدة والآمنة
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'alrasekhooninlaw.com',
+      },
+    ],
     unoptimized: true,
   },
   
-  // تحسين إعدادات الهيدرز
   async headers() {
     return [
       {
@@ -35,7 +41,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/:path*', // لجميع الصفحات
+        source: '/:path*',
         headers: [
           { 
             key: 'Cache-Control', 
