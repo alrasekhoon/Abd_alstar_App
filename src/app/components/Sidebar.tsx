@@ -102,6 +102,16 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     router.push('/login')
   }
 
+  // --- الإضافة الجديدة لحل مشكلة صفحة تسجيل الدخول ---
+  // إذا كان الرابط الحالي هو صفحة تسجيل الدخول، اعرض محتوى الصفحة فقط بدون القوائم
+  if (pathname === '/login') {
+    return (
+      <div className="min-h-screen font-sans bg-gray-50" dir="rtl">
+        {children}
+      </div>
+    )
+  }
+
   const sections = getMenuSections()
   const activeSection = sections.length > 0 ? (sections.find(s => s.id === activeSectionId) || sections[0]) : null
 
