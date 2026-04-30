@@ -87,7 +87,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     } catch(e) {}
   }, [])
 
-  // تحديث القسم النشط بناءً على الرابط الحالي عند تحميل الصفحة
   useEffect(() => {
     const sections = getMenuSections()
     for (const section of sections) {
@@ -113,27 +112,23 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
 
   const sections = getMenuSections()
   const activeSection = sections.length > 0 ? (sections.find(s => s.id === activeSectionId) || sections[0]) : null
-
-  // التحقق مما إذا كان الرابط الحالي (محتوى الصفحة) ينتمي للقسم المفتوح في الأعلى
   const isCurrentPageInActiveSection = activeSection?.items.some(item => item.href === pathname)
 
   return (
     <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
       
-      {/* --- الشريط العلوي --- */}
-      <header className="bg-[#1f2937] text-white shadow-md z-50 relative">
+      {/* --- الشريط العلوي (اللون الأزرق) --- */}
+      <header className="bg-blue-600 text-white shadow-md z-50 relative">
         <div className="flex items-center justify-between px-6 py-3">
           
           <div className="flex items-center space-x-6 space-x-reverse w-full md:w-auto">
-            {/* زر القائمة للهواتف */}
             <button 
-              className="md:hidden text-2xl ml-4 p-1" 
+              className="md:hidden text-2xl ml-4 p-1 text-white hover:text-blue-200 transition-colors" 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? '✕' : '☰'}
             </button>
             
-            {/* أزرار الأقسام الرئيسية (تظهر في الشاشات الكبيرة) */}
             <nav className="hidden md:flex space-x-2 space-x-reverse">
               {sections.map(section => (
                 <button
@@ -141,8 +136,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   onClick={() => setActiveSectionId(section.id)}
                   className={`px-4 py-2 rounded-md font-medium transition-colors ${
                     activeSectionId === section.id
-                      ? 'bg-blue-600 text-white shadow-inner'
-                      : 'hover:bg-gray-700 text-gray-300'
+                      ? 'bg-blue-800 text-white shadow-inner' // لون أزرق داكن للقسم المحدد
+                      : 'hover:bg-blue-500 text-blue-50' // لون أزرق فاتح عند التمرير
                   }`}
                 >
                   {section.name}
@@ -152,18 +147,16 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
 
-        {/* قائمة الهواتف المنسدلة (ستارة متصلة بالشريط العلوي) */}
+        {/* قائمة الهواتف المنسدلة (الستارة الزرقاء) */}
         {isMobileMenuOpen && (
           <>
-            {/* طبقة شفافة للإغلاق عند النقر في الخارج */}
             <div 
               className="md:hidden fixed inset-0 z-40 bg-black/50" 
               style={{ top: '56px' }}
               onClick={() => setIsMobileMenuOpen(false)}
             />
             
-            {/* القائمة التي تتدلى من الأعلى */}
-            <div className="md:hidden absolute top-full left-0 right-0 w-full bg-[#1f2937] shadow-xl flex flex-col z-50 border-t border-gray-700 pb-4">
+            <div className="md:hidden absolute top-full left-0 right-0 w-full bg-blue-700 shadow-xl flex flex-col z-50 border-t border-blue-800 pb-4">
               {sections.map(section => (
                 <button
                   key={section.id}
@@ -171,8 +164,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                     setActiveSectionId(section.id)
                     setIsMobileMenuOpen(false)
                   }}
-                  className={`text-right px-6 py-3 border-b border-gray-800 transition-colors ${
-                    activeSectionId === section.id ? 'bg-blue-600 text-white font-bold' : 'text-gray-300 hover:bg-gray-700'
+                  className={`text-right px-6 py-3 border-b border-blue-600 transition-colors ${
+                    activeSectionId === section.id ? 'bg-blue-900 text-white font-bold' : 'text-blue-50 hover:bg-blue-600'
                   }`}
                 >
                   {section.name}
@@ -180,7 +173,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               ))}
               
               <div className="mt-4 px-6">
-                <div className="text-sm text-gray-400 mb-3">
+                <div className="text-sm text-blue-200 mb-3">
                   الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
                 </div>
                 <button
@@ -198,14 +191,16 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* الشريط الجانبي في شاشة الحاسوب */}
+        {/* الشريط الجانبي في شاشة الحاسوب (اللون الذهبي) */}
         {activeSection && activeSection.items.length > 0 && (
-          <aside className="w-64 bg-white shadow-xl border-l border-gray-200 z-40 hidden md:flex flex-col flex-shrink-0">
-            <div className="p-5 border-b border-gray-100 bg-gray-50 flex-shrink-0">
-              <h2 className="text-lg font-extrabold text-gray-800">{activeSection.name}</h2>
-              <p className="text-xs text-gray-500 mt-1">اختر من القائمة أدناه</p>
+          <aside className="w-64 bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
+            {/* عنوان الشريط الجانبي */}
+            <div className="p-5 border-b border-[#a89000] bg-[#b39a00] flex-shrink-0">
+              <h2 className="text-lg font-extrabold text-black">{activeSection.name}</h2>
+              <p className="text-xs text-black/70 mt-1">اختر من القائمة أدناه</p>
             </div>
             
+            {/* القوائم الفرعية */}
             <nav className="p-3 flex-1 overflow-y-auto min-h-0">
               <ul className="space-y-1.5">
                 {activeSection.items.map(item => (
@@ -214,8 +209,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                       href={item.href}
                       className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
                         pathname === item.href
-                          ? 'bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium'
+                          ? 'bg-white/40 text-black font-extrabold border-r-4 border-black' // تحديد قوي باللون الأبيض الشفاف والأسود
+                          : 'text-black hover:bg-white/20 font-medium' // تأثير شفاف عند التمرير
                       }`}
                     >
                       {item.name}
@@ -225,13 +220,14 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               </ul>
             </nav>
 
-            <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-              <div className="text-sm text-gray-600 mb-3 text-center">
-                الصلاحيات: <span className="font-bold text-gray-900">{userRole || 'غير معروف'}</span>
+            {/* ذيل الشريط الجانبي (تسجيل الخروج) */}
+            <div className="p-4 border-t border-[#a89000] bg-[#b39a00] flex-shrink-0">
+              <div className="text-sm text-black mb-3 text-center">
+                الصلاحيات: <span className="font-bold text-black">{userRole || 'غير معروف'}</span>
               </div>
               <button
                 onClick={handleLogout}
-                className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm"
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm"
               >
                 تسجيل خروج
               </button>
@@ -242,17 +238,17 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         {/* مساحة عرض محتوى الصفحات */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
-          {/* شريط الأقسام الفرعية يظهر فقط على الهواتف */}
+          {/* شريط الأقسام الفرعية يظهر فقط على الهواتف (باللون الذهبي أيضاً) */}
           {activeSection && activeSection.items.length > 0 && (
-            <div className="md:hidden bg-white border-b shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
+            <div className="md:hidden bg-[#c4a900] border-b border-[#a89000] shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
               {activeSection.items.map(item => (
                 <Link 
                   key={item.name} 
                   href={item.href} 
-                  className={`inline-block px-4 py-2 mx-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`inline-block px-4 py-2 mx-1 rounded-full text-sm font-bold transition-colors ${
                     pathname === item.href 
-                      ? 'bg-blue-600 text-white shadow-md' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-white/50 text-black shadow-md' // زر محدد
+                      : 'bg-transparent text-black border border-black/20 hover:bg-white/20' // زر غير محدد
                   }`}
                 >
                   {item.name}
@@ -266,9 +262,8 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             {isCurrentPageInActiveSection ? (
               children
             ) : (
-              // رسالة الترحيب التي تظهر عند التنقل بين الأقسام الرئيسية
               <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center px-4">
-                <div className="w-20 h-20 mb-6 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center shadow-inner">
+                <div className="w-20 h-20 mb-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shadow-inner">
                   <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
