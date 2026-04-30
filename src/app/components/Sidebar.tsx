@@ -12,7 +12,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const [activeSectionId, setActiveSectionId] = useState<string>('main')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  // نفس الصلاحيات والأقسام الموجودة في نظامك
   const getMenuSections = useCallback(() => {
     const sections = [
       {
@@ -88,7 +87,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     } catch(e) {}
   }, [])
 
-  // تحديد القسم النشط تلقائياً بناءً على الرابط الحالي
   useEffect(() => {
     const sections = getMenuSections()
     for (const section of sections) {
@@ -110,14 +108,18 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
       
-      {/* --- الشريط العلوي (القوائم الرئيسية) --- */}
+      {/* --- الشريط العلوي (القوائم الرئيسية فقط) --- */}
       <header className="bg-[#1f2937] text-white shadow-md z-50">
         <div className="flex items-center justify-between px-6 py-3">
           
-          <div className="flex items-center space-x-6 space-x-reverse">
-            <h1 className="text-xl font-bold text-white border-l border-gray-600 pl-6">
-              الراسخون في القانون
-            </h1>
+          <div className="flex items-center space-x-6 space-x-reverse w-full md:w-auto">
+            {/* زر القائمة للهواتف */}
+            <button 
+              className="md:hidden text-2xl ml-4" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              ☰
+            </button>
             
             {/* أزرار الأقسام الرئيسية (تظهر في الشاشات الكبيرة) */}
             <nav className="hidden md:flex space-x-2 space-x-reverse">
@@ -136,28 +138,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
               ))}
             </nav>
           </div>
-
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="text-sm hidden md:block text-gray-300">
-              الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition"
-            >
-              تسجيل خروج
-            </button>
-            {/* زر القائمة للهواتف */}
-            <button 
-              className="md:hidden text-2xl" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              ☰
-            </button>
-          </div>
         </div>
 
-        {/* قائمة الهواتف المنسدلة للأقسام الرئيسية */}
+        {/* قائمة الهواتف المنسدلة */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-gray-800 px-4 py-3 border-t border-gray-700 flex flex-col space-y-2">
             {sections.map(section => (
@@ -174,22 +157,35 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                 {section.name}
               </button>
             ))}
+            
+            {/* تسجيل الخروج والصلاحيات للموبايل فقط */}
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="text-sm text-gray-300 mb-2">
+                الصلاحيات: <span className="font-bold text-white">{userRole || 'غير معروف'}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition"
+              >
+                تسجيل خروج
+              </button>
+            </div>
           </div>
         )}
       </header>
 
-      {/* --- منطقة المحتوى السفلية (الشريط الجانبي + محتوى الصفحة) --- */}
+      {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* الشريط الجانبي (القوائم الفرعية للقسم المحدد) */}
+        {/* الشريط الجانبي (القوائم الفرعية + زر الخروج) */}
         {activeSection && activeSection.items.length > 0 && (
-          <aside className="w-64 bg-white shadow-xl border-l border-gray-200 z-40 overflow-y-auto hidden md:flex md:flex-col">
+          <aside className="w-64 bg-white shadow-xl border-l border-gray-200 z-40 flex flex-col hidden md:flex">
             <div className="p-5 border-b border-gray-100 bg-gray-50">
               <h2 className="text-lg font-extrabold text-gray-800">{activeSection.name}</h2>
               <p className="text-xs text-gray-500 mt-1">اختر من القائمة أدناه</p>
             </div>
             
-            <nav className="p-3 flex-1">
+            <nav className="p-3 flex-1 overflow-y-auto">
               <ul className="space-y-1.5">
                 {activeSection.items.map(item => (
                   <li key={item.name}>
@@ -207,13 +203,26 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                 ))}
               </ul>
             </nav>
+
+            {/* تم نقل زر الخروج والصلاحيات إلى هنا (أسفل القائمة الجانبية) */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50 mt-auto">
+              <div className="text-sm text-gray-600 mb-3 text-center">
+                الصلاحيات: <span className="font-bold text-gray-900">{userRole || 'غير معروف'}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow-sm"
+              >
+                تسجيل خروج
+              </button>
+            </div>
           </aside>
         )}
 
         {/* مساحة عرض محتوى الصفحات */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
-          {/* شريط تمرير فرعي يظهر فقط على الهواتف بدلاً من الشريط الجانبي */}
+          {/* شريط تمرير فرعي يظهر فقط على الهواتف */}
           {activeSection && activeSection.items.length > 0 && (
             <div className="md:hidden bg-white border-b shadow-sm overflow-x-auto whitespace-nowrap p-3">
               {activeSection.items.map(item => (
@@ -232,7 +241,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             </div>
           )}
 
-          {/* محتوى الصفحة الفعلي والمكونات الأخرى كالهيدر */}
+          {/* محتوى الصفحة الفعلي */}
           <div className="flex-1 overflow-auto">
             {children}
           </div>
