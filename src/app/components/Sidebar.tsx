@@ -264,36 +264,24 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             {isCurrentPageInActiveSection ? (
               children
             ) : (
-              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] px-4 py-8">
-                {/* أيقونة وعنوان القسم */}
-                <div className="w-16 h-16 mb-4 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-extrabold text-gray-800 mb-1">{activeSection?.name}</h2>
-                <p className="text-gray-400 text-sm mb-8">اختر أحد الخيارات أدناه للبدء</p>
-
-                {/* بطاقات القائمة الفرعية */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-2xl">
-                  {activeSection?.items.map((item, index) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group flex flex-col items-center justify-center gap-2 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5"
-                    >
-                      {/* رقم ترتيبي كأيقونة */}
-                      <div className="w-10 h-10 rounded-xl bg-[#c4a900]/20 group-hover:bg-blue-600 flex items-center justify-center transition-colors duration-200">
-                        <span className="text-[#a89000] group-hover:text-white font-bold text-sm transition-colors duration-200">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <span className="text-gray-700 group-hover:text-blue-700 font-semibold text-sm text-center leading-snug transition-colors duration-200">
-                        {item.name}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
+              <div className="flex flex-col items-center justify-center h-full min-h-[50vh] px-6 text-center">
+                <p className="text-[#a89000] font-bold text-sm tracking-widest mb-3 uppercase">الراسخون في القانون</p>
+                <h2 className="text-3xl font-extrabold text-gray-800 mb-4">
+                  {activeSection?.id === 'main' && 'أهلاً بك في لوحة التحكم'}
+                  {activeSection?.id === 'education' && 'إدارة المقررات والمحتوى التعليمي'}
+                  {activeSection?.id === 'printing' && 'خدمات الطباعة والتوصيل'}
+                  {activeSection?.id === 'financial' && 'إدارة المستخدمين والشؤون المالية'}
+                  {activeSection?.id === 'administration' && 'إعدادات النظام والتحكم'}
+                </h2>
+                <div className="w-16 h-1 rounded-full bg-[#c4a900] mb-6" />
+                <p className="text-gray-500 text-base leading-loose max-w-lg">
+                  {activeSection?.id === 'main' && 'من هذه الواجهة يمكنك إدارة الإعلانات والإشعارات والروابط الجامعية والمواد المرتبطة بها، واستعراض كل ما يخص الواجهة الأمامية للتطبيق.'}
+                  {activeSection?.id === 'education' && 'من هنا تتحكم في كامل المحتوى التعليمي، من إضافة المواد الدراسية وأنواع الاشتراكات إلى استخراج الأسئلة وإدارة الأصوات والاستفسارات.'}
+                  {activeSection?.id === 'printing' && 'تتيح لك هذه الواجهة الإشراف على طلبات الطباعة وعمليات التوصيل والشحن ومتابعة الفواتير الصادرة بشكل منظم.'}
+                  {activeSection?.id === 'financial' && 'من هذا القسم يمكنك استعراض بيانات المستخدمين، ومتابعة الدفعات المالية، ومراجعة الحسابات وتوثيقها، وتحليل الجدوى المالية للتطبيق.'}
+                  {activeSection?.id === 'administration' && 'هنا تجد أدوات إدارة النظام بالكامل، من ضبط الإعدادات العامة إلى إدارة صلاحيات لوحة التحكم ومتابعة الدردشة المباشرة مع المستخدمين.'}
+                </p>
+                <p className="text-gray-400 text-sm mt-6">← اختر من القائمة الجانبية للبدء</p>
               </div>
             )}
           </div>
