@@ -845,9 +845,11 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </button>
       </div>
     </div>
+  </div>
+)}
 
-    {/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
-    {fullScreenImage && (
+{/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
+{fullScreenImage && (
       <div className="fixed inset-0 flex items-center justify-center p-4 z-[60] bg-black/90 backdrop-blur-md transition-all">
         <div className="relative w-full max-w-3xl h-[80vh] flex flex-col items-center justify-center gap-4">
           <div className="relative w-full h-full">
