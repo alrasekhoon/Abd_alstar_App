@@ -522,12 +522,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
             )}
           </div>
         </div>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
 
         {/* التحميل التدريجي */}
         {!isLoading && pagination && pagination.totalPages > 1 && (
