@@ -743,7 +743,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
           </div>
-        </div>
       {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
