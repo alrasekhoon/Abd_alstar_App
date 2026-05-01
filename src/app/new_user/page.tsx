@@ -794,8 +794,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
               >
                 {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
               </button>
-            </div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
 
