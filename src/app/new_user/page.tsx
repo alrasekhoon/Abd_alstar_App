@@ -559,9 +559,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
 <div className="flex flex-row items-center justify-between gap-3 mb-4">
 <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className={`flex-1 w-1/2 text-sm border rounded-xl px-3 py-3 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer text-center ${user.user_type === 'vip' ? 'bg-purple-50 border-purple-400 text-purple-800' : user.user_type === 'موثوق' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-amber-50 border-amber-400 text-amber-700'}`}>
     <option value="غير موثوق">غير موثوق</option>
-    <option value="موثوق">موثوق</option>
-    <option value="vip">VIP</option>
-  </select>
+      <option value="موثوق">موثوق</option>
+      <option value="vip">VIP</option>
+    </select>
   <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`flex-1 w-1/2 py-3 rounded-xl text-sm font-bold shadow-sm transition ${user.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-[#d32f2f] hover:bg-red-700 text-white'}`}>
     {user.block === 1 ? 'فك الحظر' : 'حظر'}
   </button>
