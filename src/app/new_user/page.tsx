@@ -342,9 +342,13 @@ const openNotificationsModal = (userId: number, userName: string) => {
   );
 
   return (
-<div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-2 md:p-4">
-  <div className="bg-white rounded-2xl shadow-md p-2 md:p-4 border border-gray-100">
-<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
+<div dir="rtl" className="font-sans min-h-screen bg-white">
+  <div className="bg-white p-2 md:p-4">
+<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
+  <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">إدارة المستخدمين</h1>
+  <div className="text-sm bg-blue-200 shadow-inner px-4 py-2 rounded-md font-bold">
+    إجمالي المستخدمين: {pagination?.totalUsers || 0}
+  </div>
 </div>
 
 {/* شريط البحث والتصفية */}
