@@ -395,10 +395,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </select>
   </div>
 
-  <div className="col-span-2 md:col-span-1 flex justify-start md:justify-end">
+  <div className="hidden md:flex col-span-1 justify-end">
     <button
       onClick={resetFilters}
-      className="w-full md:w-auto px-4 py-3 text-sm text-white bg-red-500 hover:bg-red-600 rounded-xl transition shadow-sm font-bold flex items-center justify-center gap-2"
+      className="w-full px-4 py-3 text-sm text-white bg-red-500 hover:bg-red-600 rounded-xl transition shadow-sm font-bold flex items-center justify-center gap-2"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -406,6 +406,19 @@ const openNotificationsModal = (userId: number, userName: string) => {
       إعادة التعيين
     </button>
   </div>
+</div>
+
+{/* زر إعادة التعيين للهاتف فقط */}
+<div className="md:hidden mb-4">
+  <button
+    onClick={resetFilters}
+    className="px-4 py-2.5 text-sm text-white bg-red-500 hover:bg-red-600 rounded-xl transition shadow-sm font-bold flex items-center gap-2"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+    </svg>
+    إعادة التعيين
+  </button>
 </div>
 
         {/* زر إعادة التعيين */}
@@ -458,7 +471,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
   <td className="px-3 py-3 text-sm text-gray-400 font-medium w-10">{getCurrentUserNumber(index)}</td>
   <td className="px-3 py-3">
     <div className="text-sm font-bold text-gray-900">{user.name}</div>
-    <div className="text-xs text-gray-400 mt-0.5" dir="ltr">{user.phone}</div>
+    <div className="text-xs text-gray-800 font-bold mt-0.5" dir="ltr">{user.phone}</div>
   </td>
   <td className="px-3 py-3">
     <select
@@ -470,7 +483,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
           ? 'bg-yellow-50 border-yellow-300 text-yellow-800'
           : user.user_type === 'موثوق'
           ? 'bg-green-50 border-green-300 text-green-800'
-          : 'bg-gray-50 border-gray-300 text-gray-600'
+          : 'bg-orange-50 border-orange-300 text-orange-700'
       }`}
     >
       <option value="غير موثوق">غير موثوق</option>
@@ -540,36 +553,30 @@ const openNotificationsModal = (userId: number, userName: string) => {
             ) : (
               users.map((user, index) => (
                 <div key={`mobile-${user.id}`} className={`p-4 rounded-2xl shadow-sm border relative overflow-hidden ${user.block === 1 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`}>
-                  
-                  {/* الشريط العلوي للبطاقة (# والحالة) */}
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="scale-90 origin-right">{getStatusBadge(user.block, user.user_type)}</div>
-                    <span className="text-gray-400 font-extrabold text-sm">#{getCurrentUserNumber(index)}</span>
-                  </div>
 
-                  {/* الاسم */}
-                  <div className="text-center mb-4">
-                    <div className="text-lg font-extrabold text-gray-900">{user.name}</div>
-                    {user.f_name && <div className="text-sm text-gray-500 mt-0.5">{user.f_name} {user.last_name}</div>}
-                  </div>
+  {/* الشريط العلوي: الرقم يسار، الحالة يمين */}
+  <div className="flex justify-between items-center mb-4">
+    <span className="text-gray-400 font-bold text-xs bg-gray-100 px-2 py-1 rounded-full">#{getCurrentUserNumber(index)}</span>
+    <div>{getStatusBadge(user.block, user.user_type)}</div>
+  </div>
 
-{/* التفاصيل المنسقة */}
-<div className="mb-4 mt-2">
-  <div className="flex justify-between items-center mb-4 px-1">
-    <div className="text-right">
-      <span className="text-gray-400 block text-[11px] mb-1 font-medium">المدينة:</span>
+  {/* الاسم في المنتصف */}
+  <div className="text-center mb-4">
+    <div className="text-xl font-extrabold text-gray-900">{user.name}</div>
+    <div className="text-sm font-bold text-gray-800 mt-1" dir="ltr">{user.phone}</div>
+  </div>
+
+  {/* بيانات مدمجة: المدينة والتاريخ */}
+  <div className="grid grid-cols-2 gap-2 mb-4">
+    <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+      <span className="text-gray-400 block text-[10px] font-medium mb-1">المدينة</span>
       <span className="font-extrabold text-gray-900 text-sm">{user.city || '-'}</span>
     </div>
-    <div className="text-left">
-      <span className="text-gray-400 block text-[11px] mb-1 font-medium">الهاتف:</span>
-      <span className="font-extrabold text-gray-900 text-sm" dir="ltr">{user.phone}</span>
+    <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+      <span className="text-gray-400 block text-[10px] font-medium mb-1">تاريخ التسجيل</span>
+      <span className="font-bold text-gray-800 text-sm">{formatDate(user.date1)}</span>
     </div>
   </div>
-  <div className="w-full text-center bg-gray-50 rounded-xl py-3 border border-gray-100 mb-4">
-    <span className="text-gray-400 text-xs ml-1">تاريخ التسجيل:</span> 
-    <span className="font-bold text-gray-800 text-sm">{formatDate(user.date1)}</span>
-  </div>
-</div>
 
 {/* نوع المستخدم وحالة الحساب (في صف واحد) */}
 <div className="flex flex-row items-center justify-between gap-3 mb-4">
