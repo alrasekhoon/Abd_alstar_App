@@ -7,7 +7,7 @@ import UserSubscriptionsModal from './UserSubscriptionsModal';
 import UserTransactionsModal from './UserTransactionsModal';
 import UserNotificationsModal from './UserNotificationsModal';
 
-
+ 
 
 type User = {
   id: number;
