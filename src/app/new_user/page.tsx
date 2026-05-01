@@ -456,7 +456,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
       value={user.user_type || ''}
       onChange={(e) => handleUserTypeChange(user.id, e.target.value)}
       disabled={updatingUser === user.id}
-      cclassName={`text-xs border rounded-lg px-2 py-1.5 font-bold focus:ring-2 focus:ring-[#c4a900] transition cursor-pointer ${user.user_type === 'vip' ? 'bg-purple-50 border-purple-400 text-purple-800' : user.user_type === 'موثوق' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-amber-50 border-amber-400 text-amber-700'}`}
+      className={`text-xs border rounded-lg px-2 py-1.5 font-bold focus:ring-2 focus:ring-[#c4a900] transition cursor-pointer ${user.user_type === 'vip' ? 'bg-purple-50 border-purple-400 text-purple-800' : user.user_type === 'موثوق' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-amber-50 border-amber-400 text-amber-700'}`}
     >
       <option value="غير موثوق">غير موثوق</option>
       <option value="موثوق">موثوق</option>
