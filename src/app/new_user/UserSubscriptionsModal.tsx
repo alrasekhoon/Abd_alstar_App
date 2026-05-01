@@ -209,7 +209,7 @@ export default function UserSubscriptionsModal({
 setQuickNotification({
   isOpen: true,
   title: 'إضافة اشتراك جديد',
-  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: \n• القيمة: \nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
+  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: ${savedType}.\n• القيمة: ${Number(newSubscription.price1).toLocaleString()} ل.س.\nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
 });
 
     } catch (err) {
