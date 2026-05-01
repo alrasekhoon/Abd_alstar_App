@@ -880,9 +880,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </div>
       </div>
     )}
-  </div>
+  </div>
+ </div>
 )}
-
 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
