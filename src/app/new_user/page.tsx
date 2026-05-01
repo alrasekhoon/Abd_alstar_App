@@ -351,18 +351,18 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
     </div>
 
-        {/* شريط البحث والتصفية */}
-     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
-  <div className="md:col-span-2">
-    <div className="relative">
-      <input
-        type="text"
-        placeholder="ابحث بالاسم أو رقم الهاتف..."
-        value={searchTerm}
-        onChange={handleSearch}
-        className="w-full px-4 py-2 pr-10 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white shadow-sm text-right"
-      />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+{/* شريط البحث والتصفية */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="md:col-span-2">
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="ابحث بالاسم أو رقم الهاتف..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full px-4 py-3 pr-11 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all text-right"
+              />
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-[#c4a900] transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                 </svg>
@@ -374,7 +374,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             <select
               value={filters.user_type}
               onChange={(e) => handleFilterChange('user_type', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all cursor-pointer"
             >
               <option value="">جميع الأنواع</option>
               <option value="غير موثوق">غير موثوق</option>
@@ -387,7 +387,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             <select
               value={filters.block_status}
               onChange={(e) => handleFilterChange('block_status', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all cursor-pointer"
             >
               <option value="">جميع الحالات</option>
               <option value="0">نشط</option>
@@ -407,8 +407,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
 </div>
 
         {/* جدول المستخدمين */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="w-full overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+          <table className="w-full min-w-[900px] text-right divide-y divide-gray-200 table-auto">
             <thead>
   <tr className="bg-[#c4a900] text-black">
     <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">#</th>
