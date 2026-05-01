@@ -166,13 +166,21 @@ export default function UserTransactionsModal({
         throw new Error(result.error || 'فشل في إضافة الدفعة');
       }
 
+await fetchData();
+
 if (requestBody.type === 'deposit') {
   setQuickNotification({
     isOpen: true,
     title: 'إشعار مالي',
-    body: `تمت إضافة رصيد بقيمة ${Number(requestBody.mony).toLocaleString()} ل.س إلى حسابكم بنجاح.\nيُرجى الاشتراك فوراً لضمان حصولكم على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
+    body: `تمت إضافة رصيد بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.) إلى حسابكم بنجاح.\nيُرجى الاشتراك فوراً لضمان حصولكم على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
   });
 }
+
+setNewTransaction({
+  mony: '',
+  type: 'deposit',
+  note: ''
+});
       
     } catch (err) {
       console.error('❌ خطأ في الإضافة:', err);
