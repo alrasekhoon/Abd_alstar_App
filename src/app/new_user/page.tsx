@@ -406,126 +406,122 @@ const openNotificationsModal = (userId: number, userName: string) => {
   </button>
 </div>
 
-        {/* جدول المستخدمين */}
-        <div className="w-full overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-          <table className="w-full min-w-[900px] text-right divide-y divide-gray-200 table-auto">
-            <thead>
-  <tr className="bg-[#c4a900] text-black">
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">#</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الاسم</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">الهاتف</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">النوع</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">المدينة</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الحالة</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">التاريخ</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الإجراءات</th>
-  </tr>
-</thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={index} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-8"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-16"></div></td>
-                    <td className="px-6 py-4"><div className="h-6 bg-gray-200 rounded w-16"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                  </tr>
-                ))
-              ) : users && users.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
-                    <div className="text-gray-500">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      </svg>
-                      <p className="text-lg font-medium">لا توجد بيانات</p>
-                      <p className="text-sm">لم يتم العثور على مستخدمين</p>
+        {/* --- نظام عرض المستخدمين المتجاوب (جدول للحاسوب، بطاقات للهاتف) --- */}
+        <div className="w-full bg-white md:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-gray-200 md:border-none p-2 md:p-0">
+          
+          {/* 1. ترويسة الجدول (تظهر على الحاسوب فقط) */}
+          <div className="hidden md:grid grid-cols-[50px,2fr,1.5fr,1.2fr,1.2fr,1.2fr,1.2fr,2.2fr] gap-2 items-center bg-[#c4a900] text-black p-4 rounded-t-xl font-extrabold text-xs shadow-md">
+            <div>#</div>
+            <div>الاسم</div>
+            <div>الهاتف</div>
+            <div>النوع</div>
+            <div>المدينة</div>
+            <div>الحالة</div>
+            <div>التاريخ</div>
+            <div>الإجراءات</div>
+          </div>
+
+          {/* 2. حاوية البيانات (تقسيم divide للحاسوب، تباعد space للهاتف) */}
+          <div className="space-y-4 md:space-y-0 md:bg-white md:rounded-b-xl md:shadow-inner md:border md:border-gray-200 md:divide-y md:divide-gray-100">
+            
+            {isLoading ? (
+              /* --- تأثير التحميل (Skeleton) المتجاوب --- */
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-[50px,2fr,1.5fr,1.2fr,1.2fr,1.2fr,1.2fr,2.2fr] gap-3 md:gap-2 items-center bg-white p-5 md:p-3 rounded-2xl md:rounded-none border md:border-none shadow-sm md:shadow-none animate-pulse">
+                  <div className="flex justify-between items-center md:block">
+                    <div className="h-4 bg-gray-200 rounded w-8"></div>
+                    <div className="md:hidden h-6 bg-gray-200 rounded-full w-16"></div>
+                  </div>
+                  <div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-1.5"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                  </div>
+                  <div className="hidden md:block h-4 bg-gray-100 rounded w-24"></div>
+                  <div className="hidden md:block h-8 bg-gray-100 rounded w-20"></div>
+                  <div className="hidden md:block h-4 bg-gray-100 rounded w-16"></div>
+                  <div className="hidden md:block h-6 bg-gray-200 rounded w-20"></div>
+                  <div className="hidden md:block h-4 bg-gray-100 rounded w-20"></div>
+                  <div className="grid grid-cols-2 md:flex gap-2"><div className="h-9 bg-gray-200 rounded-lg"></div><div className="h-9 bg-gray-200 rounded-lg"></div></div>
+                </div>
+              ))
+            ) : users && users.length === 0 ? (
+              /* --- رسالة لا توجد بيانات --- */
+              <div className="text-center py-16 md:bg-white md:rounded-b-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                <p className="text-xl font-bold text-gray-600">لا توجد بيانات</p>
+                <p className="text-sm text-gray-400">لم يتم العثور على مستخدمين مطابقين</p>
+              </div>
+            ) : (
+              /* --- عرض البيانات الحقيقي --- */
+              users.map((user, index) => (
+                <div key={user.id} className="grid grid-cols-1 md:grid-cols-[50px,2fr,1.5fr,1.2fr,1.2fr,1.2fr,1.2fr,2.2fr] gap-2 md:gap-2 items-center bg-white p-5 md:p-3 rounded-2xl md:rounded-none border border-gray-100 md:border-none shadow-sm md:shadow-none hover:bg-gray-50 transition-colors">
+                  
+                  {/* أ. الترقيم والحالة (الهاتف) */}
+                  <div className="flex items-center justify-between md:block mb-1 md:mb-0">
+                    <span className="text-xs font-bold text-black/50 md:text-sm md:text-gray-500 md:font-normal">#{getCurrentUserNumber(index)}</span>
+                    <div className="md:hidden flex items-center gap-1.5">
+                      {getStatusBadge(user.block, user.user_type)}
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                users.map((user, index) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getCurrentUserNumber(index)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                      {user.f_name && (
-                        <div className="text-xs text-gray-500">{user.f_name} {user.last_name}</div>
-                      )}</td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-  {user.phone}
-</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={user.user_type || ''}
-                        onChange={(e) => handleUserTypeChange(user.id, e.target.value)}
-                        disabled={updatingUser === user.id}
-                        className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition disabled:opacity-50"
-                      >
-                        <option value="غير موثوق">غير موثوق</option>
-                        <option value="موثوق">موثوق</option>
-                        <option value="vip">VIP</option>
-                      </select>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-  {user.city || '-'}
-</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge(user.block, user.user_type)}
-                        <button
-                          onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)}
-                          disabled={updatingUser === user.id}
-                          className={`text-xs px-2 py-1 rounded transition ${
-                            user.block === 1 
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                              : 'bg-red-100 text-red-800 hover:bg-red-200'
-                          } disabled:opacity-50`}
-                        >
-                          {user.block === 1 ? 'فك الحظر' : 'حظر'}
-                          {updatingUser === user.id && (
-                            <span className="mr-1 inline-block w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-  {formatDate(user.date1)}
-</td>
-                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
-  <div className="flex flex-wrap gap-1">
-    <button
-      onClick={() => openUserDetails(user)}
-      className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded-md transition"
-    >
-      عرض
-    </button>
-    <button
-      onClick={() => openNotificationsModal(user.id, user.name)}
-      className="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-1 rounded-md transition"
-    >
-      إشعار
-    </button>
-    <button
-      onClick={() => openSubscriptionsModal(user.id, user.name)}
-      className="bg-[#c4a900] hover:bg-[#b39a00] text-black text-xs px-2 py-1 rounded-md transition font-bold"
-    >
-      اشتراك
-    </button>
-    <button
-      onClick={() => openTransactionsModal(user.id, user.name)}
-      className="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2 py-1 rounded-md transition"
-    >
-      دفعات
-    </button>
-  </div>
-</td>
+                  </div>
+
+                  {/* ب. الاسم والاسم الكامل */}
+                  <div className="mb-2 md:mb-0">
+                    <div className="text-base md:text-sm font-extrabold text-black md:text-gray-900 md:font-medium leading-tight">{user.name}</div>
+                    {user.f_name && (
+                      <div className="text-xs text-black/60 md:text-gray-500 mt-0.5">{user.f_name} {user.last_name}</div>
+                    )}
+                  </div>
+
+                  {/* ج. بيانات الهاتف التفصيلية (الهاتف فقط - شبكة 2x2 صغيرة) */}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-1 mb-4 py-3 border-y border-gray-100 md:hidden text-xs text-black bg-gray-50 px-3 rounded-xl font-bold">
+                    <div className="flex items-center gap-1.5"><span className="opacity-60">الهاتف:</span> {user.phone}</div>
+                    <div className="flex items-center gap-1.5"><span className="opacity-60">المدينة:</span> {user.city || '-'}</div>
+                    <div className="flex items-center gap-1.5 col-span-2 text-black/70"><span className="opacity-60 font-medium">تاريخ التسجيل:</span> {formatDate(user.date1)}</div>
+                  </div>
+
+                  {/* د. بيانات الحاسوب الثابتة (مخفية على الهاتف) */}
+                  <div className="hidden md:block text-sm text-gray-900 font-medium">{user.phone}</div>
+                  
+                  {/* النوع (قائمة منسدلة) */}
+                  <div className="mb-3 md:mb-0">
+                    <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="w-full md:w-auto text-xs md:text-sm border border-gray-300 md:border-gray-300 rounded-lg md:rounded px-3 py-2 md:px-2 md:py-1 font-bold md:font-medium text-black md:text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-50 transition">
+                      <option value="غير موثوق">غير موثوق</option>
+                      <option value="موثوق">موثوق</option>
+                      <option value="vip">VIP</option>
+                    </select>
+                  </div>
+
+                  <div className="hidden md:block text-sm text-gray-600">{user.city || '-'}</div>
+
+                  {/* الحالة وحظر المستخدم (تنسيق مختلف للهاتف) */}
+                  <div className="flex items-center justify-between md:justify-start gap-2 mb-4 md:mb-0 p-3 md:p-0 bg-gray-100 md:bg-transparent rounded-xl md:rounded-none">
+                    <div className="hidden md:block">{getStatusBadge(user.block, user.user_type)}</div>
+                    <span className="md:hidden text-xs font-bold text-gray-700">{user.block === 1 ? 'حالة الحساب: محظور' : 'حالة الحساب: نشط'}</span>
+                    <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`text-xs md:text-xs px-4 py-2 md:px-2 md:py-1 rounded-lg md:rounded font-bold transition active:scale-95 ${user.block === 1 ? 'bg-green-600 md:bg-green-100 text-white md:text-green-800 hover:md:bg-green-200' : 'bg-red-600 md:bg-red-100 text-white md:text-red-800 hover:md:bg-red-200'} disabled:opacity-50`}>
+                        {user.block === 1 ? 'فك الحظر' : 'حظر'}
+                        {updatingUser === user.id && (<span className="mr-1 inline-block w-2 h-2 border-2 border-current border-t-transparent rounded-full animate-spin"></span>)}
+                    </button>
+                  </div>
+
+                  <div className="hidden md:block text-sm text-gray-500">{formatDate(user.date1)}</div>
+
+                  {/* هـ. الإجراءات (الأزرار الأربعة - شبكة 2x2 للهاتف، سطر للحاسوب) - هذا هو التعديل الأساسي طلبت */}
+                  <div className="mt-2 md:mt-0">
+                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2.5 md:gap-1 text-sm font-medium">
+                      <button onClick={() => openUserDetails(user)} className="bg-blue-600 hover:bg-blue-500 text-white text-xs md:text-xs px-3 py-3 md:px-2 md:py-1 rounded-xl md:rounded-md transition font-bold active:scale-95 flex items-center justify-center gap-1">عرض</button>
+                      <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-orange-500 hover:bg-orange-400 text-white text-xs md:text-xs px-3 py-3 md:px-2 md:py-1 rounded-xl md:rounded-md transition font-bold active:scale-95 flex items-center justify-center gap-1">إشعار</button>
+                      <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c4a900] hover:bg-[#b39a00] text-black text-xs md:text-xs px-3 py-3 md:px-2 md:py-1 rounded-xl md:rounded-md transition font-extrabold active:scale-95 flex items-center justify-center gap-1">اشتراك</button>
+                      <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-purple-600 hover:bg-purple-500 text-white text-xs md:text-xs px-3 py-3 md:px-2 md:py-1 rounded-xl md:rounded-md transition font-bold active:scale-95 flex items-center justify-center gap-1">دفعات</button>
+                    </div>
+                  </div>
+
+                </div>
+              ))
+            )}
+          </div>
+        </div>
                   </tr>
                 ))
               )}
