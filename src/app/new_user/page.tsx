@@ -342,26 +342,26 @@ const openNotificationsModal = (userId: number, userName: string) => {
   );
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">إدارة المستخدمين</h1>
-          <div className="text-sm text-gray-600">
-            إجمالي المستخدمين: <span className="font-bold">{pagination?.totalUsers || 0}</span>
-          </div>
-        </div>
+<div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-4 md:p-6">
+  <div className="bg-gray-50 rounded-2xl shadow-md p-4 md:p-6">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
+      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">إدارة المستخدمين</h1>
+      <div className="text-sm bg-blue-800 shadow-inner px-4 py-2 rounded-md font-bold">
+        إجمالي المستخدمين: {pagination?.totalUsers || 0}
+      </div>
+    </div>
 
         {/* شريط البحث والتصفية */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="md:col-span-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="ابحث بالاسم أو رقم الهاتف..."
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
+     <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
+  <div className="md:col-span-2">
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="ابحث بالاسم أو رقم الهاتف..."
+        value={searchTerm}
+        onChange={handleSearch}
+        className="w-full px-4 py-2 pr-10 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white shadow-sm text-right"
+      />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
