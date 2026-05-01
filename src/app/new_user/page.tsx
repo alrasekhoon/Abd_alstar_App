@@ -397,30 +397,30 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </div>
 
         {/* زر إعادة التعيين */}
-        <div className="mb-6">
-          <button
-            onClick={resetFilters}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-          >
-            إعادة التعيين
-          </button>
-        </div>
+        <div className="mb-5">
+  <button
+    onClick={resetFilters}
+    className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition shadow-sm"
+  >
+    إعادة التعيين
+  </button>
+</div>
 
         {/* جدول المستخدمين */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-500">
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الاسم</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الهاتف</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">النوع</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المدينة</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">التاريخ</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
-              </tr>
-            </thead>
+            <thead>
+  <tr className="bg-[#c4a900] text-black">
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">#</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الاسم</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">الهاتف</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">النوع</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">المدينة</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الحالة</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000] hidden md:table-cell">التاريخ</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الإجراءات</th>
+  </tr>
+</thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, index) => (
@@ -458,10 +458,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
                       {user.f_name && (
                         <div className="text-xs text-gray-500">{user.f_name} {user.last_name}</div>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.phone}
-                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+  {user.phone}
+</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={user.user_type || ''}
@@ -474,9 +473,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
                         <option value="vip">VIP</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user.city || '-'}
-                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+  {user.city || '-'}
+</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
                         {getStatusBadge(user.block, user.user_type)}
@@ -496,46 +495,34 @@ const openNotificationsModal = (userId: number, userName: string) => {
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(user.date1)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-  <div className="flex space-x-2">
-    {/* الأزرار الحالية */}
+                    <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+  {formatDate(user.date1)}
+</td>
+                    <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
+  <div className="flex flex-wrap gap-1">
     <button
       onClick={() => openUserDetails(user)}
-      className="text-blue-600 hover:text-blue-900 flex items-center"
+      className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded-md transition"
     >
-      {/* أيقونة العرض */}
       عرض
     </button>
-    
-    {/* زر الإشعارات الجديد */}
     <button
       onClick={() => openNotificationsModal(user.id, user.name)}
-      className="text-orange-600 hover:text-orange-900 flex items-center"
+      className="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-1 rounded-md transition"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-      </svg>
-      الإشعارات
+      إشعار
     </button>
-
-    {/* باقي الأزرار */}
     <button
       onClick={() => openSubscriptionsModal(user.id, user.name)}
-      className="text-green-600 hover:text-green-900 flex items-center"
+      className="bg-[#c4a900] hover:bg-[#b39a00] text-black text-xs px-2 py-1 rounded-md transition font-bold"
     >
-      {/* أيقونة الاشتراكات */}
-      الاشتراكات
+      اشتراك
     </button>
-    
     <button
       onClick={() => openTransactionsModal(user.id, user.name)}
-      className="text-purple-600 hover:text-purple-900 flex items-center"
+      className="bg-purple-600 hover:bg-purple-500 text-white text-xs px-2 py-1 rounded-md transition"
     >
-      {/* أيقونة الدفعات */}
-      الدفعات
+      دفعات
     </button>
   </div>
 </td>
