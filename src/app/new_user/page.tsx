@@ -691,7 +691,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </p>
             <button
               onClick={() => {
-                // فتح الصورة في نافذة جديدة
                 window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
               }}
               className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
@@ -701,39 +700,54 @@ const openNotificationsModal = (userId: number, userName: string) => {
               </svg>
               عرض الصورة كاملة
             </button>
+            <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-blue-700">رمز OTP</span>
+                <button
+                  onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
+                  className="text-blue-500 hover:text-blue-700 transition"
+                  title="تحديث"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-blue-900 font-extrabold tracking-widest text-xl">{selectedUser.auth || '-'}</p>
+              <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
+            </div>
           </div>
         </div>
-
       {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {/* الصف الأول: الاسم الأول - الاسم الأخير - الهاتف */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الأول</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.f_name || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الاسم الأول</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.f_name || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الأخير</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.last_name || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الاسم الأخير</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.last_name || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الهاتف</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{selectedUser.phone}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الهاتف</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium" dir="ltr">{selectedUser.phone}</p>
             </div>
 
             {/* الصف الثاني: الجامعة - السنة - الرقم الجامعي */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الجامعة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.university || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجامعة</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.university || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.year1 || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">السنة</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.year1 || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الرقم الجامعي</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.uni_number || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الرقم الجامعي</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.uni_number || '-'}</p>
             </div>
 
             {/* الصف الثالث: الجنس - المسمى الوظيفي - المدينة */}
@@ -742,74 +756,68 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.gender || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">المسمى الوظيفي</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.title || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">المسمى الوظيفي</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.title || '-'}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.city || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">المدينة</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
             {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نوع المستخدم</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  selectedUser.user_type === 'vip'
-                    ? 'bg-purple-100 text-purple-800'
-                    : selectedUser.user_type === 'موثوق'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {selectedUser.user_type || 'غير محدد'}
-                </span>
-              </p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
+              <select
+                value={selectedUser.user_type || ''}
+                onChange={(e) => {
+                  handleUserTypeChange(selectedUser.id, e.target.value);
+                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+              >
+                <option value="غير موثوق">غير موثوق</option>
+                <option value="موثوق">موثوق</option>
+                <option value="vip">VIP</option>
+              </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  selectedUser.block === 1
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-green-100 text-green-800'
-                }`}>
-                  {selectedUser.block === 1 ? 'محظور' : 'نشط'}
-                </span>
-              </p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الحالة</label>
+              <button
+                onClick={() => {
+                  const newBlock = selectedUser.block === 1 ? 0 : 1;
+                  handleBlockUser(selectedUser.id, newBlock);
+                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+              >
+                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
+              </button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.address || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
 
-            {/* الصف الخامس: رمز OTP - تاريخ التسجيل - وقت الإنشاء */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رمز التفعيل (OTP)</label>
-              <p className="text-blue-900 bg-blue-50 p-2 rounded-lg border border-blue-200 font-bold tracking-widest text-center">{selectedUser.auth || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التسجيل القديم</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{formatDate(selectedUser.date1)}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">وقت إنشاء الحساب</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
             </div>
 
             {/* الصف السادس: آخر تحديث - الجهاز */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">آخر تحديث للحساب</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">الجهاز</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجهاز</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
             </div>
 
             {/* ملاحظات - صف كامل */}
             <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
-<p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
             </div>
           </div>
         </div>
