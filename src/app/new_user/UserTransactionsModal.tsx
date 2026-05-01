@@ -176,7 +176,7 @@ export default function UserTransactionsModal({
         setQuickNotification({
           isOpen: true,
           title: `تم ${verbStr} مبلغ في حسابك`,
-          body: `مرحباً، تم ${verbStr} مبلغ ${Number(requestBody.mony).toLocaleString()} في دفتترك المالي (عملية ${transactionTypeStr}).\nتفاصيل: ${requestBody.note || '-'}`
+          body: `مرحباً، تم ${verbStr} رصيد بقيمة ${Number(requestBody.mony).toLocaleString()} ل.س إلى حسابكم بنجاح. (عملية ${transactionTypeStr}).\nيُرجى الاشتراك فوراً لضمان حصولكم على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق. ${requestBody.note || '-'}`
         });
       }
 
