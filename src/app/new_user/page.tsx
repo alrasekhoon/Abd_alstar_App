@@ -457,7 +457,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
                       <div className="text-sm font-medium text-gray-900">{user.name}</div>
                       {user.f_name && (
                         <div className="text-xs text-gray-500">{user.f_name} {user.last_name}</div>
-                      )}
+                      )}</td>
                     <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
   {user.phone}
 </td>
