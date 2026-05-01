@@ -469,12 +469,12 @@ const openNotificationsModal = (userId: number, userName: string) => {
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">{formatDate(user.date1)}</td>
                       <td className="px-3 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          <button onClick={() => openUserDetails(user)} className="bg-blue-600 text-white text-xs px-2 py-1.5 rounded-md font-bold hover:bg-blue-700">عرض</button>
-                          <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-orange-500 text-white text-xs px-2 py-1.5 rounded-md font-bold hover:bg-orange-600">إشعار</button>
-                          <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c4a900] text-black text-xs px-2 py-1.5 rounded-md font-extrabold hover:bg-[#b39a00]">اشتراك</button>
-                          <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-purple-600 text-white text-xs px-2 py-1.5 rounded-md font-bold hover:bg-purple-700">دفعات</button>
-                        </div>
+                        <div className="flex flex-col gap-1.5 min-w-[75px] max-w-[100px] mx-auto">
+  <button onClick={() => openUserDetails(user)} className="bg-blue-600 text-white text-xs px-2 py-2 rounded-lg font-bold hover:bg-blue-700 w-full text-center shadow-sm transition">عرض</button>
+  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-orange-500 text-white text-xs px-2 py-2 rounded-lg font-bold hover:bg-orange-600 w-full text-center shadow-sm transition">إشعار</button>
+  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c4a900] text-black text-xs px-2 py-2 rounded-lg font-extrabold hover:bg-[#b39a00] w-full text-center shadow-sm transition">اشتراك</button>
+  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-purple-600 text-white text-xs px-2 py-2 rounded-lg font-bold hover:bg-purple-700 w-full text-center shadow-sm transition">دفعات</button>
+</div>
                       </td>
                     </tr>
                   ))
@@ -512,29 +512,49 @@ const openNotificationsModal = (userId: number, userName: string) => {
                     {user.f_name && <div className="text-sm text-gray-500 mt-0.5">{user.f_name} {user.last_name}</div>}
                   </div>
 
-                  {/* التفاصيل (شبكة 2x2) */}
-                  <div className="grid grid-cols-2 gap-3 text-xs mb-4">
-                    <div className="text-right"><span className="text-gray-400 block mb-0.5">الهاتف:</span><span className="font-bold text-gray-800">{user.phone}</span></div>
-                    <div className="text-left"><span className="text-gray-400 block mb-0.5">المدينة:</span><span className="font-bold text-gray-800">{user.city || '-'}</span></div>
-                    <div className="col-span-2 text-center bg-gray-50 rounded-lg py-1.5"><span className="text-gray-400">تاريخ التسجيل:</span> <span className="font-bold text-gray-800">{formatDate(user.date1)}</span></div>
-                  </div>
+{/* التفاصيل المنسقة */}
+<div className="mb-4">
+  <div className="flex justify-between items-center mb-3 px-2">
+    <div className="text-right">
+      <span className="text-gray-400 block text-xs mb-1 font-medium">المدينة:</span>
+      <span className="font-bold text-gray-800 text-sm">{user.city || '-'}</span>
+    </div>
+    <div className="text-left">
+      <span className="text-gray-400 block text-xs mb-1 font-medium">الهاتف:</span>
+      <span className="font-bold text-gray-800 text-sm" dir="ltr">{user.phone}</span>
+    </div>
+  </div>
+  <div className="w-full text-center bg-gray-50 rounded-xl py-2.5 border border-gray-100">
+    <span className="text-gray-400 text-xs ml-1">تاريخ التسجيل:</span> 
+    <span className="font-bold text-gray-800 text-sm">{formatDate(user.date1)}</span>
+  </div>
+</div>
 
-                  {/* القائمة المنسدلة للنوع */}
-                  <div className="mb-4">
-                    <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="w-full text-sm border border-gray-300 rounded-xl px-4 py-2.5 font-bold text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900]">
-                      <option value="غير موثوق">غير موثوق</option>
-                      <option value="موثوق">موثوق</option>
-                      <option value="vip">VIP</option>
-                    </select>
-                  </div>
+{/* نوع المستخدم وحالة الحساب (في صف واحد) */}
+<div className="flex flex-row items-center justify-between gap-3 bg-white p-2 rounded-xl mb-4 border border-gray-200 shadow-sm">
+  <div className="flex-1 w-1/2">
+    <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="w-full text-sm border border-gray-300 rounded-lg px-2 py-2 font-bold text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer">
+      <option value="غير موثوق">غير موثوق</option>
+      <option value="موثوق">موثوق</option>
+      <option value="vip">VIP</option>
+    </select>
+  </div>
+  
+  <div className="flex-1 w-1/2 flex justify-end items-center gap-2">
+    <span className="text-xs font-bold text-gray-600 hidden sm:inline truncate">الحالة: {user.block === 1 ? 'محظور' : 'نشط'}</span>
+    <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`px-4 py-2 rounded-lg text-sm font-bold shadow-sm w-full sm:w-auto transition ${user.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
+      {user.block === 1 ? 'فك الحظر' : 'حظر'}
+    </button>
+  </div>
+</div>
 
-                  {/* زر الحظر وحالة الحساب */}
-                  <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl mb-4 border border-gray-100">
-                    <span className="text-sm font-bold text-gray-700">حالة الحساب: {user.block === 1 ? 'محظور' : 'نشط'}</span>
-                    <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`px-5 py-1.5 rounded-lg text-sm font-bold shadow-sm ${user.block === 1 ? 'bg-green-500 text-white' : 'bg-red-600 text-white'}`}>
-                      {user.block === 1 ? 'فك الحظر' : 'حظر'}
-                    </button>
-                  </div>
+{/* الأزرار الأربعة */}
+<div className="grid grid-cols-2 gap-2 mt-2">
+  <button onClick={() => openUserDetails(user)} className="bg-blue-600 text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">عرض</button>
+  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-orange-500 text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">إشعار</button>
+  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c4a900] text-black py-3 rounded-xl text-sm font-extrabold shadow-sm active:scale-95 transition">اشتراك</button>
+  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-purple-600 text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">دفعات</button>
+</div>
 
                   {/* الأزرار الأربعة (كما في صورتك الثالثة تماماً) */}
                   <div className="grid grid-cols-2 gap-2 mt-2">
