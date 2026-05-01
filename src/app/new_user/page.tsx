@@ -342,12 +342,15 @@ const openNotificationsModal = (userId: number, userName: string) => {
   );
 
   return (
-<div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-2 md:p-4">
-  <div className="bg-white rounded-2xl shadow-md p-2 md:p-4 border border-gray-100">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">إدارة المستخدمين</h1>
-      <div className="text-sm bg-blue-800 shadow-inner px-4 py-2 rounded-md font-bold">
-        إجمالي المستخدمين: {pagination?.totalUsers || 0}
+<div dir="rtl" className="font-sans min-h-screen bg-gray-50 p-2 md:p-4">
+  <div className="w-full max-w-full">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-white border border-gray-200 p-5 rounded-2xl shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="w-1.5 h-8 bg-[#c4a900] rounded-full"></div>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">إدارة المستخدمين</h1>
+      </div>
+      <div className="text-sm bg-gray-50 text-gray-700 border border-gray-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+        إجمالي المستخدمين: <span className="text-blue-600 text-base">{pagination?.totalUsers || 0}</span>
       </div>
     </div>
 
@@ -412,16 +415,16 @@ const openNotificationsModal = (userId: number, userName: string) => {
           {/* 1. نسخة الحاسوب (جدول ثابت وأنيق - يختفي في الهاتف) */}
           <div className="hidden md:block w-full overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
             <table className="w-full text-right divide-y divide-gray-200 table-auto">
-              <thead>
-                <tr className="bg-[#c4a900] text-black">
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">#</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الاسم</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الهاتف</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">النوع</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">المدينة</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الحالة</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">التاريخ</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الإجراءات</th>
+              <thead className="bg-gray-50 border-b-2 border-gray-200">
+                <tr>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">#</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">الاسم</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">الهاتف</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">النوع</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">المدينة</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">الحالة</th>
+                  <th className="px-4 py-4 text-right text-sm font-bold text-gray-600">التاريخ</th>
+                  <th className="px-4 py-4 text-center text-sm font-bold text-gray-600">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -498,7 +501,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <div className="text-center py-10 bg-white rounded-2xl"><p className="text-gray-500 font-bold">لا توجد بيانات</p></div>
             ) : (
               users.map((user, index) => (
-                <div key={`mobile-${user.id}`} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div key={`mobile-${user.id}`} className={`p-4 rounded-2xl shadow-sm border relative overflow-hidden transition-colors ${user.block === 1 ? 'bg-red-50/70 border-red-200' : 'bg-white border-gray-100'}`}>
                   
                   {/* الشريط العلوي للبطاقة (# والحالة) */}
                   <div className="flex justify-between items-center mb-3">
@@ -512,44 +515,55 @@ const openNotificationsModal = (userId: number, userName: string) => {
                     {user.f_name && <div className="text-sm text-gray-500 mt-0.5">{user.f_name} {user.last_name}</div>}
                   </div>
 
-{/* التفاصيل المنسقة */}
-<div className="mb-4 mt-2">
-  <div className="flex justify-between items-center mb-4 px-1">
-    <div className="text-right">
-      <span className="text-gray-400 block text-[11px] mb-1 font-medium">المدينة:</span>
-      <span className="font-extrabold text-gray-900 text-sm">{user.city || '-'}</span>
-    </div>
-    <div className="text-left">
-      <span className="text-gray-400 block text-[11px] mb-1 font-medium">الهاتف:</span>
-      <span className="font-extrabold text-gray-900 text-sm" dir="ltr">{user.phone}</span>
-    </div>
-  </div>
-  <div className="w-full text-center bg-gray-50 rounded-xl py-3 border border-gray-100 mb-4">
-    <span className="text-gray-400 text-xs ml-1">تاريخ التسجيل:</span> 
-    <span className="font-bold text-gray-800 text-sm">{formatDate(user.date1)}</span>
-  </div>
-</div>
+                  {/* التفاصيل المنسقة */}
+                  <div className="mb-4 mt-2">
+                    <div className="flex justify-between items-center mb-4 px-1">
+                      <div className="text-right">
+                        <span className="text-gray-400 block text-[11px] mb-1 font-medium">المدينة:</span>
+                        <span className="font-extrabold text-gray-900 text-sm">{user.city || '-'}</span>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-gray-400 block text-[11px] mb-1 font-medium">الهاتف:</span>
+                        <span className="font-extrabold text-gray-900 text-sm" dir="ltr">{user.phone}</span>
+                      </div>
+                    </div>
+                    <div className="w-full text-center bg-gray-50 rounded-xl py-3 border border-gray-100 mb-4">
+                      <span className="text-gray-400 text-xs ml-1">تاريخ التسجيل:</span> 
+                      <span className="font-bold text-gray-800 text-sm">{formatDate(user.date1)}</span>
+                    </div>
+                  </div>
 
-{/* نوع المستخدم وحالة الحساب (في صف واحد) */}
-<div className="flex flex-row items-center justify-between gap-3 mb-4">
-  <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="flex-1 w-1/2 text-sm border border-gray-200 rounded-xl px-3 py-3 font-bold text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer text-center">
-    <option value="غير موثوق">غير موثوق</option>
-    <option value="موثوق">موثوق</option>
-    <option value="vip">VIP</option>
-  </select>
-  <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`flex-1 w-1/2 py-3 rounded-xl text-sm font-bold shadow-sm transition ${user.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-[#d32f2f] hover:bg-red-700 text-white'}`}>
-    {user.block === 1 ? 'فك الحظر' : 'حظر'}
-  </button>
-</div>
+                  {/* نوع المستخدم وحالة الحساب (في صف واحد) */}
+                  <div className="flex flex-row items-center justify-between gap-3 mb-4">
+                    <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="flex-1 w-1/2 text-sm border border-gray-200 rounded-xl px-3 py-3 font-bold text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer text-center">
+                      <option value="غير موثوق">غير موثوق</option>
+                      <option value="موثوق">موثوق</option>
+                      <option value="vip">VIP</option>
+                    </select>
+                    <button onClick={() => handleBlockUser(user.id, user.block === 1 ? 0 : 1)} disabled={updatingUser === user.id} className={`flex-1 w-1/2 py-3 rounded-xl text-sm font-bold shadow-sm transition ${user.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-[#d32f2f] hover:bg-red-700 text-white'}`}>
+                      {user.block === 1 ? 'فك الحظر' : 'حظر'}
+                    </button>
+                  </div>
 
-{/* الأزرار الأربعة */}
-<div className="grid grid-cols-2 gap-3 mt-2">
-  <button onClick={() => openUserDetails(user)} className="bg-[#3b66f5] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">عرض</button>
-  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-[#ed7c1e] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">إشعار</button>
-  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-[#8b3dff] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">دفعات</button>
-  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c2aa27] text-black py-3 rounded-xl text-sm font-extrabold shadow-sm active:scale-95 transition">اشتراك</button>
-</div>
-
+                  {/* الأزرار الأربعة مع أيقونات للهاتف */}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button onClick={() => openUserDetails(user)} className="flex items-center justify-center gap-1.5 bg-[#3b66f5] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      عرض
+                    </button>
+                    <button onClick={() => openNotificationsModal(user.id, user.name)} className="flex items-center justify-center gap-1.5 bg-[#ed7c1e] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                      إشعار
+                    </button>
+                    <button onClick={() => openTransactionsModal(user.id, user.name)} className="flex items-center justify-center gap-1.5 bg-[#8b3dff] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                      دفعات
+                    </button>
+                    <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="flex items-center justify-center gap-1.5 bg-[#c2aa27] text-black py-3 rounded-xl text-sm font-extrabold shadow-sm active:scale-95 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                      اشتراك
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -558,9 +572,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
        {/* التحميل التدريجي */}
         {!isLoading && pagination && pagination.totalPages > 1 && (
-          <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-4">
-            {/* النص داخل إطار أنيق */}
-            <div className="bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-center w-full md:w-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-4 w-full">
+            {/* النص داخل إطار أنيق - محاذاة لليمين */}
+            <div className="bg-white border border-gray-200 shadow-sm px-5 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-center md:text-right w-full md:w-auto">
               عرض <span className="text-blue-600">{((pagination.currentPage - 1) * pagination.usersPerPage) + 1}</span> إلى{' '}
               <span className="text-blue-600">{Math.min(pagination.currentPage * pagination.usersPerPage, pagination.totalUsers)}</span> من{' '}
               <span className="text-[#c4a900]">{pagination.totalUsers}</span> مستخدم
@@ -801,33 +815,41 @@ const openNotificationsModal = (userId: number, userName: string) => {
 )}
 
 
-{/* مودال الدفعات المالية */}
-<UserTransactionsModal
-  isOpen={transactionsModal.isOpen}
-  onClose={() => setTransactionsModal(prev => ({ ...prev, isOpen: false }))}
-  userId={transactionsModal.userId}
-  userName={transactionsModal.userName}
-/>
+{/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
+      {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] transition-all duration-300"></div>
+      )}
 
+      {/* مودال الدفعات المالية */}
+      <div className="relative z-[50]">
+        <UserTransactionsModal
+          isOpen={transactionsModal.isOpen}
+          onClose={() => setTransactionsModal(prev => ({ ...prev, isOpen: false }))}
+          userId={transactionsModal.userId}
+          userName={transactionsModal.userName}
+        />
+      </div>
 
-{/* مودال الاشتراكات  */}
- <UserSubscriptionsModal
-  isOpen={subscriptionsModal.isOpen}
-  onClose={() => setSubscriptionsModal(prev => ({ ...prev, isOpen: false }))}
-  userId={subscriptionsModal.userId}
-  userName={subscriptionsModal.userName}
-/>
+      {/* مودال الاشتراكات  */}
+      <div className="relative z-[50]">
+        <UserSubscriptionsModal
+          isOpen={subscriptionsModal.isOpen}
+          onClose={() => setSubscriptionsModal(prev => ({ ...prev, isOpen: false }))}
+          userId={subscriptionsModal.userId}
+          userName={subscriptionsModal.userName}
+        />
+      </div>
 
-{/* مودال الإشعارات */}
-<UserNotificationsModal
-  isOpen={notificationsModal.isOpen}
-  onClose={() => setNotificationsModal(prev => ({ ...prev, isOpen: false }))}
-  userId={notificationsModal.userId}
-  userName={notificationsModal.userName}
-/>
+      {/* مودال الإشعارات */}
+      <div className="relative z-[50]">
+        <UserNotificationsModal
+          isOpen={notificationsModal.isOpen}
+          onClose={() => setNotificationsModal(prev => ({ ...prev, isOpen: false }))}
+          userId={notificationsModal.userId}
+          userName={notificationsModal.userName}
+        />
+      </div>
 
     </div>
   );
-
- 
 }
