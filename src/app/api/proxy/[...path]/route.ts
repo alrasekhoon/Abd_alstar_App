@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = 'https://alrasekhooninlaw.com/alraskoon/v2';
+const API_BASE_URL = process.env.CUSTOM_API_URL;//|| 'http://alraskun.atwebpages.com';
 
 // رؤوس افتراضية لمنع التخزين المؤقت للردود JSON
 const NO_CACHE_JSON_HEADERS = {
