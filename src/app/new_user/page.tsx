@@ -809,15 +809,12 @@ const openNotificationsModal = (userId: number, userName: string) => {
             {/* ملاحظات - صف كامل */}
             <div className="md:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
+<p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
             </div>
-
           </div>
         </div>
       
       </div>
-
-      </div> {/* إغلاق flex-col md:flex-row gap-8 */}
 
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
         <button
