@@ -344,8 +344,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
   return (
 <div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-2 md:p-4">
   <div className="bg-white rounded-2xl shadow-md p-2 md:p-4 border border-gray-100">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
+<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
+</div>
 
+{/* شريط البحث والتصفية */}
 {/* شريط البحث والتصفية */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="col-span-2">
