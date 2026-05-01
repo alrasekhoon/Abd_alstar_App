@@ -206,10 +206,19 @@ export default function UserSubscriptionsModal({
       resetForm();
       setError('');
 
+const savedMaterialName = newSubscription.materialName;
+const savedType = newSubscription.type1;
+const savedPrice = newSubscription.price1;
+
+await fetchSubscriptions();
+setShowAddForm(false);
+resetForm();
+setError('');
+
 setQuickNotification({
   isOpen: true,
   title: 'إضافة اشتراك جديد',
-  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: \n• القيمة: \nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
+  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: ${savedType}.\n• القيمة: ${Number(savedPrice).toLocaleString()} ل.س.\nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
 });
 
     } catch (err) {
