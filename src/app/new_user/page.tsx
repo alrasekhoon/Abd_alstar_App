@@ -343,13 +343,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
   return (
 <div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-2 md:p-4">
-  <div className="bg-white rounded-2xl shadow-md p-2 md:p-4 border border-gray-100">
+  <div className="bg-white rounded-2xl shadow-md p-2 md:p-4 border border-gray-100">
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-600 text-white p-4 rounded-xl shadow-md">
-      <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">إدارة المستخدمين</h1>
-      <div className="text-sm bg-blue-800 shadow-inner px-4 py-2 rounded-md font-bold">
-        إجمالي المستخدمين: {pagination?.totalUsers || 0}
-      </div>
-    </div>
 
 {/* شريط البحث والتصفية */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -413,7 +408,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
           <div className="hidden md:block w-full overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
             <table className="w-full text-right divide-y divide-gray-200 table-auto">
               <thead>
-                <tr className="bg-[#c4a900] text-black">
+                <tr className="bg-[#f5e97a] text-gray-800">
                   <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">#</th>
                   <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الاسم</th>
                   <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#a89000]">الهاتف</th>
@@ -444,7 +439,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
                   </tr>
                 ) : (
                   users.map((user, index) => (
-                    <tr key={`desktop-${user.id}`} className="hover:bg-gray-50 transition">
+                    <tr key={`desktop-${user.id}`} className={`transition ${user.block === 1 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'}`}>
                       <td className="px-3 py-4 text-sm text-gray-500">{getCurrentUserNumber(index)}</td>
                       <td className="px-3 py-4">
                         <div className="text-sm font-bold text-gray-900">{user.name}</div>
@@ -468,14 +463,26 @@ const openNotificationsModal = (userId: number, userName: string) => {
                         </div>
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-500">{formatDate(user.date1)}</td>
-                      <td className="px-3 py-4">
-<div className="flex flex-col gap-2 w-[90px] mx-auto">
-  <button onClick={() => openUserDetails(user)} className="bg-[#3b66f5] text-white text-sm py-1.5 rounded-lg font-bold hover:bg-blue-700 w-full text-center shadow-sm transition">عرض</button>
-  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-[#ed7c1e] text-white text-sm py-1.5 rounded-lg font-bold hover:bg-orange-600 w-full text-center shadow-sm transition">إشعار</button>
-  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c2aa27] text-black text-sm py-1.5 rounded-lg font-bold hover:bg-[#b39a00] w-full text-center shadow-sm transition">اشتراك</button>
-  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-[#8b3dff] text-white text-sm py-1.5 rounded-lg font-bold hover:bg-purple-700 w-full text-center shadow-sm transition">دفعات</button>
-</div>
-                      </td>
+                     <td className="px-2 py-3">
+  <div className="grid grid-cols-2 xl:grid-cols-4 gap-1.5 min-w-[140px]">
+    <button onClick={() => openUserDetails(user)} className="bg-[#3b66f5] text-white text-xs py-1.5 px-1 rounded-lg font-bold hover:bg-blue-700 flex items-center justify-center gap-1 shadow-sm transition">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/></svg>
+      عرض
+    </button>
+    <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-[#ed7c1e] text-white text-xs py-1.5 px-1 rounded-lg font-bold hover:bg-orange-600 flex items-center justify-center gap-1 shadow-sm transition">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+      إشعار
+    </button>
+    <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c2aa27] text-black text-xs py-1.5 px-1 rounded-lg font-bold hover:bg-[#b39a00] flex items-center justify-center gap-1 shadow-sm transition">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/></svg>
+      اشتراك
+    </button>
+    <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-[#8b3dff] text-white text-xs py-1.5 px-1 rounded-lg font-bold hover:bg-purple-700 flex items-center justify-center gap-1 shadow-sm transition">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/></svg>
+      دفعات
+    </button>
+  </div>
+</td>
                     </tr>
                   ))
                 )}
@@ -498,7 +505,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <div className="text-center py-10 bg-white rounded-2xl"><p className="text-gray-500 font-bold">لا توجد بيانات</p></div>
             ) : (
               users.map((user, index) => (
-                <div key={`mobile-${user.id}`} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div key={`mobile-${user.id}`} className={`p-4 rounded-2xl shadow-sm border relative overflow-hidden ${user.block === 1 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-100'}`}>
                   
                   {/* الشريط العلوي للبطاقة (# والحالة) */}
                   <div className="flex justify-between items-center mb-3">
@@ -542,12 +549,24 @@ const openNotificationsModal = (userId: number, userName: string) => {
   </button>
 </div>
 
-{/* الأزرار الأربعة */}
+{/* الأزرار الأربعة مع أيقونات */}
 <div className="grid grid-cols-2 gap-3 mt-2">
-  <button onClick={() => openUserDetails(user)} className="bg-[#3b66f5] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">عرض</button>
-  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-[#ed7c1e] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">إشعار</button>
-  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-[#8b3dff] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition">دفعات</button>
-  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c2aa27] text-black py-3 rounded-xl text-sm font-extrabold shadow-sm active:scale-95 transition">اشتراك</button>
+  <button onClick={() => openUserDetails(user)} className="bg-[#3b66f5] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/></svg>
+    عرض
+  </button>
+  <button onClick={() => openNotificationsModal(user.id, user.name)} className="bg-[#ed7c1e] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+    إشعار
+  </button>
+  <button onClick={() => openTransactionsModal(user.id, user.name)} className="bg-[#8b3dff] text-white py-3 rounded-xl text-sm font-bold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/></svg>
+    دفعات
+  </button>
+  <button onClick={() => openSubscriptionsModal(user.id, user.name)} className="bg-[#c2aa27] text-black py-3 rounded-xl text-sm font-extrabold shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/></svg>
+    اشتراك
+  </button>
 </div>
 
                 </div>
@@ -558,9 +577,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
        {/* التحميل التدريجي */}
         {!isLoading && pagination && pagination.totalPages > 1 && (
-          <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-4">
-            {/* النص داخل إطار أنيق */}
-            <div className="bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-center w-full md:w-auto">
+          <div className="flex flex-col md:flex-row items-center justify-end mt-6 gap-4">
+            {/* النص داخل إطار أنيق - محاذاة يمين */}
+            <div className="bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-right w-full md:w-auto order-last md:order-first">
               عرض <span className="text-blue-600">{((pagination.currentPage - 1) * pagination.usersPerPage) + 1}</span> إلى{' '}
               <span className="text-blue-600">{Math.min(pagination.currentPage * pagination.usersPerPage, pagination.totalUsers)}</span> من{' '}
               <span className="text-[#c4a900]">{pagination.totalUsers}</span> مستخدم
