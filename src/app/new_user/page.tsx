@@ -395,8 +395,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </select>
   </div>
 
-  <div className="hidden md:flex col-span-1 justify-end">
-    <button
+<div className="flex col-span-1 justify-end">
+ <button
       onClick={resetFilters}
       className="w-full px-4 py-3 text-sm text-white bg-red-500 hover:bg-red-600 rounded-xl transition shadow-sm font-bold flex items-center justify-center gap-2"
     >
@@ -406,19 +406,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
       إعادة التعيين
     </button>
   </div>
-</div>
-
-{/* زر إعادة التعيين للهاتف فقط */}
-<div className="md:hidden mb-4">
-  <button
-    onClick={resetFilters}
-    className="px-4 py-2.5 text-sm text-white bg-red-500 hover:bg-red-600 rounded-xl transition shadow-sm font-bold flex items-center gap-2"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-    </svg>
-    إعادة التعيين
-  </button>
 </div>
 
         {/* زر إعادة التعيين */}
@@ -580,8 +567,13 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
 {/* نوع المستخدم وحالة الحساب (في صف واحد) */}
 <div className="flex flex-row items-center justify-between gap-3 mb-4">
-  <select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className="flex-1 w-1/2 text-sm border border-gray-200 rounded-xl px-3 py-3 font-bold text-gray-800 bg-white focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer text-center">
-    <option value="غير موثوق">غير موثوق</option>
+<select value={user.user_type || ''} onChange={(e) => handleUserTypeChange(user.id, e.target.value)} disabled={updatingUser === user.id} className={`flex-1 w-1/2 text-sm border rounded-xl px-3 py-3 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer text-center ${
+    user.user_type === 'vip'
+      ? 'bg-yellow-50 border-yellow-300 text-yellow-800'
+      : user.user_type === 'موثوق'
+      ? 'bg-green-50 border-green-300 text-green-800'
+      : 'bg-amber-50 border-amber-400 text-amber-700'
+  }`}>    <option value="غير موثوق">غير موثوق</option>
     <option value="موثوق">موثوق</option>
     <option value="vip">VIP</option>
   </select>
