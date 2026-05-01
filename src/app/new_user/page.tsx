@@ -837,28 +837,50 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
 
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
-        <button
-          onClick={() => setIsUserModalOpen(false)}
-          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-        >
-          إغلاق
+       <button
+          onClick={() => setIsUserModalOpen(false)}
+          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+        >
+          إغلاق
         </button>
       </div>
     </div>
+
+    {/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
+    {fullScreenImage && (
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-[60] bg-black/90 backdrop-blur-md transition-all">
+        <div className="relative w-full max-w-3xl h-[80vh] flex flex-col items-center justify-center gap-4">
+          <div className="relative w-full h-full">
+            <Image src={fullScreenImage} alt="صورة مكبرة" fill className="object-contain" />
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = fullScreenImage;
+                link.download = `user_${selectedUser?.id}_image.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }} 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              تنزيل
+            </button>
+            <button 
+              onClick={() => setFullScreenImage(null)} 
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition shadow-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 )}
-
-{/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
-{fullScreenImage && (
-      <div className="fixed inset-0 flex items-center justify-center p-4 z-[60] bg-black/90 backdrop-blur-md transition-all">
-        <div className="relative w-full max-w-3xl h-[80vh] flex flex-col items-center justify-center gap-4">
-          <div className="relative w-full h-full">
-            <Image src={fullScreenImage} alt="صورة مكبرة" fill className="object-contain" />
-          </div>
-          <div className="flex gap-4">
-            <button 
-              onClick={() => {
-                const link = document.createElement('a');
                 link.href = fullScreenImage;
                 link.download = `user_${selectedUser?.id}_image.jpg`;
                 document.body.appendChild(link);
