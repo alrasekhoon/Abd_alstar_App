@@ -172,13 +172,21 @@ export default function UserTransactionsModal({
       const transactionTypeStr = requestBody.type === 'deposit' ? 'إيداع' : 'سحب';
       const verbStr = requestBody.type === 'deposit' ? 'إضافة' : 'خصم';
       
-      if (window.confirm('تمت العملية المالية بنجاح. هل تريد إرسال إشعار للطالب لتنبيهه بالحركة المالية؟')) {
-        setQuickNotification({
-          isOpen: true,
-          title: `تم ${verbStr} مبلغ في حسابك`,
-          body: `مرحباً، تم ${verbStr} مبلغ ${Number(requestBody.mony).toLocaleString()} في دفتترك المالي (عملية ${transactionTypeStr}).\nتفاصيل: ${requestBody.note || '-'}`
-        });
-      }
+ await fetchData();
+
+if (requestBody.type === 'deposit') {
+  setQuickNotification({
+    isOpen: true,
+    title: 'إشعار مالي',
+    body: `تمت إضافة رصيد بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.) إلى حسابكم بنجاح.\nيُرجى الاشتراك فوراً لضمان حصولكم على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
+  });
+}
+
+setNewTransaction({
+  mony: '',
+  type: 'deposit',
+  note: ''
+});
 
       setNewTransaction({
         mony: '',
