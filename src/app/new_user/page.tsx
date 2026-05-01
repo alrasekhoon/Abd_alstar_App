@@ -467,10 +467,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
       disabled={updatingUser === user.id}
       className={`text-xs border rounded-lg px-2 py-1.5 font-bold focus:ring-2 focus:ring-[#c4a900] transition cursor-pointer ${
         user.user_type === 'vip'
-          ? 'bg-yellow-50 border-yellow-300 text-yellow-800'
+          ? 'bg-yellow-50 border-yellow-400 text-yellow-800'
           : user.user_type === 'موثوق'
-          ? 'bg-green-50 border-green-300 text-green-800'
-          : 'bg-orange-50 border-orange-300 text-orange-700'
+          ? 'bg-green-50 border-green-400 text-green-800'
+          : 'bg-orange-50 border-orange-200 text-orange-700'
       }`}
     >
       <option value="غير موثوق">غير موثوق</option>
