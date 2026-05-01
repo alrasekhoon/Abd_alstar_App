@@ -206,14 +206,11 @@ export default function UserSubscriptionsModal({
       resetForm();
       setError('');
 
-      // رسالة التأكيد لإرسال الإشعار
-      if (window.confirm('تم إضافة الاشتراك بنجاح. هل تريد إرسال إشعار للطالب لإخباره بتفعيل الاشتراك؟')) {
-        setQuickNotification({
-          isOpen: true,
-          title: 'تفعيل اشتراك جديد',
-          body: `مرحباً، تم تفعيل اشتراكك ( ${savedType} ) في مادة ${savedMaterialName} بنجاح.`
-        });
-      }
+setQuickNotification({
+  isOpen: true,
+  title: 'إضافة اشتراك جديد',
+  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: \n• القيمة: \nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
+});
 
     } catch (err) {
       console.error('Error adding subscription:', err);
