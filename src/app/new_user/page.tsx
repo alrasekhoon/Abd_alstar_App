@@ -408,15 +408,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
   </div>
 </div>
 
-        {/* زر إعادة التعيين */}
-        <div className="mb-5">
-  <button
-    onClick={resetFilters}
-    className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition shadow-sm"
-  >
-    إعادة التعيين
-  </button>
-</div>
 
 {/* === منطقة عرض المستخدمين === */}
         <div>
@@ -466,12 +457,11 @@ const openNotificationsModal = (userId: number, userName: string) => {
       onChange={(e) => handleUserTypeChange(user.id, e.target.value)}
       disabled={updatingUser === user.id}
       className={`text-xs border rounded-lg px-2 py-1.5 font-bold focus:ring-2 focus:ring-[#c4a900] transition cursor-pointer ${
-        user.user_type === 'vip'
-          ? 'bg-yellow-50 border-yellow-400 text-yellow-800'
-          : user.user_type === 'موثوق'
-          ? 'bg-green-50 border-green-400 text-green-800'
-          : 'bg-orange-50 border-orange-200 text-orange-700'
-      }`}
+    user.user_type === 'vip'
+      ? 'bg-purple-50 border-purple-400 text-purple-800'
+      : user.user_type === 'موثوق'
+      ? 'bg-green-50 border-green-300 text-green-800'
+      : 'bg-amber-50 border-amber-400 text-amber-700'
     >
       <option value="غير موثوق">غير موثوق</option>
       <option value="موثوق">موثوق</option>
@@ -724,84 +714,72 @@ const openNotificationsModal = (userId: number, userName: string) => {
           </div>
         </div>
 
-        {/* قسم البيانات */}
+      {/* قسم البيانات */}
         <div className="flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.name}</p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الهاتف</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.phone}</p>
-            </div>
-            
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* الصف الأول: الاسم الأول - الاسم الأخير - الهاتف */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الأول</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.f_name || '-'}</p>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الأخير</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.last_name || '-'}</p>
             </div>
-            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الرقم الجامعي</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.uni_number || '-'}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الهاتف</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{selectedUser.phone}</p>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.year1 || '-'}</p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.gender || '-'}</p>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.city || '-'}</p>
-            </div>
-            
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 min-h-[60px]">{selectedUser.address || '-'}</p>
-            </div>
-            
+
+            {/* الصف الثاني: الجامعة - السنة - الرقم الجامعي */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الجامعة</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.university || '-'}</p>
             </div>
-            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.year1 || '-'}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الرقم الجامعي</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.uni_number || '-'}</p>
+            </div>
+
+            {/* الصف الثالث: الجنس - المسمى الوظيفي - المدينة */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الجنس</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.gender || '-'}</p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">المسمى الوظيفي</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.title || '-'}</p>
             </div>
-            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.city || '-'}</p>
+            </div>
+
+            {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">نوع المستخدم</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  selectedUser.user_type === 'vip' 
+                  selectedUser.user_type === 'vip'
                     ? 'bg-purple-100 text-purple-800'
                     : selectedUser.user_type === 'موثوق'
                     ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
+                    : 'bg-amber-100 text-amber-700'
                 }`}>
                   {selectedUser.user_type || 'غير محدد'}
                 </span>
               </p>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  selectedUser.block === 1 
+                  selectedUser.block === 1
                     ? 'bg-red-100 text-red-800'
                     : 'bg-green-100 text-green-800'
                 }`}>
@@ -809,39 +787,43 @@ const openNotificationsModal = (userId: number, userName: string) => {
                 </span>
               </p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.address || '-'}</p>
+            </div>
 
+            {/* الصف الخامس: رمز OTP - تاريخ التسجيل - وقت الإنشاء */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">رمز التفعيل (OTP)</label>
               <p className="text-blue-900 bg-blue-50 p-2 rounded-lg border border-blue-200 font-bold tracking-widest text-center">{selectedUser.auth || '-'}</p>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التسجيل القديم</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{formatDate(selectedUser.date1)}</p>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">وقت إنشاء الحساب</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
             </div>
 
+            {/* الصف السادس: آخر تحديث - الجهاز */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">آخر تحديث للحساب</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
+              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
-
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">الجهاز</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
             </div>
 
-            <div className="md:col-span-2">
+            {/* ملاحظات - صف كامل */}
+            <div className="md:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200 min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
             </div>
+
           </div>
         </div>
-      </div>
       
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
         <button
