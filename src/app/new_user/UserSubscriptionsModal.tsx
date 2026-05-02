@@ -2,92 +2,133 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-type Transaction = {
+type Subscription = {
   id: number;
-  user_id: number;
-  mony: string;
-  type: 'deposit' | 'withdraw';
-  note: string;
+  userid: number;
+  materialid: number;
+  material_name: string;
+  type1: string;
+  price1: string;
+  dolar: string;
+  created_at: string;
 };
 
-type User = {
-  name: string;
-  phone: string;
-  gender?: string;
-};
-
-type Summary = {
-  total_deposit: number;
-  total_withdraw: number;
-  balance: number;
-};
-
-interface UserTransactionsModalProps {
+type UserSubscriptionsModalProps = {
   isOpen: boolean;
   onClose: () => void;
   userId: number;
   userName: string;
-}
+};
 
-export default function UserTransactionsModal({ 
-  isOpen, 
-  onClose, 
-  userId, 
-  userName 
-}: UserTransactionsModalProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [deletedTransactions, setDeletedTransactions] = useState<Transaction[]>([]);
-  const [paidTransactions, setPaidTransactions] = useState<number[]>([]); 
+const SUBSCRIPTION_TYPES = ['مقرر', 'اسئلة', 'صوت'] as const;
+type SubscriptionType = typeof SUBSCRIPTION_TYPES[number];
+
+type MaterialOption = {
+  id: number;
+  material_name: string;
+  material_code: string;
+  unit_price: string;
+  quizall_price: string;
+  voice_price: string;
+};
+
+export default function UserSubscriptionsModal({
+  isOpen,
+  onClose,
+  userId,
+  userName
+}: UserSubscriptionsModalProps) {
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [deletedSubscriptions, setDeletedSubscriptions] = useState<Subscription[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState('');
-  const [user, setUser] = useState<User | null>(null);
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSendingNotif, setIsSendingNotif] = useState(false);
-  
-  // حالات الرصيد المؤجل
-  const [isDeferred, setIsDeferred] = useState(false);
-  const [deferDays, setDeferDays] = useState('7');
-  const [deferHours, setDeferHours] = useState('5');
-  const [noReminder, setNoReminder] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
   const [quickNotification, setQuickNotification] = useState({
     isOpen: false,
     title: '',
     body: ''
   });
-  
-  const [newTransaction, setNewTransaction] = useState({
-    mony: '',
-    type: 'deposit' as 'deposit' | 'withdraw',
-    note: ''
+
+  const [newSubscription, setNewSubscription] = useState({
+    materialid: '',
+    materialName: '',
+    type1: '' as SubscriptionType | '',
+    price1: '',
+    dolar: '0'
   });
 
-  const API_URL = '/api/proxy/user_transactions.php';
+  const [availableMaterials, setAvailableMaterials] = useState<MaterialOption[]>([]);
+  const [isMaterialsLoading, setIsMaterialsLoading] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState('');
 
-  const getGreeting = useCallback(() => {
-    const firstName = userName.split(' ')[0] || '';
-    return user?.gender === 'أنثى' ? `العزيزة ${firstName}` : `العزيز ${firstName}`;
-  }, [userName, user?.gender]);
+  const API_URL = '/api/proxy/cp_user_subscriptions.php';
 
   useEffect(() => {
     if (isOpen && userId) {
-      const storedDeleted = localStorage.getItem(`deleted_trans_${userId}`);
-      if (storedDeleted) setDeletedTransactions(JSON.parse(storedDeleted));
-      
-      const storedPaid = localStorage.getItem(`paid_trans_${userId}`);
-      if (storedPaid) setPaidTransactions(JSON.parse(storedPaid));
+      fetchSubscriptions();
+      fetchAvailableMaterials();
     }
   }, [isOpen, userId]);
 
-  const fetchData = useCallback(async () => {
+  const fetchAvailableMaterials = async () => {
+    try {
+      setIsMaterialsLoading(true);
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/proxy/cp_material.php?refresh=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب المواد');
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        setAvailableMaterials(result.data);
+      } else if (Array.isArray(result.data)) {
+        setAvailableMaterials(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching materials:', err);
+    } finally {
+      setIsMaterialsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (newSubscription.materialid && newSubscription.type1) {
+      const material = availableMaterials.find(m => m.id === parseInt(newSubscription.materialid));
+      if (material) {
+        let price = '0';
+        switch (newSubscription.type1) {
+          case 'مقرر':
+            price = material.unit_price || '0';
+            break;
+          case 'اسئلة':
+            price = material.quizall_price || '0';
+            break;
+          case 'صوت':
+            price = material.voice_price || '0';
+            break;
+        }
+        setNewSubscription(prev => ({ ...prev, price1: price }));
+      }
+    }
+  }, [newSubscription.materialid, newSubscription.type1, availableMaterials]);
+
+  const fetchSubscriptions = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const timestamp = new Date().getTime();
       const response = await fetch(`${API_URL}?user_id=${userId}&_t=${timestamp}`, {
         method: 'GET',
@@ -98,187 +139,154 @@ export default function UserTransactionsModal({
         },
         cache: 'no-store' as RequestCache
       });
-      
-      if (!response.ok) throw new Error(`فشل في جلب البيانات: ${response.status}`);
-      
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'حدث خطأ غير متوقع');
 
-      setUser(result.user || null);
-      setTransactions(result.rseed || result.transactions || []);
-      setSummary(result.summary || { total_deposit: 0, total_withdraw: 0, balance: 0 });
-      
+      if (!response.ok) {
+        throw new Error(`فشل في جلب البيانات: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'حدث خطأ غير متوقع');
+      }
+
+      setSubscriptions(result.subscriptions || []);
     } catch (err) {
+      console.error('Error fetching subscriptions:', err);
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
       setIsLoading(false);
     }
   }, [userId]);
 
-  useEffect(() => {
-    if (isOpen && userId) fetchData();
-  }, [isOpen, userId, fetchData]);
-
-  // إرسال إشعار تلقائي كل 25 ثانية للدفعات المؤجلة (للتجريب)
-  useEffect(() => {
-    if (!isOpen || transactions.length === 0) return;
-
-    const interval = setInterval(() => {
-      const deferredItems = transactions.filter(t => 
-        t.note && t.note.startsWith('DEFERRED|') && !paidTransactions.includes(t.id)
-      );
-
-      if (deferredItems.length > 0) {
-        deferredItems.forEach(async (item) => {
-          try {
-            const parts = item.note.split('|');
-            const days = parts[1] || '7';
-            const hours = parts[2] || '5';
-            const hasNoReminder = parts[3] === 'NONE';
-            
-            if (hasNoReminder) return; // تخطي إذا كان معطل
-
-            const amount = Number(item.mony).toLocaleString();
-            
-            await fetch('/api/proxy/cp_notifications.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: userId,
-                title: 'تذكير: سداد رصيد مؤجل',
-                body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) المتبقي من مدة السماح (${days} أيام)، لتجنب انقطاع الخدمة.`,
-                url1: '',
-                note1: ''
-              }),
-            });
-          } catch (e) {
-            console.error('فشل إرسال الإشعار التلقائي', e);
-          }
-        });
+  const handleAddSubscription = async () => {
+    try {
+      if (!newSubscription.materialid || !newSubscription.type1) {
+        setError('يرجى ملء جميع الحقول المطلوبة');
+        return;
       }
-    }, 25000);
 
-    return () => clearInterval(interval);
-  }, [isOpen, transactions, paidTransactions, userId, getGreeting]);
+      const timestamp = Date.now();
+      const response = await fetch(`/api/proxy/add_subscribe.php?refresh=${timestamp}`, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify({
+          userid: userId,
+          materialid: parseInt(newSubscription.materialid),
+          type: newSubscription.type1,
+          price: parseFloat(newSubscription.price1) || 0
+        })
+      });
 
-  const handleAddTransaction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTransaction.mony) {
-      setError('المبلغ مطلوب');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'حدث خطأ أثناء الإضافة');
+      }
+
+      const result = await response.json();
+
+      if (result.status === 'error') {
+        throw new Error(result.message || 'حدث خطأ أثناء الإضافة');
+      }
+
+      const savedMaterialName = newSubscription.materialName;
+      const savedType = newSubscription.type1;
+
+      await fetchSubscriptions();
+      setShowAddForm(false);
+      resetForm();
+      setError('');
+
+      setQuickNotification({
+        isOpen: true,
+        title: 'إضافة اشتراك جديد',
+        body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
+      });
+
+    } catch (err) {
+      console.error('Error adding subscription:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    }
+  };
+
+  const handleDeleteSubscription = async (id: number) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الاشتراك؟')) {
       return;
     }
 
+    const subToDelete = subscriptions.find(sub => sub.id === id);
+
     try {
-      setIsAdding(true);
-      setError('');
-      
-      let finalNote = newTransaction.note;
-      if (isDeferred && newTransaction.type === 'deposit') {
-        const reminderFlag = noReminder ? 'NONE' : 'ACTIVE';
-        finalNote = `DEFERRED|${deferDays}|${deferHours}|${reminderFlag}|${newTransaction.note}`;
-      }
-      
-      const requestBody = {
-        user_id: userId,
-        mony: newTransaction.mony,
-        type: newTransaction.type,
-        note: finalNote
-      };
-      
       const response = await fetch(API_URL, {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
         cache: 'no-store' as RequestCache,
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ id })
       });
-      
-      const result = await response.json();
-      if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
-      if (!result.success) throw new Error(result.error || 'فشل في إضافة الدفعة');
 
-      await fetchData();
-      setShowAddForm(false);
-      
-      if (requestBody.type === 'deposit') {
-        if (isDeferred) {
-          setQuickNotification({
-            isOpen: true,
-            title: 'رصيد مؤجل',
-            body: `${getGreeting()}،\nتم إضافة رصيد مؤجل بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.).\nيرجى السداد خلال المدة المذكورة (${deferDays} أيام) لتجنب توقف الحساب.`
-          });
-        } else {
-          setQuickNotification({
-            isOpen: true,
-            title: 'إشعار مالي',
-            body: `${getGreeting()}،\nتمت إضافة رصيد بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.) إلى حسابك بنجاح.\nيُرجى الاشتراك فوراً لضمان الحصول على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
-          });
-        }
+      const result = await response.json();
+
+      if (result.success === false || result.status === 'error') {
+        throw new Error(result.error || result.message || 'حدث خطأ أثناء الحذف');
       }
 
-      setNewTransaction({ mony: '', type: 'deposit', note: '' });
-      setIsDeferred(false);
-      setDeferDays('7');
-      setDeferHours('5');
-      setNoReminder(false);
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
-    } finally {
-      setIsAdding(false);
-    }
-  };
+      if (subToDelete) {
+        setDeletedSubscriptions(prev => [...prev, subToDelete]);
+      }
 
-  const handleDeleteTransaction = async (transactionId: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الدفعة؟')) return;
-    const transToDelete = transactions.find(t => t.id === transactionId);
-
-    try {
+      await fetchSubscriptions();
       setError('');
-      const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
-        method: 'DELETE',
-        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
-        cache: 'no-store' as RequestCache
-      });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
-      if (!result.success) throw new Error(result.error || 'فشل في حذف الدفعة');
-
-      if (transToDelete) {
-        const newDeleted = [...deletedTransactions, transToDelete];
-        setDeletedTransactions(newDeleted);
-        localStorage.setItem(`deleted_trans_${userId}`, JSON.stringify(newDeleted));
-      }
-
-      await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
+      console.error('Error deleting subscription:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     }
   };
 
-  const handleMarkAsPaid = async (transactionId: number) => {
+  const handleUpdateSubscription = async (id: number, newType: SubscriptionType) => {
     try {
-      const updatedPaid = [...paidTransactions, transactionId];
-      setPaidTransactions(updatedPaid);
-      localStorage.setItem(`paid_trans_${userId}`, JSON.stringify(updatedPaid));
-      
-      await fetch(API_URL, {
+      const response = await fetch(API_URL, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: transactionId, user_id: userId, status: 'paid' })
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        cache: 'no-store' as RequestCache,
+        body: JSON.stringify({
+          subscription_id: id,
+          type1: newType
+        })
       });
-    } catch (e) {
-      console.log('تم التحديث محلياً', e);
+
+      const result = await response.json();
+
+      if (result.success === false || result.status === 'error') {
+        throw new Error(result.error || result.message || 'حدث خطأ أثناء التحديث');
+      }
+
+      await fetchSubscriptions();
+      setEditingSubscription(null);
+      setError('');
+
+    } catch (err) {
+      console.error('Error updating subscription:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     }
   };
 
   const handleSendQuickNotification = async () => {
     try {
       setError('');
-      setIsSendingNotif(true);
+      setIsLoading(true);
       const response = await fetch('/api/proxy/cp_notifications.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -301,406 +309,495 @@ export default function UserTransactionsModal({
     } catch (err) {
       alert(err instanceof Error ? err.message : 'حدث خطأ أثناء الإرسال');
     } finally {
-      setIsSendingNotif(false);
+      setIsLoading(false);
     }
   };
 
-  const parseNote = (note: string, id: number) => {
-    if (!note) return { isDeferred: false, actualNote: '-' };
-    if (note.startsWith('DEFERRED|')) {
-      const parts = note.split('|');
-      const isPaid = paidTransactions.includes(id);
-      return { 
-        isDeferred: !isPaid, 
-        isPaid: isPaid,
-        days: parts[1] || '0', 
-        hours: parts[2] || '0',
-        actualNote: parts[4] || '-' 
-      };
-    }
-    return { isDeferred: false, actualNote: note };
+  const resetForm = () => {
+    setNewSubscription({
+      materialid: '',
+      materialName: '',
+      type1: '',
+      price1: '',
+      dolar: '0'
+    });
+    setMaterialSearch('');
   };
 
-  // حساب مشتريات الفصل
-  const semesterPurchases = summary ? (summary.total_deposit - summary.total_withdraw - summary.balance) : 0;
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('ar-EG');
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatPrice = (price: string) => {
+    if (!price) return '-';
+    try {
+      const priceNum = parseFloat(price);
+      return new Intl.NumberFormat('ar-SY', {
+        style: 'currency',
+        currency: 'SYP'
+      }).format(priceNum);
+    } catch {
+      return price;
+    }
+  };
+
+  const formatDolar = (dolar: string) => {
+    if (!dolar) return '-';
+    try {
+      const dolarNum = parseFloat(dolar);
+      return new Intl.NumberFormat('ar-EG', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(dolarNum);
+    } catch {
+      return dolar;
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-2 md:p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+      {/* التعتيم الخاص بالنافذة الأساسية */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
         
         {/* الهيدر */}
-        <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 shrink-0">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 rounded-t-xl shrink-0">
           <div>
-            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
-            <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
-              {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
+            <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">اشتراكات المستخدم</h2>
+            <p className="text-gray-600 mt-1 font-medium">
+              {userName} - ID: {userId}
             </p>
           </div>
 
-          {/* الإحصائيات العلوية الجديدة */}
-          {summary && !isLoading && !error && (
-            <div className="flex gap-2 md:gap-4 bg-white px-3 md:px-5 py-2 md:py-3 rounded-xl border border-gray-200 shadow-sm text-xs md:text-sm w-full lg:w-auto overflow-x-auto">
-              <div className="flex flex-col items-center min-w-[80px]">
-                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد الحالي</span>
-                <span className={`font-extrabold text-base md:text-lg ${summary.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                  {summary.balance.toLocaleString()}
+          {/* الإحصائيات العلوية */}
+          {!isLoading && !error && subscriptions.length > 0 && (
+            <div className="flex gap-4 bg-white px-5 py-3 rounded-xl border border-gray-200 shadow-sm text-sm">
+              <div className="flex flex-col items-center">
+                <span className="font-bold text-gray-500 uppercase text-xs">المواد</span>
+                <span className="font-extrabold text-gray-900 text-lg">{subscriptions.length}</span>
+              </div>
+              <div className="w-px bg-gray-200"></div>
+              <div className="flex flex-col items-center">
+                <span className="font-bold text-gray-500 uppercase text-xs">الإجمالي (ل.س)</span>
+                <span className="font-extrabold text-green-600 text-lg">
+                  {formatPrice(subscriptions.reduce((total, sub) => total + (parseFloat(sub.price1) || 0), 0).toString())}
                 </span>
               </div>
-              <div className="w-px bg-gray-200 shrink-0"></div>
-              <div className="flex flex-col items-center min-w-[80px]">
-                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">مشتريات الفصل</span>
-                <span className="font-extrabold text-purple-600 text-base md:text-lg">{semesterPurchases.toLocaleString()}</span>
-              </div>
-              <div className="w-px bg-gray-200 shrink-0"></div>
-              <div className="flex flex-col items-center min-w-[80px]">
-                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">إجمالي الإيداع</span>
-                <span className="font-extrabold text-green-600 text-base md:text-lg">{summary.total_deposit.toLocaleString()}</span>
-              </div>
-              <div className="w-px bg-gray-200 shrink-0"></div>
-              <div className="flex flex-col items-center min-w-[80px]">
-                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد المسترد</span>
-                <span className="font-extrabold text-red-600 text-base md:text-lg">{summary.total_withdraw.toLocaleString()}</span>
+              <div className="w-px bg-gray-200"></div>
+              <div className="flex flex-col items-center">
+                <span className="font-bold text-gray-500 uppercase text-xs">الإجمالي ($)</span>
+                <span className="font-extrabold text-blue-600 text-lg">
+                  {formatDolar(subscriptions.reduce((total, sub) => total + (parseFloat(sub.dolar) || 0), 0).toString())}
+                </span>
               </div>
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-end">
+          <div className="flex gap-3">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
+              className="bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
-              <span className="hidden md:inline">سجل المحذوفات</span>
-              <span className="md:hidden">المحذوفات</span>
-              {deletedTransactions.length > 0 && (
-                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
+              سجل المحذوفات
+              {deletedSubscriptions.length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full shadow-sm">{deletedSubscriptions.length}</span>
               )}
             </button>
             <button
-              onClick={() => setShowAddForm(true)}
-              className="flex-1 md:flex-none justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
+              onClick={() => {
+                setShowAddForm(true);
+                fetchAvailableMaterials();
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
               </svg>
-              إضافة دفعة
+              إضافة اشتراك
             </button>
-            <button onClick={onClose} className="hidden md:flex text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* محتوى النافذة */}
-        <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-gray-50 md:bg-white">
+        {/* محتوى النافذة (قابل للتمرير) */}
+        <div className="p-6 overflow-y-auto flex-1">
           
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-lg text-sm" role="alert">
-              <p className="font-bold">{error}</p>
-            </div>
-          )}
-
-          {/* نموذج الإضافة المحسن */}
+          {/* نموذج الإضافة */}
           {showAddForm && (
-            <div className="mb-6 p-4 md:p-6 border border-blue-200 rounded-xl bg-white md:bg-blue-50/50 shadow-sm transition-all duration-300">
-              <h3 className="text-lg font-bold text-blue-900 mb-5 flex items-center gap-2">
+            <div className="mb-6 p-6 border border-blue-200 rounded-xl bg-blue-50/50 shadow-sm">
+              <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
                 </svg>
-                تفاصيل الدفعة الجديدة
+                تفاصيل الاشتراك الجديد
               </h3>
-              <form onSubmit={handleAddTransaction} className="flex flex-col gap-5">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">المبلغ (ل.س)</label>
-                    <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-lg shadow-sm" placeholder="مثال: 50000" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">نوع العملية</label>
-                    <select value={newTransaction.type} onChange={(e) => {
-                        setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
-                        if (e.target.value === 'withdraw') setIsDeferred(false);
-                      }} 
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-gray-800 shadow-sm cursor-pointer"
-                    >
-                      <option value="deposit">إيداع (إضافة رصيد)</option>
-                      <option value="withdraw">سحب (رصيد مسترد)</option>
-                    </select>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">المادة</label>
+                  <input
+                    type="text"
+                    value={materialSearch || newSubscription.materialName}
+                    onChange={(e) => {
+                      setMaterialSearch(e.target.value);
+                      if (newSubscription.materialid) {
+                        setNewSubscription(prev => ({ ...prev, materialid: '', materialName: '' }));
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                    placeholder="ابحث عن مادة..."
+                  />
+                  {(materialSearch && !newSubscription.materialid) && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {isMaterialsLoading ? (
+                        <div className="p-2 text-sm text-gray-500 font-medium">جاري التحميل...</div>
+                      ) : availableMaterials.filter(m =>
+                        m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
+                        m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
+                      ).length === 0 ? (
+                        <div className="p-2 text-sm text-gray-500 font-medium">لا توجد نتائج</div>
+                      ) : (
+                        availableMaterials.filter(m =>
+                          m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
+                          m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
+                        ).slice(0, 10).map(material => (
+                          <div
+                            key={material.id}
+                            onClick={() => {
+                              setNewSubscription({
+                                ...newSubscription,
+                                materialid: material.id.toString(),
+                                materialName: material.material_name
+                              });
+                              setMaterialSearch(material.material_name);
+                            }}
+                            className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 transition"
+                          >
+                            <div className="font-bold text-sm text-gray-800">{material.material_name}</div>
+                            <div className="text-xs text-gray-500 font-medium mt-0.5">{material.material_code}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                {newTransaction.type === 'deposit' && (
-                  <div className={`p-4 rounded-xl border transition-all duration-300 ${isDeferred ? 'bg-orange-50 border-orange-300 shadow-sm' : 'bg-gray-50 border-gray-200'}`}>
-                    <label className="flex items-center gap-3 cursor-pointer select-none">
-                      <input type="checkbox" checked={isDeferred} onChange={(e) => setIsDeferred(e.target.checked)} className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500 border-gray-300" />
-                      <span className={`font-bold text-lg ${isDeferred ? 'text-orange-800' : 'text-gray-600'}`}>رصيد مؤجل</span>
-                    </label>
-                    
-                    {isDeferred && (
-                      <div className="mt-4 pt-4 border-t border-orange-200 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div>
-                          <label className="block text-xs font-bold text-orange-700 mb-1">يُستحق السداد بعد (أيام)</label>
-                          <div className="relative">
-                            <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 disabled:opacity-50" />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-orange-500">يوم</span>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-orange-700 mb-1">تكرار الإشعار كل (ساعات)</label>
-                          <div className="relative">
-                            <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 disabled:opacity-50" />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-orange-500">ساعة</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center h-[42px]">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-4 h-4 text-gray-600 rounded focus:ring-gray-500" />
-                            <span className="font-bold text-sm text-gray-700">لا يوجد (بدون تذكير)</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">ملاحظات (اختياري)</label>
-                  <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-sm resize-none" placeholder="اكتب ملاحظة حول هذه الدفعة..." />
+                  <label className="block text-sm font-bold text-gray-700 mb-1">نوع الاشتراك</label>
+                  <select
+                    value={newSubscription.type1}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, type1: e.target.value as SubscriptionType })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium cursor-pointer"
+                  >
+                    <option value="">اختر النوع</option>
+                    {SUBSCRIPTION_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
-                
-                <div className="flex gap-3 pt-2">
-                  <button type="submit" disabled={isAdding} className="flex-1 md:flex-none bg-blue-600 text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-md disabled:opacity-50 flex items-center justify-center gap-2">
-                    {isAdding ? 'جاري التنفيذ...' : 'تنفيذ وحفظ الدفعة'}
-                  </button>
-                  <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 md:flex-none bg-white border border-gray-300 text-gray-700 px-8 py-3 rounded-xl font-bold text-lg hover:bg-gray-50 transition shadow-sm">
-                    إلغاء
-                  </button>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">السعر (ل.س)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newSubscription.price1}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, price1: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800"
+                    placeholder="السعر بالليرة"
+                  />
                 </div>
-              </form>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">السعر (دولار)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newSubscription.dolar}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, dolar: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800"
+                    placeholder="السعر بالدولار"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={handleAddSubscription}
+                  className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm"
+                >
+                  حفظ الاشتراك
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    resetForm();
+                  }}
+                  className="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition shadow-sm"
+                >
+                  إلغاء
+                </button>
+              </div>
             </div>
           )}
 
-          {/* محتوى الدفعات */}
+          {/* محتوى الاشتراكات */}
           {isLoading ? (
             <div className="flex justify-center items-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="mt-4 text-lg font-bold text-gray-700">جاري تحميل الاشتراكات...</p>
+              </div>
             </div>
-          ) : transactions.length === 0 ? (
-            <div className="text-center py-20 bg-white md:bg-gray-50/50 rounded-2xl border border-gray-200 md:border-dashed">
-              <p className="text-gray-500 font-bold">لا توجد دفعات مالية</p>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center shadow-sm">
+              <div className="text-red-600 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <p className="text-red-800 font-bold text-lg mb-4">{error}</p>
+              <button
+                onClick={fetchSubscriptions}
+                className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-red-700 transition shadow-sm"
+              >
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : subscriptions.length === 0 ? (
+            <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-xl font-extrabold text-gray-800">لا توجد اشتراكات</h3>
+              <p className="text-gray-500 mt-2 font-medium">لم يتم العثور على أي اشتراكات فعالة لهذا المستخدم</p>
             </div>
           ) : (
-            <>
-              {/* نسخة الحاسوب - جدول */}
-              <div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
-                <table className="w-full text-right divide-y divide-gray-200 table-auto">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المبلغ</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">النوع</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">ملاحظة / حالة</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.map((transaction, index) => {
-                      const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
-                      
-                      return (
-                        <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-3 text-sm font-extrabold text-gray-400">{index + 1}</td>
-                          <td className="px-4 py-3 text-sm font-extrabold">
-                            <span className={transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}>
-                              {Number(transaction.mony).toLocaleString()}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${
-                              transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                            }`}>
-                              {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium text-gray-600">
-                            <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
-                            {isDeferred && (
-                              <div className="mt-1 text-[10px] text-orange-600 font-bold bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-200">
-                                مؤجل السداد (تذكير كل {hours} سا)
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 flex gap-2 items-center">
-                            {isDeferred && (
-                              <button onClick={() => handleMarkAsPaid(transaction.id)} className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
-                                رصيد مؤجل
-                              </button>
-                            )}
-                            {isPaid && (
-                              <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1.5 rounded-lg font-bold border border-blue-200">
-                                مدفوع
-                              </span>
-                            )}
-                            <button onClick={() => handleDeleteTransaction(transaction.id)} className="text-red-500 hover:text-white border border-red-500 hover:bg-red-500 px-3 py-1.5 rounded-lg transition shadow-sm text-xs font-bold">
-                              حذف
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* نسخة الموبايل - بطاقات احترافية */}
-              <div className="md:hidden flex flex-col gap-4">
-                {transactions.map((transaction, index) => {
-                  const { isDeferred, isPaid, hours, actualNote } = parseNote(transaction.note, transaction.id);
-                  
-                  return (
-                    <div key={`mob-${transaction.id}`} className={`bg-white p-5 rounded-2xl shadow-sm border relative overflow-hidden ${isDeferred ? 'border-orange-200' : 'border-gray-100'}`}>
-                      {isDeferred && <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-400"></div>}
-                      
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-gray-500 font-bold text-xs bg-gray-100 px-2.5 py-1 rounded-lg">#{index + 1}</span>
-                        <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                          {transaction.type === 'deposit' ? 'إيداع رصيد' : 'رصيد مسترد'}
-                        </span>
-                      </div>
-                      
-                      <div className="text-center mb-5">
-                        <div className={`text-3xl font-extrabold tracking-tight ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                          {Number(transaction.mony).toLocaleString()} <span className="text-sm font-bold text-gray-500">ل.س</span>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-xl p-3.5 mb-5 border border-gray-100">
-                        <span className="text-gray-400 block text-[10px] font-bold mb-1 uppercase tracking-wide">الملاحظة</span>
-                        <span className="font-medium text-gray-800 text-sm block leading-relaxed">{actualNote}</span>
-                        {isDeferred && (
-                          <div className="mt-3 inline-block text-xs font-bold text-orange-700 bg-orange-100 px-3 py-1.5 rounded-lg border border-orange-200">
-                            ⚠️ رصيد مؤجل السداد (تذكير كل {hours} سا)
-                          </div>
+            <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+              <table className="w-full text-right divide-y divide-gray-200 table-auto">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المادة</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">نوع الاشتراك</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">السعر (ل.س)</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">السعر (دولار)</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">التاريخ</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {subscriptions.map((subscription, index) => (
+                    <tr key={subscription.id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-gray-400">
+                        {index + 1}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-bold text-gray-900">{subscription.material_name}</div>
+                        <div className="text-xs text-gray-500 font-medium mt-0.5">ID: {subscription.materialid}</div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {editingSubscription?.id === subscription.id ? (
+                          <select
+                            value={editingSubscription.type1}
+                            onChange={(e) => setEditingSubscription({
+                              ...editingSubscription,
+                              type1: e.target.value as SubscriptionType
+                            })}
+                            className="px-2 py-1.5 text-xs font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            onBlur={() => handleUpdateSubscription(subscription.id, editingSubscription.type1 as SubscriptionType)}
+                            autoFocus
+                          >
+                            {SUBSCRIPTION_TYPES.map(type => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span
+                            className="cursor-pointer text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition inline-block min-w-[70px] text-center border border-blue-100"
+                            onClick={() => setEditingSubscription(subscription)}
+                          >
+                            {subscription.type1 || '-'}
+                          </span>
                         )}
-                      </div>
-
-                      <div className="flex gap-2">
-                        {isDeferred && (
-                          <button onClick={() => handleMarkAsPaid(transaction.id)} className="flex-1 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white py-3 rounded-xl text-sm font-bold shadow-md transition transform active:scale-95">
-                            الضغط للتحويل لـ مدفوع
-                          </button>
-                        )}
-                        {isPaid && (
-                          <div className="flex-1 bg-blue-50 text-blue-800 py-3 rounded-xl text-sm font-bold text-center border border-blue-200">
-                            ✓ رصيد مدفوع
-                          </div>
-                        )}
-                        <button onClick={() => handleDeleteTransaction(transaction.id)} className={`border-2 border-red-100 text-red-600 bg-white hover:bg-red-50 py-3 rounded-xl text-sm font-bold transition ${isDeferred ? 'w-[80px] shrink-0' : 'flex-1'}`}>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-green-600">
+                        {formatPrice(subscription.price1)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-blue-600">
+                        {formatDolar(subscription.dolar)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-600">
+                        {formatDate(subscription.created_at)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleDeleteSubscription(subscription.id)}
+                          className="text-red-500 hover:text-white border border-red-500 hover:bg-red-500 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1"
+                          title="حذف الاشتراك"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
                           حذف
                         </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* الفوتر */}
-        <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none relative z-20">
-          <button onClick={onClose} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition">
-            إغلاق النافذة
+        <div className="flex justify-end p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl shrink-0">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition"
+          >
+            إغلاق
           </button>
         </div>
       </div>
 
-      {/* الدرج الجانبي للمحذوفات */}
-      <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="bg-red-50 p-5 md:p-6 border-b border-red-100 flex justify-between items-center shrink-0">
+      {/* الدرج الجانبي للمحذوفات (Side Drawer) */}
+      <div 
+        className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <div className="bg-red-50 p-6 border-b border-red-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-red-100 p-2 rounded-lg text-red-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
             </div>
             <div>
-              <h3 className="text-lg md:text-xl font-extrabold text-red-900 tracking-tight">سجل المحذوفات</h3>
-              <p className="text-[10px] md:text-xs font-bold text-red-600 mt-1">الدفعات المحذوفة للقراءة فقط</p>
+              <h3 className="text-xl font-extrabold text-red-900 tracking-tight">سجل المحذوفات</h3>
+              <p className="text-xs font-bold text-red-600 mt-1">الاشتراكات المحذوفة للقراءة فقط</p>
             </div>
           </div>
           <button onClick={() => setIsDrawerOpen(false)} className="bg-white text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-sm border border-gray-200 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
           </button>
         </div>
 
         <div className="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
-          <label className="block text-[10px] md:text-xs font-bold text-gray-500 mb-2 uppercase">تصفية حسب الفصل (ميزة مستقبلية)</label>
-          <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)} className="w-full px-3 py-2 md:py-2.5 bg-white border border-gray-300 rounded-xl text-xs md:text-sm font-bold text-gray-700 focus:ring-2 focus:ring-red-200 outline-none transition shadow-sm cursor-pointer">
-            <option value="">جميع الفصول</option><option value="F23">F23</option><option value="S24">S24</option>
+          <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">تصفية حسب الفصل (ميزة مستقبلية)</label>
+          <select 
+            value={selectedSemester} 
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-red-200 outline-none transition shadow-sm cursor-pointer"
+          >
+            <option value="">جميع الفصول</option>
+            <option value="F23">F23 (خريف 2023)</option>
+            <option value="S24">S24 (ربيع 2024)</option>
+            <option value="F24">F24 (خريف 2024)</option>
           </select>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
-          {deletedTransactions.length === 0 ? (
+          {deletedSubscriptions.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-gray-400 font-bold text-sm">سجل المحذوفات فارغ</p>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <p className="text-gray-500 font-bold">سجل المحذوفات فارغ</p>
             </div>
           ) : (
-            deletedTransactions.map((transaction, index) => {
-              const { actualNote } = parseNote(transaction.note, transaction.id);
-              return (
-                <div key={`del-${transaction.id}-${index}`} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-1.5 h-full bg-red-400"></div>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-extrabold text-gray-900 line-through decoration-red-400 decoration-2 text-sm md:text-base">
-                        {Number(transaction.mony).toLocaleString()} ل.س
-                      </h4>
-                      <span className="text-[10px] md:text-xs font-medium text-gray-500 mt-1 inline-block truncate max-w-[180px]">
-                        {actualNote}
-                      </span>
-                    </div>
-                    <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                      {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
-                    </span>
+            deletedSubscriptions.map((subscription, index) => (
+              <div key={`del-${subscription.id}-${index}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-1.5 h-full bg-red-400"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-bold text-gray-900 line-through decoration-red-400 decoration-2">{subscription.material_name}</h4>
+                    <span className="text-xs font-medium text-gray-400 mt-1 inline-block">كود المادة: {subscription.materialid}</span>
+                  </div>
+                  <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-lg border border-gray-200">
+                    {subscription.type1 || '-'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-gray-400 mb-1">السعر (ل.س)</span>
+                    <span className="text-sm font-extrabold text-gray-600">{formatPrice(subscription.price1)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-gray-400 mb-1">تاريخ الاشتراك</span>
+                    <span className="text-sm font-bold text-gray-600">{formatDate(subscription.created_at)}</span>
                   </div>
                 </div>
-              );
-            })
+              </div>
+            ))
           )}
         </div>
       </div>
       
-      {isDrawerOpen && <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[65] transition-opacity" onClick={() => setIsDrawerOpen(false)}></div>}
+      {/* تعتيم الخلفية للدرج الجانبي */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[65] transition-opacity"
+          onClick={() => setIsDrawerOpen(false)}
+        ></div>
+      )}
 
-      {/* مودال الإشعار السريع */}
       {quickNotification.isOpen && (
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[80]">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}></div>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10 m-4">
-            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-5 border-b pb-3">إرسال إشعار للطالب</h3>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">إرسال إشعار للطالب</h3>
+            
             <div className="space-y-4">
               <div>
-                <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1">عنوان الإشعار</label>
-                <input type="text" value={quickNotification.title} onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  value={quickNotification.title}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
               </div>
+              
               <div>
-                <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1">محتوى الإشعار</label>
-                <textarea value={quickNotification.body} onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))} rows={6} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium text-sm leading-relaxed" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">محتوى الإشعار</label>
+                <textarea
+                  value={quickNotification.body}
+                  onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
-            <div className="flex flex-col-reverse md:flex-row justify-end mt-6 gap-3">
-              <button onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })} className="w-full md:w-auto px-5 py-3 text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition font-bold text-sm">
-                تخطي الإرسال
+            
+            <div className="flex justify-end mt-6 space-x-3 gap-2">
+              <button
+                onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold"
+              >
+                تخطي / إلغاء
               </button>
-              <button onClick={handleSendQuickNotification} disabled={isSendingNotif || !quickNotification.title || !quickNotification.body} className="w-full md:w-auto px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 font-bold text-sm shadow-sm flex items-center justify-center gap-2">
-                {isSendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+              <button
+                onClick={handleSendQuickNotification}
+                disabled={isLoading || !quickNotification.title || !quickNotification.body}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-bold"
+              >
+                {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
               </button>
             </div>
           </div>
