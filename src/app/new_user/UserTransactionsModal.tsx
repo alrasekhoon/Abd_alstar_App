@@ -48,10 +48,10 @@ export default function UserTransactionsModal({
   const [isAdding, setIsAdding] = useState(false);
   const [isSendingNotif, setIsSendingNotif] = useState(false);
   
-  // حالات الرصيد المؤجل
+  // حالات الرصيد المؤجل (بالثواني للتجريب)
   const [isDeferred, setIsDeferred] = useState(false);
-  const [deferDays, setDeferDays] = useState('7');
-  const [deferHours, setDeferHours] = useState('5');
+  const [deferSeconds, setDeferSeconds] = useState('60'); // المهلة بالثواني
+  const [repeatSeconds, setRepeatSeconds] = useState('25'); // تكرار التذكير بالثواني
   const [noReminder, setNoReminder] = useState(false);
 
   const [quickNotification, setQuickNotification] = useState({
@@ -120,7 +120,7 @@ export default function UserTransactionsModal({
     if (isOpen && userId) fetchData();
   }, [isOpen, userId, fetchData]);
 
-  // إرسال إشعار تلقائي كل 25 ثانية للدفعات المؤجلة
+  // إرسال إشعار تلقائي كل 25 ثانية للدفعات المؤجلة (للتجريب)
   useEffect(() => {
     if (!isOpen || transactions.length === 0) return;
 
@@ -133,8 +133,7 @@ export default function UserTransactionsModal({
         deferredItems.forEach(async (item) => {
           try {
             const parts = item.note.split('|');
-            const days = parts[1] || '7';
-            const hours = parts[2] || '5';
+            const deadlineSec = parts[1] || '60';
             const hasNoReminder = parts[3] === 'NONE';
             
             if (hasNoReminder) return; // تخطي إذا كان التذكير معطلاً
@@ -146,18 +145,19 @@ export default function UserTransactionsModal({
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 user_id: userId,
-                title: 'تذكير: سداد رصيد مؤجل',
-                body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) المتبقي من مدة السماح (${days} أيام)، لتجنب انقطاع الخدمة.`,
+                title: 'تذكير عاجل: سداد رصيد مؤجل',
+                body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س). المهلة المحددة هي (${deadlineSec} ثواني)، يرجى السداد لتجنب انقطاع الخدمة.`,
                 url1: '',
                 note1: ''
               }),
             });
+            console.log(`تم إرسال إشعار تلقائي للدفعة ${item.id}`);
           } catch (e) {
             console.error('فشل إرسال الإشعار التلقائي', e);
           }
         });
       }
-    }, 25000);
+    }, 25000); // 25 ثانية
 
     return () => clearInterval(interval);
   }, [isOpen, transactions, paidTransactions, userId, getGreeting]);
@@ -176,7 +176,8 @@ export default function UserTransactionsModal({
       let finalNote = newTransaction.note;
       if (isDeferred && newTransaction.type === 'deposit') {
         const reminderFlag = noReminder ? 'NONE' : 'ACTIVE';
-        finalNote = `DEFERRED|${deferDays}|${deferHours}|${reminderFlag}|${newTransaction.note}`;
+        // صيغة الملاحظة: DEFERRED|المهلة|التكرار|حالة_التذكير|الملاحظة_الأصلية
+        finalNote = `DEFERRED|${deferSeconds}|${repeatSeconds}|${reminderFlag}|${newTransaction.note}`;
       }
       
       const requestBody = {
@@ -208,7 +209,7 @@ export default function UserTransactionsModal({
           setQuickNotification({
             isOpen: true,
             title: 'رصيد مؤجل',
-            body: `${getGreeting()}،\nتم إضافة رصيد مؤجل بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.).\nيرجى السداد خلال المدة المذكورة (${deferDays} أيام) لتجنب توقف الحساب.`
+            body: `${getGreeting()}،\nتم إضافة رصيد مؤجل بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.).\nيرجى السداد خلال المدة المذكورة (${deferSeconds} ثواني) لتجنب توقف الحساب.`
           });
         } else {
           setQuickNotification({
@@ -221,8 +222,8 @@ export default function UserTransactionsModal({
 
       setNewTransaction({ mony: '', type: 'deposit', note: '' });
       setIsDeferred(false);
-      setDeferDays('7');
-      setDeferHours('5');
+      setDeferSeconds('60');
+      setRepeatSeconds('25');
       setNoReminder(false);
       
     } catch (err) {
@@ -266,6 +267,7 @@ export default function UserTransactionsModal({
       setPaidTransactions(updatedPaid);
       localStorage.setItem(`paid_trans_${userId}`, JSON.stringify(updatedPaid));
       
+      // محاولة الإرسال للسيرفر لتحديث الحالة إذا أمكن
       await fetch(API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -314,16 +316,22 @@ export default function UserTransactionsModal({
       return { 
         isDeferred: !isPaid, 
         isPaid: isPaid,
-        days: parts[1] || '0', 
-        hours: parts[2] || '0',
+        deadline: parts[1] || '0', 
+        repeat: parts[2] || '0',
         actualNote: parts[4] || '-' 
       };
     }
     return { isDeferred: false, actualNote: note };
   };
 
-  // حساب مشتريات الفصل
-  const semesterPurchases = summary ? (summary.total_deposit - summary.total_withdraw - summary.balance) : 0;
+  // حساب دقيق للمشتريات والرصيد المسترد
+  // الرصيد المسترد هو مجموع عمليات السحب المباشرة من الجدول
+  const explicitWithdrawals = transactions.filter(t => t.type === 'withdraw').reduce((sum, t) => sum + Number(t.mony), 0);
+  const totalDeposits = summary ? summary.total_deposit : 0;
+  const currentBalance = summary ? summary.balance : 0;
+  
+  // مشتريات الفصل = إجمالي الإيداعات - الرصيد المسترد (السحوبات الحقيقية) - الرصيد المتبقي
+  const semesterPurchases = Math.max(0, totalDeposits - explicitWithdrawals - currentBalance);
 
   if (!isOpen) return null;
 
@@ -347,8 +355,8 @@ export default function UserTransactionsModal({
             <div className="flex gap-2 md:gap-4 bg-white px-3 md:px-5 py-2 md:py-3 rounded-xl border border-gray-200 shadow-sm text-xs md:text-sm w-full lg:w-auto overflow-x-auto">
               <div className="flex flex-col items-center min-w-[80px]">
                 <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد الحالي</span>
-                <span className={`font-extrabold text-base md:text-lg ${summary.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                  {summary.balance.toLocaleString()}
+                <span className={`font-extrabold text-base md:text-lg ${currentBalance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  {currentBalance.toLocaleString()}
                 </span>
               </div>
               <div className="w-px bg-gray-200 shrink-0"></div>
@@ -359,12 +367,12 @@ export default function UserTransactionsModal({
               <div className="w-px bg-gray-200 shrink-0"></div>
               <div className="flex flex-col items-center min-w-[80px]">
                 <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">إجمالي الإيداع</span>
-                <span className="font-extrabold text-green-600 text-base md:text-lg">{summary.total_deposit.toLocaleString()}</span>
+                <span className="font-extrabold text-green-600 text-base md:text-lg">{totalDeposits.toLocaleString()}</span>
               </div>
               <div className="w-px bg-gray-200 shrink-0"></div>
               <div className="flex flex-col items-center min-w-[80px]">
                 <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد المسترد</span>
-                <span className="font-extrabold text-red-600 text-base md:text-lg">{summary.total_withdraw.toLocaleString()}</span>
+                <span className="font-extrabold text-red-600 text-base md:text-lg">{explicitWithdrawals.toLocaleString()}</span>
               </div>
             </div>
           )}
@@ -419,16 +427,17 @@ export default function UserTransactionsModal({
                 <h3 className="text-xl font-extrabold text-blue-900 tracking-tight">تفاصيل الدفعة الجديدة</h3>
               </div>
 
-              <form onSubmit={handleAddTransaction} className="flex flex-col gap-6">
+              <form onSubmit={handleAddTransaction} className="flex flex-col gap-5">
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* الحقل 1: المبلغ */}
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
                     <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">المبلغ (ل.س)</label>
                     <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-xl shadow-inner transition-all outline-none" placeholder="مثال: 50000" />
                   </div>
                   
                   {/* الحقل 2: نوع العملية */}
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
                     <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">نوع العملية</label>
                     <select value={newTransaction.type} onChange={(e) => {
                         setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
@@ -442,13 +451,7 @@ export default function UserTransactionsModal({
                   </div>
                 </div>
 
-                {/* الحقل 3: الملاحظات (أصبح في النهاية قبل المؤجل) */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">ملاحظات (اختياري)</label>
-                  <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-inner resize-none outline-none" placeholder="اكتب ملاحظات تفصيلية حول هذه الدفعة هنا..." />
-                </div>
-
-                {/* إعدادات الرصيد المؤجل */}
+                {/* إعدادات الرصيد المؤجل (تظهر بعد نوع العملية إذا كان إيداع) */}
                 {newTransaction.type === 'deposit' && (
                   <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${isDeferred ? 'bg-orange-50 border-orange-300 shadow-sm' : 'bg-white border-dashed border-gray-300 hover:border-orange-200'}`}>
                     <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -459,29 +462,35 @@ export default function UserTransactionsModal({
                     {isDeferred && (
                       <div className="mt-5 pt-5 border-t border-orange-200 grid grid-cols-1 lg:grid-cols-3 gap-5 items-end">
                         <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
-                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تحديد المهلة (أيام)</label>
+                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تحديد المهلة (للتجريب)</label>
                           <div className="relative">
-                            <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full pl-10 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">يوم</span>
+                            <input type="number" min="1" value={deferSeconds} onChange={(e) => setDeferSeconds(e.target.value)} disabled={noReminder} className="w-full pl-12 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">ثواني</span>
                           </div>
                         </div>
                         <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
-                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تكرار التذكير كل</label>
+                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تكرار التذكير (للتجريب)</label>
                           <div className="relative">
-                            <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full pl-12 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">ساعات</span>
+                            <input type="number" min="1" value={repeatSeconds} onChange={(e) => setRepeatSeconds(e.target.value)} disabled={noReminder} className="w-full pl-12 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">ثواني</span>
                           </div>
                         </div>
                         <div className="flex items-center h-[76px] bg-white px-4 rounded-lg border border-orange-100 shadow-sm">
                           <label className="flex items-center gap-3 cursor-pointer w-full">
                             <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-5 h-5 text-gray-600 rounded focus:ring-gray-500 cursor-pointer" />
-                            <span className="font-extrabold text-sm text-gray-700">إلغاء التذكير (لا يوجد)</span>
+                            <span className="font-extrabold text-sm text-gray-700">لا يوجد (إلغاء التذكير)</span>
                           </label>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
+
+                {/* الحقل 3: الملاحظات (أصبح في النهاية) */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">ملاحظات (اختياري)</label>
+                  <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-inner resize-none outline-none" placeholder="اكتب ملاحظات تفصيلية حول هذه الدفعة هنا..." />
+                </div>
                 
                 <div className="flex gap-3 pt-3 border-t border-gray-100 mt-2">
                   <button type="submit" disabled={isAdding} className="flex-1 md:flex-none bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 transform active:scale-[0.98]">
@@ -520,7 +529,7 @@ export default function UserTransactionsModal({
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {transactions.map((transaction, index) => {
-                      const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
+                      const { isDeferred, isPaid, deadline, repeat, actualNote } = parseNote(transaction.note, transaction.id);
                       
                       return (
                         <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
@@ -541,7 +550,7 @@ export default function UserTransactionsModal({
                             <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
                             {isDeferred && (
                               <div className="mt-1 text-[10px] text-orange-700 font-extrabold bg-orange-100 inline-block px-2 py-1 rounded border border-orange-200">
-                                ⏳ مؤجل لـ {days} أيام (تذكير كل {hours} سا)
+                                ⏳ مؤجل لـ {deadline} ث (تذكير كل {repeat} ث)
                               </div>
                             )}
                           </td>
@@ -570,7 +579,7 @@ export default function UserTransactionsModal({
               {/* نسخة الموبايل - بطاقات احترافية */}
               <div className="md:hidden flex flex-col gap-4">
                 {transactions.map((transaction, index) => {
-                  const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
+                  const { isDeferred, isPaid, deadline, repeat, actualNote } = parseNote(transaction.note, transaction.id);
                   
                   return (
                     <div key={`mob-${transaction.id}`} className={`bg-white p-5 rounded-2xl shadow-sm border relative overflow-hidden ${isDeferred ? 'border-orange-200' : 'border-gray-100'}`}>
@@ -594,7 +603,7 @@ export default function UserTransactionsModal({
                         <span className="font-medium text-gray-800 text-sm block leading-relaxed">{actualNote}</span>
                         {isDeferred && (
                           <div className="mt-3 inline-block text-[11px] font-extrabold text-orange-700 bg-orange-100 px-2.5 py-1.5 rounded-lg border border-orange-200">
-                            ⏳ مهلة: {days} أيام | تذكير: كل {hours} ساعة
+                            ⏳ مهلة: {deadline} ث | تذكير: كل {repeat} ث
                           </div>
                         )}
                       </div>
@@ -602,12 +611,12 @@ export default function UserTransactionsModal({
                       <div className="flex gap-2">
                         {isDeferred && (
                           <button onClick={() => handleMarkAsPaid(transaction.id)} className="flex-1 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white py-3 rounded-xl text-sm font-bold shadow-md transition transform active:scale-95">
-                            الضغط للتحويل لـ مدفوع
+                            رصيد مؤجل
                           </button>
                         )}
                         {isPaid && (
                           <div className="flex-1 bg-blue-50 text-blue-800 py-3 rounded-xl text-sm font-bold text-center border border-blue-200">
-                            ✓ رصيد مدفوع
+                            ✓ مدفوع
                           </div>
                         )}
                         <button onClick={() => handleDeleteTransaction(transaction.id)} className={`border-2 border-red-100 text-red-600 bg-white hover:bg-red-50 py-3 rounded-xl text-sm font-bold transition ${isDeferred ? 'w-[80px] shrink-0' : 'flex-1'}`}>
