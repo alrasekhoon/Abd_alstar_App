@@ -861,9 +861,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
         >
           إغلاق
         </button>
-      </div>
-    </div>
-  </div>
+      </div>
+    </div>
 )}
 
 {/* نافذة عرض الصورة المكبرة (Lightbox) */}
