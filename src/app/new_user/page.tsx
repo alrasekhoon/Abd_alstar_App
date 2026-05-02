@@ -836,15 +836,14 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
 
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
-       <button
+        <button
           onClick={() => setIsUserModalOpen(false)}
-         className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
         >
           إغلاق
         </button>
       </div>
     </div>
-  </div>
 )}
 
 {/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
