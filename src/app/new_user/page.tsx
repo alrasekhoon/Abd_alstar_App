@@ -757,10 +757,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </div>
           </div>
         </div>
-            </div>
-          </div>
-        </div>
-      {/* قسم البيانات */}
+
+      {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -862,6 +860,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </button>
       </div>
     </div>
+  </div>
 )}
 
 {/* نافذة عرض الصورة المكبرة (Lightbox) */}
