@@ -63,9 +63,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         id: 'term_management',
         name: 'إدارة الفصل',
         items: [
-          { name: 'إضافة فصل جديد', href: '/add_term', roles: ['admin', 'editor'] },
-          { name: 'إنهاء الفصل الحالي', href: '/end_term', roles: ['admin', 'editor'] },
-          { name: 'فصولي الدراسية', href: '/my_terms', roles: ['admin', 'editor'] },
+          { name: 'إضافة فصل جديد', href: '/terms-add', roles: ['admin', 'editor'] },
+          { name: 'إنهاء الفصل الحالي', href: '/terms-end', roles: ['admin', 'editor'] },
+          { name: 'فصولي الدراسية', href: '/terms-my', roles: ['admin', 'editor'] },
         ]
       },
       {
