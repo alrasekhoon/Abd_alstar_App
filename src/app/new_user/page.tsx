@@ -751,14 +751,14 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </div>
 
             {/* الجهاز */}
-            <div className="mt-3 text-right">
-              <label className="block text-[10px] font-bold text-gray-500 mb-1">الجهاز:</label>
-              <p className="text-gray-900 bg-white p-2 rounded-xl border border-gray-200 shadow-sm text-[10px] font-mono break-all leading-tight">{selectedUser.device_uuid || '-'}</p>
-            </div>
-          </div>
-        </div>
+            <div className="mt-3 text-right">
+              <label className="block text-[10px] font-bold text-gray-500 mb-1">الجهاز:</label>
+              <p className="text-gray-900 bg-white p-2 rounded-xl border border-gray-200 shadow-sm text-[10px] font-mono break-all leading-tight">{selectedUser.device_uuid || '-'}</p>
+            </div>
+          </div>
+        </div>
 
-      {/* قسم البيانات */}
+        {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -804,30 +804,33 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            {/* الصف الرابع: العنوان - نوع المستخدم - وقت إنشاء الحساب (في صف واحد 3 أعمدة) */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium truncate" title={selectedUser.address || '-'}>{selectedUser.address || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
-              <select
-                value={selectedUser.user_type || ''}
-                onChange={(e) => {
-                  handleUserTypeChange(selectedUser.id, e.target.value);
-                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full text-sm border-2 rounded-xl px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-              >
-                <option value="غير موثوق">غير موثوق</option>
-                <option value="موثوق">موثوق</option>
-                <option value="vip">VIP</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-medium" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+           {/* الصف الرابع المدمج */}
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">العنوان</label>
+                <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 shadow-sm text-sm font-bold truncate">{selectedUser.address || '-'}</div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">نوع المستخدم</label>
+                <select
+                  value={selectedUser.user_type || ''}
+                  onChange={(e) => {
+                    handleUserTypeChange(selectedUser.id, e.target.value);
+                    setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                  }}
+                  disabled={updatingUser === selectedUser.id}
+                  className={`w-full text-sm border rounded-xl px-3 py-2 font-bold outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-purple-50 border-purple-300 text-purple-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-gray-50 border-gray-300 text-gray-700'}`}
+                >
+                  <option value="غير موثوق">غير موثوق</option>
+                  <option value="موثوق">موثوق</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ الإنشاء</label>
+                <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-bold" dir="ltr">{formatDateTime(selectedUser.created_at)}</div>
+              </div>
+            </div>
             </div>
 
             {/* ملاحظات قابلة للتحرير - صف كامل */}
