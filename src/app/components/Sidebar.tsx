@@ -24,6 +24,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           { name: 'الاعلانات', href: '/adv', roles: ['admin', 'editor'] },
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
+           { name: 'إدارة الموقع التعريف', href: '/users', roles: ['admin'] },
           { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
           // ✅ إصلاح #1: حذف "إدارة واجهة الموقع"
         ]
@@ -52,7 +53,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         id: 'financial',
         name: 'المستخدمين والمالية',
         items: [
-          { name: 'المستخدمين', href: '/users', roles: ['admin'] },
           { name: 'الدفعات المالية', href: '/mony1', roles: ['admin'] },
           { name: 'إدارة المستخدمين', href: '/new_user', roles: ['admin'] },
           { name: 'مراجعة وتوثيق الحسابات', href: '/verify_users', roles: ['admin'] },
