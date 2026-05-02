@@ -1,81 +1,96 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function MyTermsPage() {
-  const terms = [
-    { id: 1, name: 'الفصل الدراسي الأول 2025', status: 'نشط', date: '2025-01-10', students: 450 },
-    { id: 2, name: 'فصل خريف 2024', status: 'مؤرشف', date: '2024-09-05', students: 890 },
-  ];
+  const [terms, setTerms] = useState<any[]>([]);
+
+  useEffect(() => {
+    const savedTerms = JSON.parse(localStorage.getItem('app_terms') || '[]');
+    setTerms(savedTerms);
+  }, []);
 
   return (
-    <div dir="rtl" className="font-sans min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* شريط التنقل العلوي */}
+    <div dir="rtl" className="font-sans min-h-screen bg-gray-100 p-2 md:p-4">
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <Link href="/terms-add" className="px-6 py-2 bg-white text-sky-600 border border-sky-200 rounded-full text-sm font-bold hover:bg-sky-50">إضافة فصل</Link>
-        <Link href="/terms-end" className="px-6 py-2 bg-white text-sky-600 border border-sky-200 rounded-full text-sm font-bold hover:bg-sky-50">إنهاء فصل</Link>
-        <Link href="/terms-my" className="px-6 py-2 bg-sky-500 text-white rounded-full text-sm font-bold shadow-md">سجل الفصول</Link>
+        <Link href="/terms-add" className="px-6 py-2 bg-white text-blue-900 border border-blue-200 rounded-full text-sm font-bold hover:bg-blue-50">إضافة فصل</Link>
+        <Link href="/terms-end" className="px-6 py-2 bg-white text-blue-900 border border-blue-200 rounded-full text-sm font-bold hover:bg-blue-50">إنهاء فصل</Link>
+        <Link href="/terms-my" className="px-6 py-2 bg-[#3b66f5] text-white rounded-full text-sm font-bold shadow-md">سجل الفصول</Link>
       </div>
 
-      <div className="bg-sky-500 p-6 rounded-2xl text-white mb-6 shadow-lg flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">سجل الفصول الدراسية</h1>
-          <p className="text-sky-100 text-xs mt-1">إدارة ومتابعة كافة الفصول الدراسية المسجلة</p>
-        </div>
-        <div className="bg-sky-700/30 px-4 py-2 rounded-xl border border-sky-400/30 font-bold text-sm">
-          العدد: {terms.length}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">سجل الفصول الدراسية</h1>
+        <div className="text-sm bg-blue-200 shadow-inner px-4 py-2 rounded-md font-bold">
+          إجمالي الفصول: {terms.length}
         </div>
       </div>
 
-      {/* الجدول (حاسوب) */}
-      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-right border-collapse">
+      <div className="hidden md:block w-full overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+        <table className="w-full text-right divide-y divide-gray-200 table-auto">
           <thead>
-            <tr className="bg-[#c4a900] text-black">
-              <th className="p-4 text-sm font-black">#</th>
-              <th className="p-4 text-sm font-black">المسمى</th>
-              <th className="p-4 text-sm font-black">الحالة</th>
-              <th className="p-4 text-sm font-black">التاريخ</th>
-              <th className="p-4 text-sm font-black">الإجراءات</th>
+            <tr>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-10">#</th>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفصل</th>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الحالة</th>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">تاريخ البدء</th>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الطلاب</th>
+              <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">الإجراءات</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
-            {terms.map((term) => (
-              <tr key={term.id} className="hover:bg-sky-50/50 transition-colors">
-                <td className="p-4 text-gray-400 font-bold text-sm">{term.id}</td>
-                <td className="p-4 font-black text-gray-800 text-sm">{term.name}</td>
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-lg text-[10px] font-black ${term.status === 'نشط' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
-                    {term.status}
-                  </span>
-                </td>
-                <td className="p-4 text-gray-500 text-sm">{term.date}</td>
-                <td className="p-4">
-                  <button className="bg-sky-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm">عرض</button>
-                </td>
-              </tr>
-            ))}
+          <tbody className="bg-white divide-y divide-gray-200">
+            {terms.length === 0 ? (
+              <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-bold">لا توجد فصول مضافة بعد</td></tr>
+            ) : (
+              terms.map((term) => (
+                <tr key={term.id} className={`transition ${term.status === 'مؤرشف' ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-blue-50/30'}`}>
+                  <td className="px-3 py-3 text-sm text-gray-400 font-medium w-10">{term.id}</td>
+                  <td className="px-3 py-3 font-bold text-gray-900">{term.name}</td>
+                  <td className="px-3 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${term.status === 'نشط' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                      {term.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-sm text-gray-600">{term.date}</td>
+                  <td className="px-3 py-3 font-bold text-[#3b66f5]">{term.students}</td>
+                  <td className="px-3 py-3">
+                    <button className="bg-[#c2aa27] text-black px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-sm hover:bg-[#b39a00]">عرض</button>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* البطاقات (هاتف) */}
+      {/* عرض الهاتف */}
       <div className="md:hidden space-y-4">
-        {terms.map((term) => (
-          <div key={term.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-             <div className="flex justify-between mb-4">
-                <span className={`px-3 py-1 rounded-lg text-[10px] font-black ${term.status === 'نشط' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>{term.status}</span>
-                <span className="text-gray-300 font-black italic">#{term.id}</span>
-             </div>
-             <div className="text-center font-black text-gray-800 mb-5">{term.name}</div>
-             <div className="bg-gray-50 p-4 rounded-xl space-y-2 mb-4 text-xs">
-                <div className="flex justify-between font-bold"><span className="opacity-50">تاريخ البدء:</span> <span>{term.date}</span></div>
-                <div className="flex justify-between font-bold"><span className="opacity-50">الطلاب:</span> <span className="text-sky-600">{term.students} طالب</span></div>
-             </div>
-             <button className="w-full bg-sky-500 text-white py-3.5 rounded-xl font-black text-xs shadow-md">تقرير الفصل</button>
-          </div>
-        ))}
+        {terms.length === 0 ? (
+           <div className="text-center py-10 bg-white rounded-2xl"><p className="text-gray-500 font-bold">لا توجد بيانات</p></div>
+        ) : (
+          terms.map((term) => (
+            <div key={term.id} className={`p-4 rounded-2xl shadow-sm border relative overflow-hidden ${term.status === 'مؤرشف' ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-100'}`}>
+               <div className="flex justify-between items-center mb-4">
+                  <span className="text-gray-400 font-bold text-xs bg-gray-100 px-2 py-1 rounded-full">#{term.id}</span>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${term.status === 'نشط' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'}`}>
+                      {term.status}
+                  </span>
+               </div>
+               <div className="text-center font-extrabold text-lg text-gray-900 mb-4">{term.name}</div>
+               <div className="grid grid-cols-2 gap-2 mb-4">
+                 <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                   <span className="text-gray-400 block text-[10px] font-medium mb-1">تاريخ البدء</span>
+                   <span className="font-extrabold text-gray-900 text-sm">{term.date}</span>
+                 </div>
+                 <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                   <span className="text-gray-400 block text-[10px] font-medium mb-1">عدد الطلاب</span>
+                   <span className="font-bold text-[#3b66f5] text-sm">{term.students}</span>
+                 </div>
+               </div>
+               <button className="w-full bg-[#3b66f5] hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-xs shadow-sm transition">عرض تقرير الفصل</button>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
