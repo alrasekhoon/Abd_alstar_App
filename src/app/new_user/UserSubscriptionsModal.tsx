@@ -40,6 +40,7 @@ export default function UserSubscriptionsModal({
   userName
 }: UserSubscriptionsModalProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [deletedSubscriptions, setDeletedSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -223,6 +224,9 @@ setQuickNotification({
       return;
     }
 
+    // الاحتفاظ بنسخة من الاشتراك قبل حذفه لتخزينه في قائمة المحذوفات
+    const subToDelete = subscriptions.find(sub => sub.id === id);
+
     try {
       const response = await fetch(API_URL, {
         method: 'DELETE',
@@ -240,7 +244,12 @@ setQuickNotification({
         throw new Error(result.error || result.message || 'حدث خطأ أثناء الحذف');
       }
 
-      // إعادة تحميل الاشتراكات
+      // نقل الاشتراك إلى قائمة المحذوفات محلياً
+      if (subToDelete) {
+        setDeletedSubscriptions(prev => [...prev, subToDelete]);
+      }
+
+      // إعادة تحميل الاشتراكات الفعالة
       await fetchSubscriptions();
       setError('');
 
@@ -363,14 +372,39 @@ setQuickNotification({
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-        {/* الهيدر */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+       {/* الهيدر */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">اشتراكات المستخدم</h2>
             <p className="text-gray-600 mt-1">
               {userName} - ID: {userId}
             </p>
           </div>
+          
+          {/* الإحصائيات (تم نقلها للأعلى) */}
+          {!isLoading && !error && subscriptions.length > 0 && (
+            <div className="flex gap-4 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-sm">
+              <div className="flex flex-col items-center">
+                <span className="font-medium text-blue-800">المواد</span>
+                <span className="font-bold text-blue-900">{subscriptions.length}</span>
+              </div>
+              <div className="w-px bg-blue-200"></div>
+              <div className="flex flex-col items-center">
+                <span className="font-medium text-blue-800">الإجمالي (ل.س)</span>
+                <span className="font-bold text-blue-900">
+                  {formatPrice(subscriptions.reduce((total, sub) => total + (parseFloat(sub.price1) || 0), 0).toString())}
+                </span>
+              </div>
+              <div className="w-px bg-blue-200"></div>
+              <div className="flex flex-col items-center">
+                <span className="font-medium text-blue-800">الإجمالي ($)</span>
+                <span className="font-bold text-blue-900">
+                  {formatDolar(subscriptions.reduce((total, sub) => total + (parseFloat(sub.dolar) || 0), 0).toString())}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -616,33 +650,43 @@ setQuickNotification({
             </div>
           )}
 
-          {/* إحصائيات */}
-          {!isLoading && !error && subscriptions.length > 0 && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                <div className="flex flex-col">
-                  <span className="font-medium text-blue-800">إجمالي المواد:</span>
-                  <span className="font-bold text-blue-900 text-lg">{subscriptions.length}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-medium text-blue-800">إجمالي السعر (ل.س):</span>
-                  <span className="font-bold text-blue-900 text-lg">
-                    {formatPrice(subscriptions.reduce((total, sub) => {
-                      const price = parseFloat(sub.price1) || 0;
-                      return total + price;
-                    }, 0).toString())}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-medium text-blue-800">إجمالي السعر (دولار):</span>
-                  <span className="font-bold text-blue-900 text-lg">
-                    {formatDolar(subscriptions.reduce((total, sub) => {
-                      const dolar = parseFloat(sub.dolar) || 0;
-                      return total + dolar;
-                    }, 0).toString())}
-                  </span>
-                </div>
-
+          {/* الاشتراكات المحذوفة */}
+          {deletedSubscriptions.length > 0 && (
+            <div className="mt-8 border-t-2 border-red-200 pt-6">
+              <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                الاشتراكات المحذوفة (مؤرشفة)
+              </h3>
+              <div className="overflow-x-auto rounded-lg border border-red-200">
+                <table className="min-w-full divide-y divide-red-200">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">#</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">المادة</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">نوع الاشتراك</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">السعر (ل.س)</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">السعر (دولار)</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">تاريخ الإشتراك</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-red-100">
+                    {deletedSubscriptions.map((subscription, index) => (
+                      <tr key={`deleted-${subscription.id}-${index}`} className="hover:bg-red-50 transition opacity-75">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900 line-through">{subscription.material_name}</div>
+                          <div className="text-sm text-gray-500">ID: {subscription.materialid}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subscription.type1 || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{formatPrice(subscription.price1)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{formatDolar(subscription.dolar)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(subscription.created_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
