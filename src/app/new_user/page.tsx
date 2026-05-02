@@ -66,33 +66,9 @@ export default function UserManagement() {
   });
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-const [updatingUser, setUpdatingUser] = useState<number | null>(null);
-  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+  const [updatingUser, setUpdatingUser] = useState<number | null>(null);
 
-  const API_URL = '/api/proxy/cp_news_new.php';
-
-  const handleUpdateNote = async (userId: number, newNote: string) => {
-    try {
-      setUpdatingUser(userId);
-      const response = await fetch(`${API_URL}?id=${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        },
-        cache: 'no-store',
-        body: JSON.stringify({ note: newNote }),
-      });
-      if (!response.ok) throw new Error('فشل في تحديث الملاحظات');
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'فشل في التحديث');
-      setUsers(prev => prev.map(user => user.id === userId ? { ...user, note: newNote } : user));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
-    } finally {
-      setUpdatingUser(null);
-    }
-  };
+  const API_URL = '/api/proxy/cp_news_new.php';
 
   const [subscriptionsModal, setSubscriptionsModal] = useState({
   isOpen: false,
@@ -693,72 +669,56 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
       
       <div className="flex flex-col md:flex-row gap-8">
-        {/* القسم الجانبي (الصورة + الإجراءات + الجهاز) */}
-        <div className="flex-shrink-0 w-full md:w-56">
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
-            <div className="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-4 cursor-pointer group" onClick={() => setFullScreenImage(`/api/proxy/uploads/card_${selectedUser.id}.jpg`)}>
-              <Image
-                src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
-                alt={`صورة ${selectedUser.name}`}
-                fill
-                className="object-cover rounded-xl border-2 border-gray-300 shadow-sm transition-transform group-hover:scale-105"
-                onError={(e) => {
-                  const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
-                  e.currentTarget.src = defaultImageUrl;
-                }}
-              />
-              <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-bold">عرض الصورة</span>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 font-bold mb-2">ID: {selectedUser.id}</p>
-            
-            {/* مستطيل OTP ثابت الأبعاد لمنع الاهتزاز */}
-            <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm min-h-[96px] flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-blue-700">رمز OTP</span>
-                <button
-                  onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
-                  className="text-blue-500 hover:text-blue-700 transition"
-                  title="تحديث"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-blue-900 font-extrabold tracking-widest text-xl m-0">{selectedUser.auth || '-'}</p>
-              <p className="text-[10px] text-blue-500 m-0">تحديث: {formatDateTime(selectedUser.updated_at)}</p>
-            </div>
-
-            {/* زر الحظر المدمج الجديد */}
-            <div className="mt-3 flex w-full border rounded-xl overflow-hidden shadow-sm h-11 bg-white">
-              <div className={`flex items-center justify-center w-1/2 text-xs font-bold gap-1.5 ${selectedUser.block === 1 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                <span className={`w-2.5 h-2.5 rounded-full ${selectedUser.block === 1 ? 'bg-red-500' : 'bg-green-500'}`}></span>
-                {selectedUser.block === 1 ? 'محظور' : 'نشط'}
-              </div>
-              <button
-                onClick={() => {
-                  const newBlock = selectedUser.block === 1 ? 0 : 1;
-                  handleBlockUser(selectedUser.id, newBlock);
-                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-1/2 text-xs font-bold text-white transition ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}
-              >
-                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
-              </button>
-            </div>
-
-            {/* الجهاز */}
-            <div className="mt-3 text-right">
-              <label className="block text-[10px] font-bold text-gray-500 mb-1">الجهاز:</label>
-              <p className="text-gray-900 bg-white p-2 rounded-xl border border-gray-200 shadow-sm text-[10px] font-mono break-all leading-tight">{selectedUser.device_uuid || '-'}</p>
+        {/* قسم الصورة */}
+        <div className="flex-shrink-0">
+          <div className="bg-gray-100 rounded-lg p-4 text-center">
+            <div className="relative w-48 h-48 mx-auto mb-4">
+  <Image
+    src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+    alt={`صورة ${selectedUser.name}`}
+    width={192}
+    height={192}
+    className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+    onError={(e) => {
+      // استخدام صورة افتراضية
+      const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
+      e.currentTarget.src = defaultImageUrl;
+    }}
+  />
+</div>
+            <p className="text-sm text-gray-600">
+              ID: {selectedUser.id}
+            </p>
+            <button
+              onClick={() => {
+                window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
+              }}
+              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+              </svg>
+              عرض الصورة كاملة
+            </button>
+            <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-bold text-blue-700">رمز OTP</span>
+                <button
+                  onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
+                  className="text-blue-500 hover:text-blue-700 transition"
+                  title="تحديث"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-blue-900 font-extrabold tracking-widest text-xl">{selectedUser.auth || '-'}</p>
+              <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
           </div>
         </div>
-
-        {/* قسم البيانات */}
+      {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -804,100 +764,79 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-           {/* الصف الرابع المدمج */}
-            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">العنوان</label>
-                <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 shadow-sm text-sm font-bold truncate">{selectedUser.address || '-'}</div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">نوع المستخدم</label>
-                <select
-                  value={selectedUser.user_type || ''}
-                  onChange={(e) => {
-                    handleUserTypeChange(selectedUser.id, e.target.value);
-                    setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                  }}
-                  disabled={updatingUser === selectedUser.id}
-                  className={`w-full text-sm border rounded-xl px-3 py-2 font-bold outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-purple-50 border-purple-300 text-purple-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-gray-50 border-gray-300 text-gray-700'}`}
-                >
-                  <option value="غير موثوق">غير موثوق</option>
-                  <option value="موثوق">موثوق</option>
-                  <option value="vip">VIP</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ الإنشاء</label>
-                <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-bold" dir="ltr">{formatDateTime(selectedUser.created_at)}</div>
-              </div>
+            {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
+              <select
+                value={selectedUser.user_type || ''}
+                onChange={(e) => {
+                  handleUserTypeChange(selectedUser.id, e.target.value);
+                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+              >
+                <option value="غير موثوق">غير موثوق</option>
+                <option value="موثوق">موثوق</option>
+                <option value="vip">VIP</option>
+              </select>
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الحالة</label>
+              <button
+                onClick={() => {
+                  const newBlock = selectedUser.block === 1 ? 0 : 1;
+                  handleBlockUser(selectedUser.id, newBlock);
+                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+              >
+                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
+              </button>
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
+            </div>
 
-            {/* ملاحظات قابلة للتحرير - صف كامل */}
-            <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات (تُحفظ تلقائياً)</label>
-              <textarea
-                defaultValue={selectedUser.note || ''}
-                onBlur={(e) => {
-                  if (e.target.value !== selectedUser.note) {
-                    handleUpdateNote(selectedUser.id, e.target.value);
-                    setSelectedUser(prev => prev ? {...prev, note: e.target.value} : prev);
-                  }
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className="w-full text-gray-900 bg-white p-3 rounded-xl border border-gray-200 shadow-sm min-h-[100px] resize-y focus:ring-2 focus:ring-blue-400 outline-none transition font-medium"
-                placeholder="اكتب ملاحظاتك هنا، وسيتم حفظها عند الخروج من الحقل..."
-              />
-            </div>
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+            </div>
+
+            {/* الصف السادس: آخر تحديث - الجهاز */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجهاز</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
+            </div>
+
+            {/* ملاحظات - صف كامل */}
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
+            </div>
           </div>
         </div>
       
       </div>
 
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
-        <button
-          onClick={() => setIsUserModalOpen(false)}
-          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-        >
-          إغلاق
-        </button>
+        <button
+          onClick={() => setIsUserModalOpen(false)}
+          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+        >
+          إغلاق
+        </button>
       </div>
     </div>
+  </div>
 )}
 
-{/* نافذة عرض الصورة المكبرة (Lightbox) */}
-      {fullScreenImage && (
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-[100] bg-black/90 backdrop-blur-md transition-all">
-          <div className="relative w-full max-w-4xl h-[85vh] flex flex-col items-center justify-center gap-6">
-            <div className="relative w-full h-full">
-              <Image src={fullScreenImage} alt="صورة مكبرة" fill className="object-contain" priority />
-            </div>
-            <div className="flex gap-4">
-              <button 
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = fullScreenImage;
-                  link.download = `user_${selectedUser?.id || 'image'}.jpg`;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }} 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg active:scale-95"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                تنزيل
-              </button>
-              <button 
-                onClick={() => setFullScreenImage(null)} 
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg active:scale-95"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                إغلاق
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
