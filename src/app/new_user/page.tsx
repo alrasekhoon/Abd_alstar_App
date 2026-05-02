@@ -857,8 +857,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
           <div className="flex gap-4">
             <button 
               onClick={() => {
-                const link = document.createElement('a');
-                )}
+                <button 
+              onClick={() => {
+                const link = document.createElement('a');
                 link.href = fullScreenImage;
                 link.download = `user_${selectedUser?.id}_image.jpg`;
                 document.body.appendChild(link);
