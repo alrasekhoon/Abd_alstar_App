@@ -67,32 +67,8 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
-  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
-  const API_URL = '/api/proxy/cp_news_new.php';
-
-  const handleUpdateNote = async (userId: number, newNote: string) => {
-    try {
-      setUpdatingUser(userId);
-      const response = await fetch(`${API_URL}?id=${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate'
-        },
-        cache: 'no-store',
-        body: JSON.stringify({ note: newNote }),
-      });
-      if (!response.ok) throw new Error('فشل في تحديث الملاحظات');
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || 'فشل في التحديث');
-      setUsers(prev => prev.map(user => user.id === userId ? { ...user, note: newNote } : user));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
-    } finally {
-      setUpdatingUser(null);
-    }
-  };
+  const API_URL = '/api/proxy/cp_news_new.php';
 
   const [subscriptionsModal, setSubscriptionsModal] = useState({
   isOpen: false,
@@ -694,38 +670,36 @@ const openNotificationsModal = (userId: number, userName: string) => {
       
       <div className="flex flex-col md:flex-row gap-8">
         {/* قسم الصورة */}
-        <div className="flex-shrink-0">
-          <div className="bg-gray-100 rounded-lg p-4 text-center">
-            <div className="relative w-48 h-48 mx-auto mb-4">
-  <Image
-    src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
-    alt={`صورة ${selectedUser.name}`}
-    width={192}
-    height={192}
-    className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
-    onError={(e) => {
-      // استخدام صورة افتراضية
-      const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
-      e.currentTarget.src = defaultImageUrl;
-    }}
-  />
+        <div className="flex-shrink-0">
+          <div className="bg-gray-100 rounded-lg p-4 text-center">
+            <div className="relative w-48 h-48 mx-auto mb-4">
+  <Image
+    src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+    alt={`صورة ${selectedUser.name}`}
+    width={192}
+    height={192}
+    className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
+    onError={(e) => {
+      // استخدام صورة افتراضية
+      const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
+      e.currentTarget.src = defaultImageUrl;
+    }}
+  />
 </div>
-            <p className="text-sm text-gray-600">
-              ID: {selectedUser.id}
-            </p>
-            <button
-              onClick={() => {
-                window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
-              }}
-              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-              </svg>
-              عرض الصورة كاملة
-            </button>
-          </div>
-        </div>
+            <p className="text-sm text-gray-600">
+              ID: {selectedUser.id}
+            </p>
+            <button
+              onClick={() => {
+                window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
+              }}
+              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+              </svg>
+              عرض الصورة كاملة
+            </button>
             <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-blue-700">رمز OTP</span>
@@ -743,6 +717,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
           </div>
+        </div>
       {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -789,50 +764,65 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            {/* الصف الرابع: العنوان - نوع المستخدم - وقت إنشاء الحساب (في صف واحد) */}
+            {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
+              <select
+                value={selectedUser.user_type || ''}
+                onChange={(e) => {
+                  handleUserTypeChange(selectedUser.id, e.target.value);
+                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+              >
+                <option value="غير موثوق">غير موثوق</option>
+                <option value="موثوق">موثوق</option>
+                <option value="vip">VIP</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الحالة</label>
+              <button
+                onClick={() => {
+                  const newBlock = selectedUser.block === 1 ? 0 : 1;
+                  handleBlockUser(selectedUser.id, newBlock);
+                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+              >
+                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
+              </button>
+            </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium truncate" title={selectedUser.address || '-'}>{selectedUser.address || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
-              <select
-                value={selectedUser.user_type || ''}
-                onChange={(e) => {
-                  handleUserTypeChange(selectedUser.id, e.target.value);
-                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full text-sm border-2 rounded-xl px-3 py-2.5 font-bold outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-              >
-                <option value="غير موثوق">غير موثوق</option>
-                <option value="موثوق">موثوق</option>
-                <option value="vip">VIP</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-medium" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
-            </div>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
+            </div>
 
-            {/* ملاحظات - صف كامل بحقل قابل للتحرير */}
-            <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات</label>
-              <textarea 
-                defaultValue={selectedUser.note || ''}
-                onBlur={(e) => {
-                  if (e.target.value !== selectedUser.note) {
-                    handleUpdateNote(selectedUser.id, e.target.value);
-                    setSelectedUser(prev => prev ? {...prev, note: e.target.value} : prev);
-                  }
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className="w-full text-gray-900 bg-white p-3 rounded-xl border border-gray-200 shadow-sm min-h-[100px] resize-y focus:ring-2 focus:ring-blue-400 outline-none transition font-medium"
-                placeholder="اكتب الملاحظات هنا، سيتم الحفظ تلقائياً عند الخروج من الحقل..."
-              />
-            </div>
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
+            </div>
+
+            {/* الصف السادس: آخر تحديث - الجهاز */}
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجهاز</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
+            </div>
+
+            {/* ملاحظات - صف كامل */}
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
+            </div>
           </div>
         </div>
+      
       </div>
 
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
@@ -844,38 +834,11 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </button>
       </div>
     </div>
+  </div>
 )}
 
-{/* نافذة عرض الصورة المكبرة داخل الواجهة (Lightbox) */}
-    {fullScreenImage && (
-      <div className="fixed inset-0 flex items-center justify-center p-4 z-[70] bg-black/90 backdrop-blur-md transition-all">
-        <div className="relative w-full max-w-4xl h-[85vh] flex flex-col items-center justify-center gap-6">
-          <div className="relative w-full h-full">
-            <Image src={fullScreenImage} alt="صورة مكبرة" fill className="object-contain" />
-          </div>
-          <div className="flex gap-4">
-            <button onClick={() => {
-                const link = document.createElement('a');
-                link.href = fullScreenImage;
-                link.download = `user_${selectedUser?.id}_image.jpg`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }} 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              تنزيل
-            </button>
-            <button onClick={() => setFullScreenImage(null)} className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              إغلاق
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
 
-      {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
+{/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] transition-all duration-300"></div>
       )}
