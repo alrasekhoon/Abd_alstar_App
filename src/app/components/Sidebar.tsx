@@ -60,6 +60,15 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         ]
       },
       {
+        id: 'term_management',
+        name: 'إدارة الفصل',
+        items: [
+          { name: 'الفصول الدراسية', href: '/terms', roles: ['admin', 'editor'] },
+          { name: 'الجدول الدراسي', href: '/schedule', roles: ['admin', 'editor'] },
+          { name: 'توزيع الطلاب', href: '/student_dist', roles: ['admin', 'editor'] },
+        ]
+      },
+      {
         id: 'administration',
         name: 'إدارة النظام',
         items: [
