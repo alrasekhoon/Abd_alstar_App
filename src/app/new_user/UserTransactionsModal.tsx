@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Transaction = {
   id: number;
@@ -13,6 +13,7 @@ type Transaction = {
 type User = {
   name: string;
   phone: string;
+  gender?: string;
 };
 
 type Summary = {
@@ -36,7 +37,7 @@ export default function UserTransactionsModal({
 }: UserTransactionsModalProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [deletedTransactions, setDeletedTransactions] = useState<Transaction[]>([]);
-  const [paidTransactions, setPaidTransactions] = useState<number[]>([]); // لحفظ الدفعات التي تم سدادها محلياً
+  const [paidTransactions, setPaidTransactions] = useState<number[]>([]); 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState('');
@@ -49,7 +50,9 @@ export default function UserTransactionsModal({
   
   // حالات الرصيد المؤجل
   const [isDeferred, setIsDeferred] = useState(false);
-  const [deferSeconds, setDeferSeconds] = useState('60');
+  const [deferDays, setDeferDays] = useState('7');
+  const [deferHours, setDeferHours] = useState('5');
+  const [noReminder, setNoReminder] = useState(false);
 
   const [quickNotification, setQuickNotification] = useState({
     isOpen: false,
@@ -65,18 +68,19 @@ export default function UserTransactionsModal({
 
   const API_URL = '/api/proxy/user_transactions.php';
 
-  // استرجاع المحذوفات والمدفوعات من LocalStorage عند فتح النافذة
+  // دالة المخاطبة بناءً على الجنس
+  const getGreeting = useCallback(() => {
+    const firstName = userName.split(' ')[0] || '';
+    return user?.gender === 'أنثى' ? `العزيزة ${firstName}` : `العزيز ${firstName}`;
+  }, [userName, user?.gender]);
+
   useEffect(() => {
     if (isOpen && userId) {
       const storedDeleted = localStorage.getItem(`deleted_trans_${userId}`);
-      if (storedDeleted) {
-        setDeletedTransactions(JSON.parse(storedDeleted));
-      }
+      if (storedDeleted) setDeletedTransactions(JSON.parse(storedDeleted));
       
       const storedPaid = localStorage.getItem(`paid_trans_${userId}`);
-      if (storedPaid) {
-        setPaidTransactions(JSON.parse(storedPaid));
-      }
+      if (storedPaid) setPaidTransactions(JSON.parse(storedPaid));
     }
   }, [isOpen, userId]);
 
@@ -113,9 +117,7 @@ export default function UserTransactionsModal({
   }, [userId]);
 
   useEffect(() => {
-    if (isOpen && userId) {
-      fetchData();
-    }
+    if (isOpen && userId) fetchData();
   }, [isOpen, userId, fetchData]);
 
   // إرسال إشعار تلقائي كل 25 ثانية للدفعات المؤجلة
@@ -131,21 +133,25 @@ export default function UserTransactionsModal({
         deferredItems.forEach(async (item) => {
           try {
             const parts = item.note.split('|');
-            const seconds = parts[1] || 'غير محدد';
-            const amount = Number(item.mony).toLocaleString();
+            const days = parts[1] || '7';
+            const hours = parts[2] || '5';
+            const hasNoReminder = parts[3] === 'NONE';
+            
+            if (hasNoReminder) return; // تخطي إذا كان التذكير معطلاً
 
+            const amount = Number(item.mony).toLocaleString();
+            
             await fetch('/api/proxy/cp_notifications.php', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 user_id: userId,
                 title: 'تذكير: سداد رصيد مؤجل',
-                body: `عزيزي الطالب، يرجى تذكيركم بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) خلال المدة المحددة (${seconds} ثانية) لتجنب انقطاع الخدمة.`,
+                body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) المتبقي من مدة السماح (${days} أيام)، لتجنب انقطاع الخدمة.`,
                 url1: '',
                 note1: ''
               }),
             });
-            console.log(`تم إرسال إشعار تلقائي للدفعة ${item.id}`);
           } catch (e) {
             console.error('فشل إرسال الإشعار التلقائي', e);
           }
@@ -154,7 +160,7 @@ export default function UserTransactionsModal({
     }, 25000);
 
     return () => clearInterval(interval);
-  }, [isOpen, transactions, paidTransactions, userId]);
+  }, [isOpen, transactions, paidTransactions, userId, getGreeting]);
 
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,10 +173,10 @@ export default function UserTransactionsModal({
       setIsAdding(true);
       setError('');
       
-      // معالجة الملاحظة إذا كان الرصيد مؤجلاً
       let finalNote = newTransaction.note;
       if (isDeferred && newTransaction.type === 'deposit') {
-        finalNote = `DEFERRED|${deferSeconds}|${newTransaction.note}`;
+        const reminderFlag = noReminder ? 'NONE' : 'ACTIVE';
+        finalNote = `DEFERRED|${deferDays}|${deferHours}|${reminderFlag}|${newTransaction.note}`;
       }
       
       const requestBody = {
@@ -202,20 +208,22 @@ export default function UserTransactionsModal({
           setQuickNotification({
             isOpen: true,
             title: 'رصيد مؤجل',
-            body: `عزيزي الطالب، تم إضافة رصيد مؤجل بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.).\nيرجى السداد خلال المدة المذكورة (${deferSeconds} ثانية) لتجنب توقف الحساب.`
+            body: `${getGreeting()}،\nتم إضافة رصيد مؤجل بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.).\nيرجى السداد خلال المدة المذكورة (${deferDays} أيام) لتجنب توقف الحساب.`
           });
         } else {
           setQuickNotification({
             isOpen: true,
             title: 'إشعار مالي',
-            body: `تمت إضافة رصيد بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.) إلى حسابكم بنجاح.\nيُرجى الاشتراك فوراً لضمان حصولكم على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
+            body: `${getGreeting()}،\nتمت إضافة رصيد بقيمة (${Number(requestBody.mony).toLocaleString()} ل.س.) إلى حسابك بنجاح.\nيُرجى الاشتراك فوراً لضمان الحصول على الخدمة وفقاً للأسعار الحالية قبل أي تعديل محتمل.\nنسعد دائماً بخدمتكم، ونتمنى لكم دوام التوفيق.`
           });
         }
       }
 
       setNewTransaction({ mony: '', type: 'deposit', note: '' });
       setIsDeferred(false);
-      setDeferSeconds('60');
+      setDeferDays('7');
+      setDeferHours('5');
+      setNoReminder(false);
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
@@ -240,7 +248,6 @@ export default function UserTransactionsModal({
       if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
       if (!result.success) throw new Error(result.error || 'فشل في حذف الدفعة');
 
-      // الاحتفاظ بالدفعة في المحذوفات محلياً
       if (transToDelete) {
         const newDeleted = [...deletedTransactions, transToDelete];
         setDeletedTransactions(newDeleted);
@@ -255,20 +262,17 @@ export default function UserTransactionsModal({
 
   const handleMarkAsPaid = async (transactionId: number) => {
     try {
-      // تحديث محلي فوري (تحسباً لعدم دعم السيرفر لتحديث الملاحظات)
       const updatedPaid = [...paidTransactions, transactionId];
       setPaidTransactions(updatedPaid);
       localStorage.setItem(`paid_trans_${userId}`, JSON.stringify(updatedPaid));
       
-      // محاولة التحديث على السيرفر إذا كان الـ API يدعم الـ PUT
       await fetch(API_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: transactionId, user_id: userId, status: 'paid' })
       });
-      
     } catch (e) {
-      console.log('تم التحديث محلياً فقط', e);
+      console.log('تم التحديث محلياً', e);
     }
   };
 
@@ -310,12 +314,16 @@ export default function UserTransactionsModal({
       return { 
         isDeferred: !isPaid, 
         isPaid: isPaid,
-        seconds: parts[1], 
-        actualNote: parts[2] || '-' 
+        days: parts[1] || '0', 
+        hours: parts[2] || '0',
+        actualNote: parts[4] || '-' 
       };
     }
     return { isDeferred: false, actualNote: note };
   };
+
+  // حساب مشتريات الفصل
+  const semesterPurchases = summary ? (summary.total_deposit - summary.total_withdraw - summary.balance) : 0;
 
   if (!isOpen) return null;
 
@@ -334,9 +342,9 @@ export default function UserTransactionsModal({
             </p>
           </div>
 
-          {/* الإحصائيات العلوية */}
+          {/* الإحصائيات العلوية المحسنة */}
           {summary && !isLoading && !error && (
-            <div className="flex gap-2 md:gap-4 bg-white px-3 md:px-5 py-2 md:py-3 rounded-xl border border-gray-200 shadow-sm text-xs md:text-sm w-full md:w-auto overflow-x-auto">
+            <div className="flex gap-2 md:gap-4 bg-white px-3 md:px-5 py-2 md:py-3 rounded-xl border border-gray-200 shadow-sm text-xs md:text-sm w-full lg:w-auto overflow-x-auto">
               <div className="flex flex-col items-center min-w-[80px]">
                 <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد الحالي</span>
                 <span className={`font-extrabold text-base md:text-lg ${summary.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
@@ -345,12 +353,17 @@ export default function UserTransactionsModal({
               </div>
               <div className="w-px bg-gray-200 shrink-0"></div>
               <div className="flex flex-col items-center min-w-[80px]">
+                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">مشتريات الفصل</span>
+                <span className="font-extrabold text-purple-600 text-base md:text-lg">{semesterPurchases.toLocaleString()}</span>
+              </div>
+              <div className="w-px bg-gray-200 shrink-0"></div>
+              <div className="flex flex-col items-center min-w-[80px]">
                 <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">إجمالي الإيداع</span>
                 <span className="font-extrabold text-green-600 text-base md:text-lg">{summary.total_deposit.toLocaleString()}</span>
               </div>
               <div className="w-px bg-gray-200 shrink-0"></div>
               <div className="flex flex-col items-center min-w-[80px]">
-                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">إجمالي السحب</span>
+                <span className="font-bold text-gray-500 uppercase text-[10px] md:text-xs">الرصيد المسترد</span>
                 <span className="font-extrabold text-red-600 text-base md:text-lg">{summary.total_withdraw.toLocaleString()}</span>
               </div>
             </div>
@@ -394,61 +407,87 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          {/* نموذج الإضافة */}
+          {/* نموذج الإضافة المحسن */}
           {showAddForm && (
-            <div className="mb-6 p-4 md:p-6 border border-blue-200 rounded-xl bg-white md:bg-blue-50/50 shadow-sm">
-              <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-                </svg>
-                تفاصيل الدفعة الجديدة
-              </h3>
-              <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">المبلغ (ل.س)</label>
-                  <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-extrabold text-blue-800" placeholder="مثال: 50000" />
+            <div className="mb-8 p-5 md:p-7 border border-blue-200 rounded-2xl bg-white md:bg-blue-50/30 shadow-md transition-all duration-300">
+              <div className="flex items-center gap-3 mb-6 border-b border-blue-100 pb-4">
+                <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">نوع العملية</label>
-                  <select value={newTransaction.type} onChange={(e) => {
-                      setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
-                      if (e.target.value === 'withdraw') setIsDeferred(false);
-                    }} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold"
-                  >
-                    <option value="deposit">إيداع (إضافة رصيد)</option>
-                    <option value="withdraw">سحب (خصم رصيد)</option>
-                  </select>
-                </div>
-                
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-1">ملاحظة (اختياري)</label>
-                  <input type="text" value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium" placeholder="اكتب ملاحظة حول هذه الدفعة..." />
+                <h3 className="text-xl font-extrabold text-blue-900 tracking-tight">تفاصيل الدفعة الجديدة</h3>
+              </div>
+
+              <form onSubmit={handleAddTransaction} className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* الحقل 1: المبلغ */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">المبلغ (ل.س)</label>
+                    <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-xl shadow-inner transition-all outline-none" placeholder="مثال: 50000" />
+                  </div>
+                  
+                  {/* الحقل 2: نوع العملية */}
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">نوع العملية</label>
+                    <select value={newTransaction.type} onChange={(e) => {
+                        setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
+                        if (e.target.value === 'withdraw') setIsDeferred(false);
+                      }} 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold text-gray-800 shadow-inner cursor-pointer text-lg outline-none"
+                    >
+                      <option value="deposit">إيداع (إضافة رصيد)</option>
+                      <option value="withdraw">سحب (رصيد مسترد)</option>
+                    </select>
+                  </div>
                 </div>
 
+                {/* الحقل 3: الملاحظات (أصبح في النهاية قبل المؤجل) */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">ملاحظات (اختياري)</label>
+                  <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-inner resize-none outline-none" placeholder="اكتب ملاحظات تفصيلية حول هذه الدفعة هنا..." />
+                </div>
+
+                {/* إعدادات الرصيد المؤجل */}
                 {newTransaction.type === 'deposit' && (
-                  <div className="md:col-span-4 bg-orange-50 border border-orange-200 p-3 rounded-lg flex flex-col md:flex-row gap-4 items-start md:items-center mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={isDeferred} onChange={(e) => setIsDeferred(e.target.checked)} className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500" />
-                      <span className="font-bold text-orange-800">تعيين كرصيد مؤجل</span>
+                  <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${isDeferred ? 'bg-orange-50 border-orange-300 shadow-sm' : 'bg-white border-dashed border-gray-300 hover:border-orange-200'}`}>
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <input type="checkbox" checked={isDeferred} onChange={(e) => setIsDeferred(e.target.checked)} className="w-6 h-6 text-orange-600 rounded focus:ring-orange-500 border-gray-300 cursor-pointer" />
+                      <span className={`font-extrabold text-lg ${isDeferred ? 'text-orange-800' : 'text-gray-600'}`}>تعيين كرصيد مؤجل السداد</span>
                     </label>
                     
                     {isDeferred && (
-                      <div className="flex items-center gap-2 w-full md:w-auto">
-                        <span className="text-sm font-medium text-orange-700">مدة التأجيل:</span>
-                        <input type="number" value={deferSeconds} onChange={(e) => setDeferSeconds(e.target.value)} className="w-24 px-2 py-1 border border-orange-300 rounded text-center font-bold" placeholder="ثواني" />
-                        <span className="text-sm font-medium text-orange-700">ثانية</span>
+                      <div className="mt-5 pt-5 border-t border-orange-200 grid grid-cols-1 lg:grid-cols-3 gap-5 items-end">
+                        <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
+                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تحديد المهلة (أيام)</label>
+                          <div className="relative">
+                            <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full pl-10 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">يوم</span>
+                          </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
+                          <label className="block text-xs font-extrabold text-orange-800 mb-2 uppercase">تكرار التذكير كل</label>
+                          <div className="relative">
+                            <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full pl-12 pr-4 py-2.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-lg disabled:opacity-50 outline-none" />
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-orange-500 select-none">ساعات</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center h-[76px] bg-white px-4 rounded-lg border border-orange-100 shadow-sm">
+                          <label className="flex items-center gap-3 cursor-pointer w-full">
+                            <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-5 h-5 text-gray-600 rounded focus:ring-gray-500 cursor-pointer" />
+                            <span className="font-extrabold text-sm text-gray-700">إلغاء التذكير (لا يوجد)</span>
+                          </label>
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
                 
-                <div className="md:col-span-4 flex gap-2 mt-2">
-                  <button type="submit" disabled={isAdding} className="flex-1 md:flex-none bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
-                    {isAdding ? 'جاري التنفيذ...' : 'تنفيذ وحفظ'}
+                <div className="flex gap-3 pt-3 border-t border-gray-100 mt-2">
+                  <button type="submit" disabled={isAdding} className="flex-1 md:flex-none bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3.5 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                    {isAdding ? 'جاري التنفيذ...' : 'تنفيذ وحفظ الدفعة'}
                   </button>
-                  <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 md:flex-none bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition shadow-sm">
+                  <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 md:flex-none bg-white border-2 border-gray-200 text-gray-700 px-8 py-3.5 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all shadow-sm transform active:scale-[0.98]">
                     إلغاء
                   </button>
                 </div>
@@ -472,49 +511,49 @@ export default function UserTransactionsModal({
                 <table className="w-full text-right divide-y divide-gray-200 table-auto">
                   <thead>
                     <tr>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المبلغ</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">النوع</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">ملاحظة / حالة</th>
-                      <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المبلغ</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">النوع</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">ملاحظة / حالة</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {transactions.map((transaction, index) => {
-                      const { isDeferred, isPaid, seconds, actualNote } = parseNote(transaction.note, transaction.id);
+                      const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
                       
                       return (
                         <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-3 text-sm font-extrabold text-gray-400">{index + 1}</td>
-                          <td className="px-4 py-3 text-sm font-extrabold">
+                          <td className="px-4 py-4 text-sm font-extrabold text-gray-400">{index + 1}</td>
+                          <td className="px-4 py-4 text-sm font-extrabold">
                             <span className={transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}>
                               {Number(transaction.mony).toLocaleString()}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-4">
                             <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${
                               transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
                             }`}>
-                              {transaction.type === 'deposit' ? 'إيداع' : 'سحب'}
+                              {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm font-medium text-gray-600">
+                          <td className="px-4 py-4 text-sm font-medium text-gray-600">
                             <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
                             {isDeferred && (
-                              <div className="mt-1 text-[10px] text-orange-600 font-bold bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-200">
-                                مؤجل لـ {seconds} ثانية
+                              <div className="mt-1 text-[10px] text-orange-700 font-extrabold bg-orange-100 inline-block px-2 py-1 rounded border border-orange-200">
+                                ⏳ مؤجل لـ {days} أيام (تذكير كل {hours} سا)
                               </div>
                             )}
                           </td>
-                          <td className="px-4 py-3 flex gap-2 items-center">
+                          <td className="px-4 py-4 flex gap-2 items-center">
                             {isDeferred && (
                               <button onClick={() => handleMarkAsPaid(transaction.id)} className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
                                 رصيد مؤجل
                               </button>
                             )}
                             {isPaid && (
-                              <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1.5 rounded-lg font-bold border border-blue-200">
-                                مدفوع
+                              <span className="bg-blue-50 text-blue-800 text-xs px-3 py-1.5 rounded-lg font-bold border border-blue-200">
+                                ✓ مدفوع
                               </span>
                             )}
                             <button onClick={() => handleDeleteTransaction(transaction.id)} className="text-red-500 hover:text-white border border-red-500 hover:bg-red-500 px-3 py-1.5 rounded-lg transition shadow-sm text-xs font-bold">
@@ -529,48 +568,50 @@ export default function UserTransactionsModal({
               </div>
 
               {/* نسخة الموبايل - بطاقات احترافية */}
-              <div className="md:hidden flex flex-col gap-3">
+              <div className="md:hidden flex flex-col gap-4">
                 {transactions.map((transaction, index) => {
-                  const { isDeferred, isPaid, seconds, actualNote } = parseNote(transaction.note, transaction.id);
+                  const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
                   
                   return (
-                    <div key={`mob-${transaction.id}`} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-gray-400 font-bold text-xs bg-gray-50 px-2 py-1 rounded-md border border-gray-100">#{index + 1}</span>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                          {transaction.type === 'deposit' ? 'إيداع رصيد' : 'سحب رصيد'}
+                    <div key={`mob-${transaction.id}`} className={`bg-white p-5 rounded-2xl shadow-sm border relative overflow-hidden ${isDeferred ? 'border-orange-200' : 'border-gray-100'}`}>
+                      {isDeferred && <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-400"></div>}
+                      
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-gray-500 font-bold text-xs bg-gray-100 px-2.5 py-1 rounded-lg">#{index + 1}</span>
+                        <span className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                          {transaction.type === 'deposit' ? 'إيداع رصيد' : 'رصيد مسترد'}
                         </span>
                       </div>
                       
-                      <div className="text-center mb-4">
-                        <div className={`text-2xl font-extrabold ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className="text-center mb-5">
+                        <div className={`text-3xl font-extrabold tracking-tight ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
                           {Number(transaction.mony).toLocaleString()} <span className="text-sm font-bold text-gray-500">ل.س</span>
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
-                        <span className="text-gray-400 block text-[10px] font-bold mb-1">الملاحظة</span>
-                        <span className="font-medium text-gray-800 text-sm block">{actualNote}</span>
+                      <div className="bg-gray-50 rounded-xl p-3.5 mb-5 border border-gray-100">
+                        <span className="text-gray-400 block text-[10px] font-bold mb-1 uppercase tracking-wide">الملاحظة</span>
+                        <span className="font-medium text-gray-800 text-sm block leading-relaxed">{actualNote}</span>
                         {isDeferred && (
-                          <span className="mt-2 inline-block text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-200">
-                            مؤجل لمدة {seconds} ثانية
-                          </span>
+                          <div className="mt-3 inline-block text-[11px] font-extrabold text-orange-700 bg-orange-100 px-2.5 py-1.5 rounded-lg border border-orange-200">
+                            ⏳ مهلة: {days} أيام | تذكير: كل {hours} ساعة
+                          </div>
                         )}
                       </div>
 
                       <div className="flex gap-2">
                         {isDeferred && (
-                          <button onClick={() => handleMarkAsPaid(transaction.id)} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold shadow-sm transition">
-                            تحويل لمدفوع
+                          <button onClick={() => handleMarkAsPaid(transaction.id)} className="flex-1 bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white py-3 rounded-xl text-sm font-bold shadow-md transition transform active:scale-95">
+                            الضغط للتحويل لـ مدفوع
                           </button>
                         )}
                         {isPaid && (
-                          <div className="flex-1 bg-blue-50 text-blue-800 py-2.5 rounded-xl text-sm font-bold text-center border border-blue-200">
-                            رصيد مدفوع
+                          <div className="flex-1 bg-blue-50 text-blue-800 py-3 rounded-xl text-sm font-bold text-center border border-blue-200">
+                            ✓ رصيد مدفوع
                           </div>
                         )}
-                        <button onClick={() => handleDeleteTransaction(transaction.id)} className="flex-1 border-2 border-red-100 text-red-600 bg-white hover:bg-red-50 py-2.5 rounded-xl text-sm font-bold transition">
-                          حذف الدفعة
+                        <button onClick={() => handleDeleteTransaction(transaction.id)} className={`border-2 border-red-100 text-red-600 bg-white hover:bg-red-50 py-3 rounded-xl text-sm font-bold transition ${isDeferred ? 'w-[80px] shrink-0' : 'flex-1'}`}>
+                          حذف
                         </button>
                       </div>
                     </div>
@@ -582,14 +623,14 @@ export default function UserTransactionsModal({
         </div>
 
         {/* الفوتر */}
-        <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0">
+        <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none relative z-20">
           <button onClick={onClose} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition">
             إغلاق النافذة
           </button>
         </div>
       </div>
 
-      {/* الدرج الجانبي للمحذوفات (Side Drawer) */}
+      {/* الدرج الجانبي للمحذوفات */}
       <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="bg-red-50 p-5 md:p-6 border-b border-red-100 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
@@ -634,7 +675,7 @@ export default function UserTransactionsModal({
                       </span>
                     </div>
                     <span className={`text-[10px] md:text-xs font-bold px-2 py-1 rounded-lg border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                      {transaction.type === 'deposit' ? 'إيداع' : 'سحب'}
+                      {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
                     </span>
                   </div>
                 </div>
@@ -651,22 +692,22 @@ export default function UserTransactionsModal({
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[80]">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}></div>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10 m-4">
-            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-4">إرسال إشعار للطالب</h3>
+            <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-5 border-b pb-3">إرسال إشعار للطالب</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1">عنوان الإشعار</label>
-                <input type="text" value={quickNotification.title} onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold" />
+                <input type="text" value={quickNotification.title} onChange={(e) => setQuickNotification(prev => ({ ...prev, title: e.target.value }))} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold" />
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-bold text-gray-700 mb-1">محتوى الإشعار</label>
-                <textarea value={quickNotification.body} onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))} rows={5} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-sm leading-relaxed" />
+                <textarea value={quickNotification.body} onChange={(e) => setQuickNotification(prev => ({ ...prev, body: e.target.value }))} rows={6} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium text-sm leading-relaxed" />
               </div>
             </div>
-            <div className="flex flex-col-reverse md:flex-row justify-end mt-6 gap-2 md:gap-3">
-              <button onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })} className="w-full md:w-auto px-4 py-2.5 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold text-sm">
+            <div className="flex flex-col-reverse md:flex-row justify-end mt-6 gap-3">
+              <button onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })} className="w-full md:w-auto px-5 py-3 text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition font-bold text-sm">
                 تخطي الإرسال
               </button>
-              <button onClick={handleSendQuickNotification} disabled={isSendingNotif || !quickNotification.title || !quickNotification.body} className="w-full md:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-bold text-sm shadow-sm">
+              <button onClick={handleSendQuickNotification} disabled={isSendingNotif || !quickNotification.title || !quickNotification.body} className="w-full md:w-auto px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 font-bold text-sm shadow-sm flex items-center justify-center gap-2">
                 {isSendingNotif ? 'جاري الإرسال...' : 'إرسال الإشعار'}
               </button>
             </div>
