@@ -20,7 +20,6 @@ type UserSubscriptionsModalProps = {
   userName: string;
 };
 
-// أنواع الاشتراك المتاحة
 const SUBSCRIPTION_TYPES = ['مقرر', 'اسئلة', 'صوت'] as const;
 type SubscriptionType = typeof SUBSCRIPTION_TYPES[number];
 
@@ -28,9 +27,9 @@ type MaterialOption = {
   id: number;
   material_name: string;
   material_code: string;
-  unit_price: string;    // سعر المقرر
-  quizall_price: string; // سعر الاسئلة
-  voice_price: string;   // سعر الصوت
+  unit_price: string;
+  quizall_price: string;
+  voice_price: string;
 };
 
 export default function UserSubscriptionsModal({
@@ -41,19 +40,19 @@ export default function UserSubscriptionsModal({
 }: UserSubscriptionsModalProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [deletedSubscriptions, setDeletedSubscriptions] = useState<Subscription[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
-  // حالة الإشعار السريع للإضافة
   const [quickNotification, setQuickNotification] = useState({
     isOpen: false,
     title: '',
     body: ''
   });
 
-  // حالة النموذج الجديد
   const [newSubscription, setNewSubscription] = useState({
     materialid: '',
     materialName: '',
@@ -104,7 +103,6 @@ export default function UserSubscriptionsModal({
     }
   };
 
-  // تحديث السعر تلقائياً عند تغيير المادة أو النوع
   useEffect(() => {
     if (newSubscription.materialid && newSubscription.type1) {
       const material = availableMaterials.find(m => m.id === parseInt(newSubscription.materialid));
@@ -197,21 +195,19 @@ export default function UserSubscriptionsModal({
         throw new Error(result.message || 'حدث خطأ أثناء الإضافة');
       }
 
-      // حالة حفظ اسم المادة والنوع لاستخدامها في الإشعار
       const savedMaterialName = newSubscription.materialName;
       const savedType = newSubscription.type1;
 
-      // إعادة تحميل الاشتراكات
       await fetchSubscriptions();
       setShowAddForm(false);
       resetForm();
       setError('');
 
-setQuickNotification({
-  isOpen: true,
-  title: 'إضافة اشتراك جديد',
-  body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\n• نوع الخدمة: \n• القيمة: \nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
-});
+      setQuickNotification({
+        isOpen: true,
+        title: 'إضافة اشتراك جديد',
+        body: `عزيزي الطالب،\nتمت إضافة "${savedMaterialName}" إلى سلة مشترياتك بنجاح.\n• نوع الاشتراك: ${savedType}.\nمع خالص أمنياتنا لكم بالتفوق والنجاح.`
+      });
 
     } catch (err) {
       console.error('Error adding subscription:', err);
@@ -224,7 +220,6 @@ setQuickNotification({
       return;
     }
 
-    // الاحتفاظ بنسخة من الاشتراك قبل حذفه لتخزينه في قائمة المحذوفات
     const subToDelete = subscriptions.find(sub => sub.id === id);
 
     try {
@@ -244,12 +239,10 @@ setQuickNotification({
         throw new Error(result.error || result.message || 'حدث خطأ أثناء الحذف');
       }
 
-      // نقل الاشتراك إلى قائمة المحذوفات محلياً
       if (subToDelete) {
         setDeletedSubscriptions(prev => [...prev, subToDelete]);
       }
 
-      // إعادة تحميل الاشتراكات الفعالة
       await fetchSubscriptions();
       setError('');
 
@@ -269,7 +262,7 @@ setQuickNotification({
         },
         cache: 'no-store' as RequestCache,
         body: JSON.stringify({
-          subscription_id: id, // الـ PHP يتوقع subscription_id وليس id
+          subscription_id: id,
           type1: newType
         })
       });
@@ -280,7 +273,6 @@ setQuickNotification({
         throw new Error(result.error || result.message || 'حدث خطأ أثناء التحديث');
       }
 
-      // إعادة تحميل الاشتراكات
       await fetchSubscriptions();
       setEditingSubscription(null);
       setError('');
@@ -371,56 +363,72 @@ setQuickNotification({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
-       {/* الهيدر */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4">
+      {/* التعتيم الخاص بالنافذة الأساسية */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
+        
+        {/* الهيدر */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 rounded-t-xl shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">اشتراكات المستخدم</h2>
-            <p className="text-gray-600 mt-1">
+            <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">اشتراكات المستخدم</h2>
+            <p className="text-gray-600 mt-1 font-medium">
               {userName} - ID: {userId}
             </p>
           </div>
-          
-          {/* الإحصائيات (تم نقلها للأعلى) */}
+
+          {/* الإحصائيات العلوية */}
           {!isLoading && !error && subscriptions.length > 0 && (
-            <div className="flex gap-4 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-sm">
+            <div className="flex gap-4 bg-white px-5 py-3 rounded-xl border border-gray-200 shadow-sm text-sm">
               <div className="flex flex-col items-center">
-                <span className="font-medium text-blue-800">المواد</span>
-                <span className="font-bold text-blue-900">{subscriptions.length}</span>
+                <span className="font-bold text-gray-500 uppercase text-xs">المواد</span>
+                <span className="font-extrabold text-gray-900 text-lg">{subscriptions.length}</span>
               </div>
-              <div className="w-px bg-blue-200"></div>
+              <div className="w-px bg-gray-200"></div>
               <div className="flex flex-col items-center">
-                <span className="font-medium text-blue-800">الإجمالي (ل.س)</span>
-                <span className="font-bold text-blue-900">
+                <span className="font-bold text-gray-500 uppercase text-xs">الإجمالي (ل.س)</span>
+                <span className="font-extrabold text-green-600 text-lg">
                   {formatPrice(subscriptions.reduce((total, sub) => total + (parseFloat(sub.price1) || 0), 0).toString())}
                 </span>
               </div>
-              <div className="w-px bg-blue-200"></div>
+              <div className="w-px bg-gray-200"></div>
               <div className="flex flex-col items-center">
-                <span className="font-medium text-blue-800">الإجمالي ($)</span>
-                <span className="font-bold text-blue-900">
+                <span className="font-bold text-gray-500 uppercase text-xs">الإجمالي ($)</span>
+                <span className="font-extrabold text-blue-600 text-lg">
                   {formatDolar(subscriptions.reduce((total, sub) => total + (parseFloat(sub.dolar) || 0), 0).toString())}
                 </span>
               </div>
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              سجل المحذوفات
+              {deletedSubscriptions.length > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full shadow-sm">{deletedSubscriptions.length}</span>
+              )}
+            </button>
             <button
               onClick={() => {
                 setShowAddForm(true);
                 fetchAvailableMaterials();
               }}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center"
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
               </svg>
               إضافة اشتراك
             </button>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition"
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -429,176 +437,179 @@ setQuickNotification({
           </div>
         </div>
 
-        {/* نموذج الإضافة */}
-        {showAddForm && (
-          <div className="p-6 border-b border-gray-200 bg-blue-50">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">إضافة اشتراك جديد</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
-                <input
-                  type="text"
-                  value={materialSearch || newSubscription.materialName}
-                  onChange={(e) => {
-                    setMaterialSearch(e.target.value);
-                    if (newSubscription.materialid) {
-                      setNewSubscription(prev => ({ ...prev, materialid: '', materialName: '' }));
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ابحث عن مادة..."
-                />
-                {(materialSearch && !newSubscription.materialid) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {isMaterialsLoading ? (
-                      <div className="p-2 text-sm text-gray-500">جاري التحميل...</div>
-                    ) : availableMaterials.filter(m =>
-                      m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
-                      m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
-                    ).length === 0 ? (
-                      <div className="p-2 text-sm text-gray-500">لا توجد نتائج</div>
-                    ) : (
-                      availableMaterials.filter(m =>
+        {/* محتوى النافذة (قابل للتمرير) */}
+        <div className="p-6 overflow-y-auto flex-1">
+          
+          {/* نموذج الإضافة */}
+          {showAddForm && (
+            <div className="mb-6 p-6 border border-blue-200 rounded-xl bg-blue-50/50 shadow-sm">
+              <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                </svg>
+                تفاصيل الاشتراك الجديد
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <label className="block text-sm font-bold text-gray-700 mb-1">المادة</label>
+                  <input
+                    type="text"
+                    value={materialSearch || newSubscription.materialName}
+                    onChange={(e) => {
+                      setMaterialSearch(e.target.value);
+                      if (newSubscription.materialid) {
+                        setNewSubscription(prev => ({ ...prev, materialid: '', materialName: '' }));
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                    placeholder="ابحث عن مادة..."
+                  />
+                  {(materialSearch && !newSubscription.materialid) && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {isMaterialsLoading ? (
+                        <div className="p-2 text-sm text-gray-500 font-medium">جاري التحميل...</div>
+                      ) : availableMaterials.filter(m =>
                         m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
                         m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
-                      ).slice(0, 10).map(material => (
-                        <div
-                          key={material.id}
-                          onClick={() => {
-                            setNewSubscription({
-                              ...newSubscription,
-                              materialid: material.id.toString(),
-                              materialName: material.material_name
-                            });
-                            setMaterialSearch(material.material_name);
-                          }}
-                          className="p-2 hover:bg-blue-50 cursor-pointer text-sm border-b border-gray-100 last:border-0"
-                        >
-                          <div className="font-medium">{material.material_name}</div>
-                          <div className="text-xs text-gray-500">{material.material_code}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+                      ).length === 0 ? (
+                        <div className="p-2 text-sm text-gray-500 font-medium">لا توجد نتائج</div>
+                      ) : (
+                        availableMaterials.filter(m =>
+                          m.material_name.toLowerCase().includes(materialSearch.toLowerCase()) ||
+                          m.material_code.toLowerCase().includes(materialSearch.toLowerCase())
+                        ).slice(0, 10).map(material => (
+                          <div
+                            key={material.id}
+                            onClick={() => {
+                              setNewSubscription({
+                                ...newSubscription,
+                                materialid: material.id.toString(),
+                                materialName: material.material_name
+                              });
+                              setMaterialSearch(material.material_name);
+                            }}
+                            className="p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-0 transition"
+                          >
+                            <div className="font-bold text-sm text-gray-800">{material.material_name}</div>
+                            <div className="text-xs text-gray-500 font-medium mt-0.5">{material.material_code}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">نوع الاشتراك</label>
+                  <select
+                    value={newSubscription.type1}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, type1: e.target.value as SubscriptionType })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium cursor-pointer"
+                  >
+                    <option value="">اختر النوع</option>
+                    {SUBSCRIPTION_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">السعر (ل.س)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newSubscription.price1}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, price1: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800"
+                    placeholder="السعر بالليرة"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">السعر (دولار)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newSubscription.dolar}
+                    onChange={(e) => setNewSubscription({ ...newSubscription, dolar: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800"
+                    placeholder="السعر بالدولار"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">نوع الاشتراك</label>
-                <select
-                  value={newSubscription.type1}
-                  onChange={(e) => setNewSubscription({ ...newSubscription, type1: e.target.value as SubscriptionType })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={handleAddSubscription}
+                  className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition shadow-sm"
                 >
-                  <option value="">اختر النوع</option>
-                  {SUBSCRIPTION_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">السعر (ل.س)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newSubscription.price1}
-                  onChange={(e) => setNewSubscription({ ...newSubscription, price1: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-bold text-blue-800"
-                  placeholder="السعر بالليرة"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">السعر (دولار)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newSubscription.dolar}
-                  onChange={(e) => setNewSubscription({ ...newSubscription, dolar: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="السعر بالدولار"
-                />
+                  حفظ الاشتراك
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    resetForm();
+                  }}
+                  className="bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition shadow-sm"
+                >
+                  إلغاء
+                </button>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={handleAddSubscription}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                حفظ
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  resetForm();
-                }}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* المحتوى */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {/* محتوى الاشتراكات */}
           {isLoading ? (
-            // حالة التحميل
-            <div className="flex justify-center items-center py-12">
+            <div className="flex justify-center items-center py-16">
               <div className="text-center">
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="mt-4 text-lg font-medium text-gray-700">جاري تحميل الاشتراكات...</p>
+                <p className="mt-4 text-lg font-bold text-gray-700">جاري تحميل الاشتراكات...</p>
               </div>
             </div>
           ) : error ? (
-            // حالة الخطأ
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-              <div className="text-red-600 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center shadow-sm">
+              <div className="text-red-600 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <p className="text-red-800 font-medium">{error}</p>
+              <p className="text-red-800 font-bold text-lg mb-4">{error}</p>
               <button
                 onClick={fetchSubscriptions}
-                className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                className="bg-red-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-red-700 transition shadow-sm"
               >
                 إعادة المحاولة
               </button>
             </div>
           ) : subscriptions.length === 0 ? (
-            // لا توجد اشتراكات
-            <div className="text-center py-12">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-center py-20 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900">لا توجد اشتراكات</h3>
-              <p className="text-gray-500 mt-1">لم يتم العثور على أي اشتراكات لهذا المستخدم</p>
+              <h3 className="text-xl font-extrabold text-gray-800">لا توجد اشتراكات</h3>
+              <p className="text-gray-500 mt-2 font-medium">لم يتم العثور على أي اشتراكات فعالة لهذا المستخدم</p>
             </div>
           ) : (
-            // جدول الاشتراكات
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-500">
+            <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+              <table className="w-full text-right divide-y divide-gray-200 table-auto">
+                <thead>
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المادة</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">نوع الاشتراك</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">السعر (ل.س)</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">السعر (دولار)</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">تاريخ الإشتراك</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المادة</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">نوع الاشتراك</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">السعر (ل.س)</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">السعر (دولار)</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">التاريخ</th>
+                    <th className="px-4 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {subscriptions.map((subscription, index) => (
                     <tr key={subscription.id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-gray-400">
                         {index + 1}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{subscription.material_name}</div>
-                        <div className="text-sm text-gray-500">ID: {subscription.materialid}</div>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-bold text-gray-900">{subscription.material_name}</div>
+                        <div className="text-xs text-gray-500 font-medium mt-0.5">ID: {subscription.materialid}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         {editingSubscription?.id === subscription.id ? (
                           <select
                             value={editingSubscription.type1}
@@ -606,7 +617,7 @@ setQuickNotification({
                               ...editingSubscription,
                               type1: e.target.value as SubscriptionType
                             })}
-                            className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                            className="px-2 py-1.5 text-xs font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 cursor-pointer"
                             onBlur={() => handleUpdateSubscription(subscription.id, editingSubscription.type1 as SubscriptionType)}
                             autoFocus
                           >
@@ -616,31 +627,32 @@ setQuickNotification({
                           </select>
                         ) : (
                           <span
-                            className="cursor-pointer hover:text-blue-600 hover:underline"
+                            className="cursor-pointer text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition inline-block min-w-[70px] text-center border border-blue-100"
                             onClick={() => setEditingSubscription(subscription)}
                           >
                             {subscription.type1 || '-'}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-green-600">
                         {formatPrice(subscription.price1)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-extrabold text-blue-600">
                         {formatDolar(subscription.dolar)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-600">
                         {formatDate(subscription.created_at)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleDeleteSubscription(subscription.id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition"
+                          className="text-red-500 hover:text-white border border-red-500 hover:bg-red-500 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1"
                           title="حذف الاشتراك"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
+                          حذف
                         </button>
                       </td>
                     </tr>
@@ -649,63 +661,106 @@ setQuickNotification({
               </table>
             </div>
           )}
-
-          {/* الاشتراكات المحذوفة */}
-          {deletedSubscriptions.length > 0 && (
-            <div className="mt-8 border-t-2 border-red-200 pt-6">
-              <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                الاشتراكات المحذوفة (مؤرشفة)
-              </h3>
-              <div className="overflow-x-auto rounded-lg border border-red-200">
-                <table className="min-w-full divide-y divide-red-200">
-                  <thead className="bg-red-50">
-                    <tr>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">#</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">المادة</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">نوع الاشتراك</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">السعر (ل.س)</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">السعر (دولار)</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-red-800 uppercase tracking-wider">تاريخ الإشتراك</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-red-100">
-                    {deletedSubscriptions.map((subscription, index) => (
-                      <tr key={`deleted-${subscription.id}-${index}`} className="hover:bg-red-50 transition opacity-75">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900 line-through">{subscription.material_name}</div>
-                          <div className="text-sm text-gray-500">ID: {subscription.materialid}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subscription.type1 || '-'}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{formatPrice(subscription.price1)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">{formatDolar(subscription.dolar)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(subscription.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* الفوتر */}
-        <div className="flex justify-end p-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex justify-end p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl shrink-0">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
+            className="px-6 py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition"
           >
             إغلاق
           </button>
         </div>
       </div>
 
+      {/* الدرج الجانبي للمحذوفات (Side Drawer) */}
+      <div 
+        className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <div className="bg-red-50 p-6 border-b border-red-100 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-100 p-2 rounded-lg text-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-red-900 tracking-tight">سجل المحذوفات</h3>
+              <p className="text-xs font-bold text-red-600 mt-1">الاشتراكات المحذوفة للقراءة فقط</p>
+            </div>
+          </div>
+          <button onClick={() => setIsDrawerOpen(false)} className="bg-white text-gray-500 hover:text-gray-800 p-2 rounded-xl shadow-sm border border-gray-200 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+          <label className="block text-xs font-bold text-gray-500 mb-2 uppercase">تصفية حسب الفصل (ميزة مستقبلية)</label>
+          <select 
+            value={selectedSemester} 
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 focus:ring-red-200 outline-none transition shadow-sm cursor-pointer"
+          >
+            <option value="">جميع الفصول</option>
+            <option value="F23">F23 (خريف 2023)</option>
+            <option value="S24">S24 (ربيع 2024)</option>
+            <option value="F24">F24 (خريف 2024)</option>
+          </select>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
+          {deletedSubscriptions.length === 0 ? (
+            <div className="text-center py-16">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <p className="text-gray-500 font-bold">سجل المحذوفات فارغ</p>
+            </div>
+          ) : (
+            deletedSubscriptions.map((subscription, index) => (
+              <div key={`del-${subscription.id}-${index}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-1.5 h-full bg-red-400"></div>
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-bold text-gray-900 line-through decoration-red-400 decoration-2">{subscription.material_name}</h4>
+                    <span className="text-xs font-medium text-gray-400 mt-1 inline-block">كود المادة: {subscription.materialid}</span>
+                  </div>
+                  <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-lg border border-gray-200">
+                    {subscription.type1 || '-'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-gray-100">
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-gray-400 mb-1">السعر (ل.س)</span>
+                    <span className="text-sm font-extrabold text-gray-600">{formatPrice(subscription.price1)}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] uppercase font-bold text-gray-400 mb-1">تاريخ الاشتراك</span>
+                    <span className="text-sm font-bold text-gray-600">{formatDate(subscription.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      
+      {/* تعتيم الخلفية للدرج الجانبي */}
+      {isDrawerOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[65] transition-opacity"
+          onClick={() => setIsDrawerOpen(false)}
+        ></div>
+      )}
+
       {quickNotification.isOpen && (
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-[70]">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[80]">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}></div>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10">
             <h3 className="text-xl font-bold text-gray-800 mb-4">إرسال إشعار للطالب</h3>
             
             <div className="space-y-4">
@@ -730,17 +785,17 @@ setQuickNotification({
               </div>
             </div>
             
-            <div className="flex justify-end mt-6 space-x-3">
+            <div className="flex justify-end mt-6 space-x-3 gap-2">
               <button
                 onClick={() => setQuickNotification({ isOpen: false, title: '', body: '' })}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold"
               >
                 تخطي / إلغاء
               </button>
               <button
                 onClick={handleSendQuickNotification}
                 disabled={isLoading || !quickNotification.title || !quickNotification.body}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-bold"
               >
                 {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
               </button>
