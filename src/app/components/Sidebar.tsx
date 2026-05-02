@@ -59,13 +59,13 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           { name: 'الجدوى المالية', href: '/finance', roles: ['admin'] }
         ]
       },
-      {
+     {
         id: 'term_management',
         name: 'إدارة الفصل',
         items: [
-          { name: 'الفصول الدراسية', href: '/terms', roles: ['admin', 'editor'] },
-          { name: 'الجدول الدراسي', href: '/schedule', roles: ['admin', 'editor'] },
-          { name: 'توزيع الطلاب', href: '/student_dist', roles: ['admin', 'editor'] },
+          { name: 'إضافة فصل جديد', href: '/add_term', roles: ['admin', 'editor'] },
+          { name: 'إنهاء الفصل الحالي', href: '/end_term', roles: ['admin', 'editor'] },
+          { name: 'فصولي الدراسية', href: '/my_terms', roles: ['admin', 'editor'] },
         ]
       },
       {
