@@ -280,6 +280,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   {activeSection?.id === 'education' && 'إدارة المقررات والمحتوى التعليمي'}
                   {activeSection?.id === 'printing' && 'خدمات الطباعة والتوصيل'}
                   {activeSection?.id === 'financial' && 'إدارة المستخدمين والشؤون المالية'}
+                  {activeSection?.id === 'term_management' && 'إدارة الفصول والدورات الدراسية'}
                   {activeSection?.id === 'administration' && 'إعدادات النظام والتحكم'}
                 </h2>
                 <div className="w-16 h-1 rounded-full bg-[#c4a900] mb-6" />
@@ -288,6 +289,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                   {activeSection?.id === 'education' && 'من هنا تتحكم في كامل المحتوى التعليمي، من إضافة المواد الدراسية وأنواع الاشتراكات إلى استخراج الأسئلة وإدارة الأصوات والاستفسارات.'}
                   {activeSection?.id === 'printing' && 'تتيح لك هذه الواجهة الإشراف على طلبات الطباعة وعمليات التوصيل والشحن ومتابعة الفواتير الصادرة بشكل منظم.'}
                   {activeSection?.id === 'financial' && 'من هذا القسم يمكنك استعراض بيانات المستخدمين، ومتابعة الدفعات المالية، ومراجعة الحسابات وتوثيقها، وتحليل الجدوى المالية للتطبيق.'}
+                  {activeSection?.id === 'term_management' && 'من هنا يمكنك تنظيم الفصول الدراسية الحالية، ومتابعة الجداول الزمنية، وتوزيع الطلاب على المجموعات المختلفة.'}
                   {activeSection?.id === 'administration' && 'هنا تجد أدوات إدارة النظام بالكامل، من ضبط الإعدادات العامة إلى إدارة صلاحيات لوحة التحكم ومتابعة الدردشة المباشرة مع المستخدمين.'}
                 </p>
                 <p className="text-gray-400 text-sm mt-6">← اختر من القائمة الجانبية للبدء</p>
