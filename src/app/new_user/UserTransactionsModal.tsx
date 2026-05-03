@@ -282,10 +282,10 @@ export default function UserTransactionsModal({
       if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
       if (!result.success) throw new Error(result.error || 'فشل في تحديث حالة الدفع');
 
-      await fetchData();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'حدث خطأ أثناء التحديث');
-      await fetchData(); // استعادة في حال الفشل
+      // استعادة الواجهة في حال الفشل
+      setPaidTransactions(prev => prev.filter(id => id !== transactionId));
     }
   };
 
