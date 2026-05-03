@@ -580,6 +580,8 @@ export default function UserTransactionsModal({
                       );
                     })}
                   </tbody>
+                </table>
+              </div>
 
               {/* نسخة الموبايل - بطاقات احترافية */}
               <div className="md:hidden flex flex-col gap-4">
