@@ -528,7 +528,7 @@ export default function UserTransactionsModal({
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {transactions.map((transaction, index) => {
-                      const { isDeferred, isPaid, secDuration, actualNote } = parseNote(transaction.note, transaction.id);
+                      const { isDeferred, isPaid, secDuration, secReminder, actualNote } = parseNote(transaction.note, transaction.id);
                       return (
                         <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
                           <td className="px-4 py-4 text-sm font-extrabold text-gray-400">{index + 1}</td>
@@ -582,7 +582,7 @@ export default function UserTransactionsModal({
               {/* نسخة الموبايل */}
               <div className="md:hidden flex flex-col gap-4">
                 {transactions.map((transaction, index) => {
-                  const { isDeferred, isPaid, secDuration, actualNote } = parseNote(transaction.note, transaction.id);
+                  const { isDeferred, isPaid, secDuration, secReminder, actualNote } = parseNote(transaction.note, transaction.id);
                   return (
                     <div key={`mob-${transaction.id}`} className={`bg-white p-5 rounded-2xl shadow-sm border relative overflow-hidden ${isDeferred ? 'border-orange-200' : 'border-gray-100'}`}>
                       {isDeferred && <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-400"></div>}
