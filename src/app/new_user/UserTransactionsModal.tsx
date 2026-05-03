@@ -448,14 +448,47 @@ export default function UserTransactionsModal({
                     </div>
                     {/* زر تبديل المؤجل - يظهر فقط عند الإيداع */}
                     {newTransaction.type === 'deposit' && (
-                      <div
-                        onClick={() => setIsDeferred(!isDeferred)}
-                        className={`flex items-center gap-3 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all duration-300 select-none ${isDeferred ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-orange-300'}`}
-                      >
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDeferred ? 'bg-white border-white' : 'border-gray-400'}`}>
-                          {isDeferred && <div className="w-3 h-3 rounded-full bg-orange-500"></div>}
+                      <div className="flex flex-col gap-2">
+                        <div
+                          onClick={() => setIsDeferred(!isDeferred)}
+                          className={`flex items-center gap-3 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all duration-300 select-none ${isDeferred ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-orange-300'}`}
+                        >
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDeferred ? 'bg-white border-white' : 'border-gray-400'}`}>
+                            {isDeferred && <div className="w-3 h-3 rounded-full bg-orange-500"></div>}
+                          </div>
+                          <span className="font-extrabold text-sm whitespace-nowrap">رصيد مؤجل</span>
                         </div>
-                        <span className="font-extrabold text-sm whitespace-nowrap">رصيد مؤجل</span>
+
+                        {/* إعدادات المؤجل بجانب الزر مباشرة */}
+                        {isDeferred && (
+                          <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-xl border border-orange-200 shadow-sm">
+                            <p className="text-[10px] font-extrabold text-orange-700 mb-2 uppercase tracking-wide">⚙️ إعدادات المؤجل</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm">
+                                <label className="block text-[10px] font-extrabold text-orange-600 mb-1 uppercase">المهلة</label>
+                                <div className="flex items-center gap-1">
+                                  <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full py-1.5 px-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-400 font-extrabold text-orange-900 text-sm disabled:opacity-40 outline-none text-center" />
+                                  <span className="text-xs font-bold text-orange-500 shrink-0">يوم</span>
+                                </div>
+                              </div>
+                              <div className="bg-white rounded-xl p-2 border border-orange-100 shadow-sm">
+                                <label className="block text-[10px] font-extrabold text-orange-600 mb-1 uppercase">التذكير كل</label>
+                                <div className="flex items-center gap-1">
+                                  <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full py-1.5 px-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-400 font-extrabold text-orange-900 text-sm disabled:opacity-40 outline-none text-center" />
+                                  <span className="text-xs font-bold text-orange-500 shrink-0">سا</span>
+                                </div>
+                              </div>
+                              <div className="col-span-2 bg-white rounded-xl p-2 border border-orange-100 shadow-sm">
+                                <div onClick={() => setNoReminder(!noReminder)} className="flex items-center gap-3 cursor-pointer select-none">
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${noReminder ? 'bg-gray-500 border-gray-500' : 'border-gray-300'}`}>
+                                    {noReminder && <div className="w-2.5 h-2.5 rounded-full bg-white"></div>}
+                                  </div>
+                                  <span className="font-extrabold text-xs text-gray-700">إلغاء التذكير التلقائي</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -466,9 +499,9 @@ export default function UserTransactionsModal({
                     <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-inner resize-none outline-none" placeholder="اكتب ملاحظات تفصيلية حول هذه الدفعة هنا..." />
                   </div>
 
-                  {/* إعدادات الرصيد المؤجل */}
+                  {/* إعدادات الرصيد المؤجل - القسم السفلي محذوف وأصبح بجانب الزر */}
                   {newTransaction.type === 'deposit' && isDeferred && (
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 shadow-sm">
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 shadow-sm hidden">
                       <p className="text-xs font-extrabold text-orange-700 mb-3 uppercase tracking-wide">⚙️ إعدادات الرصيد المؤجل</p>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {/* المهلة */}
