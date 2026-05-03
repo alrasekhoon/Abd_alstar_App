@@ -581,7 +581,7 @@ export default function UserTransactionsModal({
                           </td>
                         </tr>
                       );
-                    })}
+                    )}
                 </table>
               </div>
 
