@@ -433,31 +433,30 @@ export default function UserTransactionsModal({
                   )}
                 </div>
 
-                {/* إعدادات الرصيد المؤجل في صف واحد */}
-                {paymentMethod === 'deferred' && newTransaction.type === 'deposit' && (
-                  <div className="p-5 rounded-xl bg-orange-50 border border-orange-200 shadow-sm flex flex-col md:flex-row gap-4 items-center animate-in fade-in slide-in-from-top-4">
-                    <span className="text-orange-800 font-extrabold text-sm whitespace-nowrap hidden md:block">إعدادات المؤجل (ثواني للتجريب):</span>
-                    
-                    <div className="w-full flex-1 flex flex-col md:flex-row gap-3">
-                      <div className="flex-1 bg-white p-2.5 rounded-lg border border-orange-100 flex items-center justify-between">
-                        <label className="text-[10px] font-extrabold text-orange-800 uppercase px-2 w-1/2">المهلة</label>
-                        <input type="number" min="1" value={deferDurationSec} onChange={(e) => setDeferDurationSec(e.target.value)} disabled={noReminder} className="w-1/2 px-2 py-1.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-sm disabled:opacity-50 outline-none text-center" />
-                      </div>
-                      
-                      <div className="flex-1 bg-white p-2.5 rounded-lg border border-orange-100 flex items-center justify-between">
-                        <label className="text-[10px] font-extrabold text-orange-800 uppercase px-2 w-1/2">تكرار الإشعار كل</label>
-                        <input type="number" min="1" value={deferReminderSec} onChange={(e) => setDeferReminderSec(e.target.value)} disabled={noReminder} className="w-1/2 px-2 py-1.5 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-sm disabled:opacity-50 outline-none text-center" />
-                      </div>
+               {/* إعدادات الرصيد المؤجل (صف واحد دائماً) */}
+                {paymentMethod === 'deferred' && newTransaction.type === 'deposit' && (
+                  <div className="p-4 rounded-xl bg-orange-50 border border-orange-200 shadow-sm flex flex-row items-center gap-3 overflow-x-auto animate-in fade-in slide-in-from-top-4">
+                    <span className="text-orange-800 font-extrabold text-xs whitespace-nowrap shrink-0">إعدادات المؤجل (ثواني للتجريب):</span>
+                    
+                    <div className="flex bg-white rounded-lg border border-orange-100 shadow-sm shrink-0 overflow-hidden">
+                      <div className="flex items-center px-3 py-1.5 border-l border-orange-100 bg-orange-50/50">
+                        <label className="text-[10px] font-extrabold text-orange-800 uppercase ml-2 whitespace-nowrap">المهلة</label>
+                        <input type="number" min="1" value={deferDurationSec} onChange={(e) => setDeferDurationSec(e.target.value)} disabled={noReminder} className="w-16 px-1 py-1 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-xs disabled:opacity-50 outline-none text-center" />
+                      </div>
+                      <div className="flex items-center px-3 py-1.5">
+                        <label className="text-[10px] font-extrabold text-orange-800 uppercase ml-2 whitespace-nowrap">تكرار الإشعار كل</label>
+                        <input type="number" min="1" value={deferReminderSec} onChange={(e) => setDeferReminderSec(e.target.value)} disabled={noReminder} className="w-16 px-1 py-1 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-xs disabled:opacity-50 outline-none text-center" />
+                      </div>
+                    </div>
 
-                      <div className="flex-1 bg-white px-3 py-2 rounded-lg border border-orange-100 flex items-center justify-center">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-4 h-4 text-gray-600 rounded focus:ring-gray-500 cursor-pointer" />
-                          <span className="font-extrabold text-xs text-gray-700">إلغاء التذكير</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    <div className="flex items-center px-3 py-1.5 bg-white rounded-lg border border-orange-100 shadow-sm shrink-0 h-[38px]">
+                      <label className="flex items-center gap-1.5 cursor-pointer m-0">
+                        <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-3.5 h-3.5 text-gray-600 rounded cursor-pointer" />
+                        <span className="font-extrabold text-[10px] text-gray-700 whitespace-nowrap">إلغاء التذكير</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
 
                 {/* الملاحظات في الأسفل */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -645,15 +644,15 @@ export default function UserTransactionsModal({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
-          {deletedTransactions.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-gray-400 font-bold text-sm">سجل المحذوفات فارغ</p>
-            </div>
-          ) : (
-            deletedTransactions.map((transaction, index) => {
-              const { actualNote } = parseNote(transaction.note, transaction.id);
-              return (
-                <div key={`del-${transaction.id}-${index}`} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
+          {(!deletedTransactions || deletedTransactions.length === 0) ? (
+            <div className="text-center py-16">
+              <p className="text-gray-400 font-bold text-sm">سجل المحذوفات فارغ</p>
+            </div>
+          ) : (
+            deletedTransactions.map((transaction, index) => {
+              const { actualNote } = parseNote(transaction.note, transaction.id);
+              return (
+                <div key={`del-${transaction.id}-${index}`} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-1.5 h-full bg-red-400"></div>
                   <div className="flex justify-between items-start mb-2">
                     <div>
