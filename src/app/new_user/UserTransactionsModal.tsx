@@ -226,45 +226,39 @@ export default function UserTransactionsModal({
   };
 
   const handleDeleteTransaction = async (transactionId: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الدفعة؟ (سيتم أرشفتها في سجل المحذوفات)')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه الدفعة؟ (سيتم أرشفتها في سجل المحذوفات)')) return;
 
-    try {
-      setError('');
-      // إضافة ?id= بالـ URL لتتوافق مع $_GET['id'] في كود PHP
-      const response = await fetch(`${API_URL}?id=${transactionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: transactionId, status: 'deleted' })
-      });
+    try {
+      setError('');
+      // إضافة ?id= للرابط لحل مشكلة خطأ 400
+      const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: transactionId, status: 'deleted' })
+      });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
-      if (!result.success) throw new Error(result.error || 'فشل في حذف الدفعة');
+      const result = await response.json();
+      if (!response.ok) throw new Error(`خطأ: ${response.status}`);
+      if (result.success) await fetchData();
+    } catch (err) {
+      setError('فشل الحذف: تأكد من تحديث كود PHP السيرفر');
+    }
+  };
 
-      await fetchData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
-    }
-  };
-
-  const handleMarkAsPaid = async (transactionId: number) => {
-    try {
-      setError('');
-      // إضافة ?id= بالـ URL لتتوافق مع $_GET['id'] في كود PHP
-      const response = await fetch(`${API_URL}?id=${transactionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: transactionId, status: 'paid' })
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(`خطأ في السيرفر: ${response.status}`);
-      if (!result.success) throw new Error(result.error || 'فشل في تحديث حالة الدفع');
-
-      await fetchData();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'حدث خطأ أثناء التحديث');
-    }
-  };
+  const handleMarkAsPaid = async (transactionId: number) => {
+    try {
+      setError('');
+      const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: transactionId, status: 'paid' })
+      });
+      const result = await response.json();
+      if (result.success) await fetchData();
+    } catch (e) {
+      setError('فشل تحديث الحالة');
+    }
+  };
 
   const handleSendQuickNotification = async () => {
     try {
