@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-type Transaction = {
+type Transaction = { 
   id: number;
   user_id: number;
   mony: string;
