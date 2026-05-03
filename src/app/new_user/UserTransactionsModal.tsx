@@ -410,8 +410,8 @@ export default function UserTransactionsModal({
 
           {/* نموذج الإضافة - Overlay عائم فوق الجدول */}
           {showAddForm && (
-            <div className="absolute inset-0 z-30 flex items-start justify-center pt-4 px-4">
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm rounded-xl" onClick={() => setShowAddForm(false)}></div>
+            <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 px-4">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowAddForm(false)}></div>
               <div className="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-blue-200 overflow-hidden">
                 <div className="flex items-center gap-3 px-6 py-4 border-b border-blue-100 bg-blue-50">
                   <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
