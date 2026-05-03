@@ -429,12 +429,12 @@ export default function UserTransactionsModal({
                   {/* صف واحد: المبلغ + نوع العملية + خيار المؤجل */}
                   <div className="flex flex-col md:flex-row gap-3 items-stretch">
                     {/* المبلغ */}
-                    <div className="w-36 shrink-0 bg-white p-3 rounded-xl border-2 border-blue-100 shadow-sm flex flex-col justify-between">
+                    <div className="w-36 shrink-0 bg-white p-3 rounded-xl border-2 border-blue-100 shadow-sm flex flex-col gap-2">
                       <label className="block text-[10px] font-extrabold text-blue-400 mb-1.5 uppercase tracking-widest">💰 المبلغ</label>
                       <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-2 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 font-extrabold text-blue-700 text-base outline-none text-center" placeholder="50000" />
                     </div>
                     {/* نوع العملية */}
-                    <div className="w-36 shrink-0 bg-white p-3 rounded-xl border-2 border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div className="w-36 shrink-0 bg-white p-3 rounded-xl border-2 border-gray-100 shadow-sm flex flex-col gap-2">
                       <label className="block text-[10px] font-extrabold text-gray-400 mb-1.5 uppercase tracking-widest">⚡ النوع</label>
                       <select value={newTransaction.type} onChange={(e) => {
                           setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
