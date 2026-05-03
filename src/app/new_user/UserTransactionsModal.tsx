@@ -9,7 +9,7 @@ type Transaction = {
   type: 'deposit' | 'withdraw';
   note: string;
 };
-
+ 
 type User = {
   name: string;
   phone: string;
