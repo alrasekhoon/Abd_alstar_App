@@ -553,6 +553,8 @@ export default function UserTransactionsModal({
                                 ⏳ مؤجل لـ {days} أيام (تذكير كل {hours} سا)
                               </div>
                             )}
+                          </td>
+                          <td className="px-4 py-4">
                           <td className="px-4 py-4">
                             <div className="flex gap-2 items-center">
                               {/* الحالة 1: رصيد نقدي عادي (deposit بدون DEFERRED) */}
