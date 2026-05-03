@@ -427,7 +427,8 @@ export default function UserTransactionsModal({
 
                 <form onSubmit={handleAddTransaction} className="flex flex-col gap-4 p-5">
                   {/* صف واحد: المبلغ + نوع العملية + خيار المؤجل */}
-                  <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-row gap-3 items-stretch">
                     {/* المبلغ */}
                     <div className="w-36 shrink-0 bg-white p-3 rounded-xl border-2 border-blue-100 shadow-sm flex flex-col gap-2">
                       <label className="block text-[10px] font-extrabold text-blue-400 mb-1.5 uppercase tracking-widest">💰 المبلغ</label>
@@ -491,6 +492,7 @@ export default function UserTransactionsModal({
                         )}
                       </div>
                     )}
+                  </div>
                   </div>
 
                   {/* الملاحظات */}
