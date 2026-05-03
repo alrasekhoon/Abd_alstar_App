@@ -546,6 +546,25 @@ export default function UserTransactionsModal({
                               {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
                             </span>
                           </td>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                    {transactions.map((transaction, index) => {
+                      const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
+                      
+                      return (
+                        <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
+                          <td className="px-4 py-4 text-sm font-extrabold text-gray-400">{index + 1}</td>
+                          <td className="px-4 py-4 text-sm font-extrabold">
+                            <span className={transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}>
+                              {Number(transaction.mony).toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${
+                              transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                            }`}>
+                              {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
+                            </span>
+                          </td>
                           <td className="px-4 py-4 text-sm font-medium text-gray-600">
                             <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
                             {isDeferred && (
@@ -555,27 +574,22 @@ export default function UserTransactionsModal({
                             )}
                           </td>
                           <td className="px-4 py-4">
-                          <td className="px-4 py-4">
                             <div className="flex gap-2 items-center">
-                              {/* الحالة 1: رصيد نقدي عادي (deposit بدون DEFERRED) */}
                               {transaction.type === 'deposit' && !transaction.note?.startsWith('DEFERRED|') && (
                                 <span className="bg-green-50 text-green-700 border border-green-200 text-xs px-3 py-1.5 rounded-lg font-bold select-none">
                                   رصيد نقدي 💵
                                 </span>
                               )}
-                              {/* الحالة 2: مؤجل ولم يُدفع بعد */}
                               {isDeferred && (
                                 <button onClick={() => handleMarkAsPaid(transaction.id)} className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition shadow-sm">
                                   دفع الرصيد المؤجل
                                 </button>
                               )}
-                              {/* الحالة 3: مؤجل وتم دفعه */}
                               {isPaid && (
                                 <span className="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-3 py-1.5 rounded-lg font-bold select-none">
                                   مؤجل وتم دفعه ✓
                                 </span>
                               )}
-                              {/* زر الحذف دائماً */}
                               <button onClick={() => handleDeleteTransaction(transaction.id)} className="text-red-500 hover:text-white border border-red-400 hover:bg-red-500 px-3 py-1.5 rounded-lg transition shadow-sm text-xs font-bold">
                                 حذف
                               </button>
@@ -585,8 +599,6 @@ export default function UserTransactionsModal({
                       );
                     })}
                   </tbody>
-                </table>
-              </div>
 
               {/* نسخة الموبايل - بطاقات احترافية */}
               <div className="md:hidden flex flex-col gap-4">
