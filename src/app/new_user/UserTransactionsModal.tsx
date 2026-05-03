@@ -426,15 +426,16 @@ export default function UserTransactionsModal({
                 </div>
 
                 <form onSubmit={handleAddTransaction} className="flex flex-col gap-4 p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* الحقل 1: المبلغ */}
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">المبلغ (ل.س)</label>
-                      <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-xl shadow-inner transition-all outline-none" placeholder="مثال: 50000" />
+                  {/* صف واحد: المبلغ + نوع العملية + خيار المؤجل */}
+                  <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                    {/* المبلغ */}
+                    <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">المبلغ (ل.س)</label>
+                      <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-xl shadow-inner transition-all outline-none" placeholder="50000" />
                     </div>
-                    {/* الحقل 2: نوع العملية */}
-                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">نوع العملية</label>
+                    {/* نوع العملية */}
+                    <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">نوع العملية</label>
                       <select value={newTransaction.type} onChange={(e) => {
                           setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
                           if (e.target.value === 'withdraw') setIsDeferred(false);
@@ -445,49 +446,60 @@ export default function UserTransactionsModal({
                         <option value="withdraw">سحب (رصيد مسترد)</option>
                       </select>
                     </div>
+                    {/* زر تبديل المؤجل - يظهر فقط عند الإيداع */}
+                    {newTransaction.type === 'deposit' && (
+                      <div
+                        onClick={() => setIsDeferred(!isDeferred)}
+                        className={`flex items-center gap-3 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all duration-300 select-none ${isDeferred ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-orange-300'}`}
+                      >
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isDeferred ? 'bg-white border-white' : 'border-gray-400'}`}>
+                          {isDeferred && <div className="w-3 h-3 rounded-full bg-orange-500"></div>}
+                        </div>
+                        <span className="font-extrabold text-sm whitespace-nowrap">رصيد مؤجل</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* الحقل 3: الملاحظات */}
+                  {/* الملاحظات */}
                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">ملاحظات (اختياري)</label>
+                    <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">ملاحظات (اختياري)</label>
                     <textarea rows={2} value={newTransaction.note} onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium shadow-inner resize-none outline-none" placeholder="اكتب ملاحظات تفصيلية حول هذه الدفعة هنا..." />
                   </div>
 
-                  {/* إعدادات الرصيد المؤجل - يظهر فقط عند الإيداع */}
-                  {newTransaction.type === 'deposit' && (
-                    <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${isDeferred ? 'bg-orange-50 border-orange-300 shadow-sm' : 'bg-white border-dashed border-gray-300 hover:border-orange-200'}`}>
-                      <label className="flex items-center gap-3 cursor-pointer select-none">
-                        <input type="checkbox" checked={isDeferred} onChange={(e) => setIsDeferred(e.target.checked)} className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500 border-gray-300 cursor-pointer" />
-                        <span className={`font-extrabold text-base ${isDeferred ? 'text-orange-800' : 'text-gray-600'}`}>تعيين كرصيد مؤجل السداد</span>
-                      </label>
-
-                      {isDeferred && (
-                        <div className="mt-4 pt-4 border-t border-orange-200">
-                          {/* Desktop: 4 عناصر في صف واحد | Mobile: شبكة 2x2 */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
-                              <label className="block text-[10px] font-extrabold text-orange-800 mb-1.5 uppercase">المهلة (أيام)</label>
-                              <div className="relative">
-                                <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full pl-8 pr-2 py-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-base disabled:opacity-50 outline-none" />
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-orange-500 select-none">يوم</span>
-                              </div>
-                            </div>
-                            <div className="bg-white p-3 rounded-lg border border-orange-100 shadow-sm">
-                              <label className="block text-[10px] font-extrabold text-orange-800 mb-1.5 uppercase">التذكير كل</label>
-                              <div className="relative">
-                                <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full pl-8 pr-2 py-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 font-extrabold text-orange-900 text-base disabled:opacity-50 outline-none" />
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-orange-500 select-none">سا</span>
-                              </div>
-                            </div>
-                            <div className="col-span-2 md:col-span-2 flex items-center bg-white px-4 py-3 rounded-lg border border-orange-100 shadow-sm">
-                              <label className="flex items-center gap-3 cursor-pointer w-full">
-                                <input type="checkbox" checked={noReminder} onChange={(e) => setNoReminder(e.target.checked)} className="w-5 h-5 text-gray-600 rounded focus:ring-gray-500 cursor-pointer" />
-                                <span className="font-extrabold text-sm text-gray-700">إلغاء التذكير التلقائي</span>
-                              </label>
-                            </div>
+                  {/* إعدادات الرصيد المؤجل */}
+                  {newTransaction.type === 'deposit' && isDeferred && (
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 shadow-sm">
+                      <p className="text-xs font-extrabold text-orange-700 mb-3 uppercase tracking-wide">⚙️ إعدادات الرصيد المؤجل</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* المهلة */}
+                        <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                          <label className="block text-[10px] font-extrabold text-orange-600 mb-2 uppercase">المهلة</label>
+                          <div className="flex items-center gap-2">
+                            <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full py-2 px-3 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-400 font-extrabold text-orange-900 text-base disabled:opacity-40 outline-none text-center" />
+                            <span className="text-xs font-bold text-orange-500 shrink-0">يوم</span>
                           </div>
                         </div>
-                      )}
+                        {/* التذكير */}
+                        <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
+                          <label className="block text-[10px] font-extrabold text-orange-600 mb-2 uppercase">التذكير كل</label>
+                          <div className="flex items-center gap-2">
+                            <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full py-2 px-3 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-400 font-extrabold text-orange-900 text-base disabled:opacity-40 outline-none text-center" />
+                            <span className="text-xs font-bold text-orange-500 shrink-0">سا</span>
+                          </div>
+                        </div>
+                        {/* إلغاء التذكير */}
+                        <div className="col-span-2 bg-white rounded-xl p-3 border border-orange-100 shadow-sm flex items-center">
+                          <div
+                            onClick={() => setNoReminder(!noReminder)}
+                            className={`flex items-center gap-3 cursor-pointer w-full select-none`}
+                          >
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${noReminder ? 'bg-gray-500 border-gray-500' : 'border-gray-300'}`}>
+                              {noReminder && <div className="w-3 h-3 rounded-full bg-white"></div>}
+                            </div>
+                            <span className="font-extrabold text-sm text-gray-700">إلغاء التذكير التلقائي</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
