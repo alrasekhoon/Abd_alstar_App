@@ -429,21 +429,21 @@ export default function UserTransactionsModal({
                   {/* صف واحد: المبلغ + نوع العملية + خيار المؤجل */}
                   <div className="flex flex-col md:flex-row gap-3 items-stretch">
                     {/* المبلغ */}
-                    <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">المبلغ (ل.س)</label>
-                      <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-extrabold text-blue-800 text-xl shadow-inner transition-all outline-none" placeholder="50000" />
+                    <div className="md:w-44 bg-white p-3 rounded-xl border-2 border-blue-100 shadow-sm">
+                      <label className="block text-[10px] font-extrabold text-blue-400 mb-1.5 uppercase tracking-widest">💰 المبلغ (ل.س)</label>
+                      <input type="number" step="0.01" required value={newTransaction.mony} onChange={(e) => setNewTransaction(prev => ({ ...prev, mony: e.target.value }))} className="w-full px-3 py-2 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-extrabold text-blue-700 text-lg outline-none text-center" placeholder="50000" />
                     </div>
                     {/* نوع العملية */}
-                    <div className="flex-1 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">نوع العملية</label>
+                    <div className="md:w-52 bg-white p-3 rounded-xl border-2 border-gray-100 shadow-sm">
+                      <label className="block text-[10px] font-extrabold text-gray-400 mb-1.5 uppercase tracking-widest">⚡ نوع العملية</label>
                       <select value={newTransaction.type} onChange={(e) => {
                           setNewTransaction(prev => ({ ...prev, type: e.target.value as 'deposit' | 'withdraw' }));
                           if (e.target.value === 'withdraw') setIsDeferred(false);
                         }}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold text-gray-800 shadow-inner cursor-pointer text-base outline-none"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 font-bold cursor-pointer text-sm outline-none ${newTransaction.type === 'deposit' ? 'border-green-200 text-green-700 bg-green-50 focus:ring-green-400' : 'border-red-200 text-red-700 bg-red-50 focus:ring-red-400'}`}
                       >
-                        <option value="deposit">إيداع (إضافة رصيد)</option>
-                        <option value="withdraw">سحب (رصيد مسترد)</option>
+                        <option value="deposit">إيداع ✅</option>
+                        <option value="withdraw">سحب ❌</option>
                       </select>
                     </div>
                     {/* زر تبديل المؤجل - يظهر فقط عند الإيداع */}
