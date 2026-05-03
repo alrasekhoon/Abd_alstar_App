@@ -252,7 +252,7 @@ export default function UserTransactionsModal({
     try {
       setError('');
       const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: transactionId, status: 'deleted' })
       });
@@ -274,7 +274,7 @@ export default function UserTransactionsModal({
     try {
       setError('');
       const response = await fetch(`${API_URL}?id=${transactionId}&user_id=${userId}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: transactionId, status: 'paid' })
       });
