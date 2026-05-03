@@ -546,25 +546,6 @@ export default function UserTransactionsModal({
                               {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
                             </span>
                           </td>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                    {transactions.map((transaction, index) => {
-                      const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
-                      
-                      return (
-                        <tr key={`desk-${transaction.id}`} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-4 text-sm font-extrabold text-gray-400">{index + 1}</td>
-                          <td className="px-4 py-4 text-sm font-extrabold">
-                            <span className={transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}>
-                              {Number(transaction.mony).toLocaleString()}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold border ${
-                              transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                            }`}>
-                              {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
-                            </span>
-                          </td>
                           <td className="px-4 py-4 text-sm font-medium text-gray-600">
                             <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
                             {isDeferred && (
