@@ -447,8 +447,8 @@ export default function UserTransactionsModal({
                       </select>
                     </div>
                     {/* زر تبديل المؤجل - يظهر فقط عند الإيداع */}
-                    {newTransaction.type === 'deposit' && (
-                      <div className="flex flex-col gap-2">
+                   {newTransaction.type === 'deposit' && (
+                      <div className="flex flex-col gap-2 md:w-48 shrink-0">
                         <div
                           onClick={() => setIsDeferred(!isDeferred)}
                           className={`flex items-center gap-3 px-5 py-4 rounded-xl border-2 cursor-pointer transition-all duration-300 select-none ${isDeferred ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-orange-300'}`}
