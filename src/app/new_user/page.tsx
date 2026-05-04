@@ -129,7 +129,7 @@ const [transactionsModal, setTransactionsModal] = useState({
       
       const result: ApiResponse = await response.json();
       
-      if (!result.success) {
+      if (!result.success && !result.users) {
         throw new Error(result.error || 'حدث خطأ غير متوقع');
       }
       
@@ -532,11 +532,23 @@ const openNotificationsModal = (userId: number, userName: string) => {
     <div>{getStatusBadge(user.block, user.user_type)}</div>
   </div>
 
-  {/* الاسم في المنتصف */}
+{/* الاسم في المنتصف */}
   <div className="text-center mb-4">
     <div className="text-xl font-extrabold text-gray-900">{user.name}</div>
     <div className="text-sm font-bold text-gray-800 mt-1" dir="ltr">{user.phone}</div>
+    {user.address && (
+      <div className="text-xs text-gray-500 font-medium mt-1">{user.address}</div>
+    )}
+    <div className="flex justify-center gap-3 mt-2">
+      {user.created_at && (
+        <span className="text-[10px] text-gray-400 font-medium">📅 {formatDate(user.created_at)}</span>
+      )}
+      {user.updated_at && (
+        <span className="text-[10px] text-gray-400 font-medium">🔄 {formatDate(user.updated_at)}</span>
+      )}
+    </div>
   </div>
+
 
   {/* بيانات مدمجة: المدينة والتاريخ */}
   <div className="grid grid-cols-2 gap-2 mb-4">
@@ -589,8 +601,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </div>
 
        {/* التحميل التدريجي */}
-        {!isLoading && pagination && pagination.totalPages > 1 && (
-         <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-3">
+        {!isLoading && pagination && pagination.totalPages > 1 && (
+         <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-3">
   <div className="bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-right w-full md:w-auto">
     عرض{' '}
     <span className="text-blue-600">{((pagination.currentPage - 1) * pagination.usersPerPage) + 1}</span>
@@ -714,11 +726,71 @@ const openNotificationsModal = (userId: number, userName: string) => {
                 </button>
               </div>
               <p className="text-blue-900 font-extrabold tracking-widest text-xl">{selectedUser.auth || '-'}</p>
-              <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
+<p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
+            </div>
+
+{/* نوع المستخدم + زر الحظر */}
+            <div className="mt-3 flex gap-2 items-stretch">
+              <select
+                value={selectedUser.user_type || ''}
+                onChange={(e) => {
+                  handleUserTypeChange(selectedUser.id, e.target.value);
+                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className={`flex-1 text-xs border-2 rounded-xl px-2 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+              >
+                <option value="غير موثوق">غير موثوق</option>
+                <option value="موثوق">موثوق</option>
+                <option value="vip">VIP</option>
+              </select>
+
+              {/* زر الحظر المنقسم */}
+              <button
+                onClick={() => {
+                  const newBlock = selectedUser.block === 1 ? 0 : 1;
+                  handleBlockUser(selectedUser.id, newBlock);
+                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+                }}
+                disabled={updatingUser === selectedUser.id}
+                className="flex-1 rounded-xl overflow-hidden shadow-md transition flex items-stretch disabled:opacity-50"
+              >
+                {selectedUser.block === 1 ? (
+                  /* محظور → نصف أخضر نصف رمادي */
+                  <div className="flex w-full items-center">
+                    <div className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs font-extrabold flex items-center justify-center py-2 gap-1 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                      </svg>
+                      فك
+                    </div>
+                    <div className="w-px bg-white/40"></div>
+                    <div className="flex-1 bg-gray-400 text-white text-xs font-extrabold flex items-center justify-center py-2 transition">
+                      محظور
+                    </div>
+                  </div>
+                ) : (
+                  /* نشط → نصف أخضر نشط / نصف أحمر حظر */
+                  <div className="flex w-full items-center">
+                    <div className="flex-1 bg-green-500 text-white text-xs font-extrabold flex items-center justify-center py-2 gap-1">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse inline-block"></span>
+                      نشط
+                    </div>
+                    <div className="w-px bg-white/40"></div>
+                    <div className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-extrabold flex items-center justify-center py-2 gap-1 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524L13.477 14.89zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd"/>
+                      </svg>
+                      حظر
+                    </div>
+                  </div>
+                )}
+              </button>
             </div>
           </div>
         </div>
       {/* قسم البيانات */}
+}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -764,56 +836,30 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
+          {/* العنوان - وقت الإنشاء - آخر تحديث */}
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
-              <select
-                value={selectedUser.user_type || ''}
-                onChange={(e) => {
-                  handleUserTypeChange(selectedUser.id, e.target.value);
-                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-              >
-                <option value="غير موثوق">غير موثوق</option>
-                <option value="موثوق">موثوق</option>
-                <option value="vip">VIP</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الحالة</label>
-              <button
-                onClick={() => {
-                  const newBlock = selectedUser.block === 1 ? 0 : 1;
-                  handleBlockUser(selectedUser.id, newBlock);
-                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
-              >
-                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
-              </button>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
-
-            <div className="md:col-span-3">
+            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
             </div>
-
-            {/* الصف السادس: آخر تحديث - الجهاز */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
-            <div className="md:col-span-2">
+
+            <div></div>
+            <div></div>
+            <div></div>
+
+            <div className="md:col-span-1"></div>
+            <div className="md:col-span-3">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجهاز</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
             </div>
+
 
             {/* ملاحظات - صف كامل */}
             <div className="md:col-span-3">
@@ -876,3 +922,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
+
+
+
+
