@@ -124,40 +124,42 @@ export default function UserTransactionsModal({
   useEffect(() => {
     if (!isOpen || transactions.length === 0) return;
 
-    const interval = setInterval(() => {
-      const deferredItems = transactions.filter(t => 
-        t.note && t.note.startsWith('DEFERRED|') && !paidTransactions.includes(t.id)
-      );
+    const deferredItems = transactions.filter(t => 
+      t.note && t.note.startsWith('DEFERRED|') && !paidTransactions.includes(t.id)
+    );
 
-      if (deferredItems.length > 0) {
-        deferredItems.forEach(async (item) => {
-          try {
-            const parts = item.note.split('|');
-            const days = parts[1] || '7';
-            const hours = parts[2] || '5';
-            const hasNoReminder = parts[3] === 'NONE';
-            
-            if (hasNoReminder) return; // تخطي إذا كان التذكير معطلاً
+    if (deferredItems.length === 0) return;
 
-            const amount = Number(item.mony).toLocaleString();
-            
-            await fetch('/api/proxy/cp_notifications.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: userId,
-                title: 'تذكير: سداد رصيد مؤجل',
-                body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) المتبقي من مدة السماح (${days} أيام)، لتجنب انقطاع الخدمة.`,
-                url1: '',
-                note1: ''
-              }),
-            });
-          } catch (e) {
-            console.error('فشل إرسال الإشعار التلقائي', e);
-          }
-        });
-      }
-    }, 25000);
+    const intervals = deferredItems.map((item) => {
+      const parts = item.note.split('|');
+      const days = parts[1] || '7';
+      const reminderDays = Number(parts[2] || '1');
+      const hasNoReminder = parts[3] === 'NONE';
+
+      if (hasNoReminder) return null;
+
+      // تحويل الأيام إلى ميلي ثانية
+      const intervalMs = reminderDays * 24 * 60 * 60 * 1000;
+
+      return setInterval(async () => {
+        try {
+          const amount = Number(item.mony).toLocaleString();
+          await fetch('/api/proxy/cp_notifications.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              title: 'تذكير: سداد رصيد مؤجل',
+              body: `${getGreeting()}،\nنود تذكيرك بضرورة سداد الرصيد المؤجل بقيمة (${amount} ل.س) المتبقي من مدة السماح (${days} أيام)، لتجنب انقطاع الخدمة.`,
+              url1: '',
+              note1: ''
+            }),
+          });
+        } catch (e) {
+          console.error('فشل إرسال الإشعار التلقائي', e);
+        }
+      }, intervalMs);
+    });
 
     return () => clearInterval(interval);
   }, [isOpen, transactions, paidTransactions, userId, getGreeting]);
@@ -375,7 +377,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-end">
+          <div className="flex gap-2 w-full md:w-auto justify-end items-center">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
@@ -403,6 +405,7 @@ export default function UserTransactionsModal({
             </button>
           </div>
         </div>
+
 
         {/* محتوى النافذة */}
         <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-gray-50 md:bg-white relative">
@@ -533,40 +536,36 @@ export default function UserTransactionsModal({
       {isDeferred && (
         <div className="px-4 pb-4 flex flex-col gap-3">
           <div className="h-px bg-indigo-100"></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl border-2 border-indigo-100 p-3 flex items-center gap-3 focus-within:border-indigo-400 transition-all">
-              <span className="text-xl shrink-0">📅</span>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white rounded-xl border-2 border-indigo-100 p-2.5 flex items-center gap-2 focus-within:border-indigo-400 transition-all">
+              <span className="text-lg shrink-0">📅</span>
               <div className="flex-1 min-w-0">
                 <label className="block text-[9px] font-extrabold text-indigo-400 uppercase tracking-wider">المهلة</label>
                 <div className="flex items-center gap-1">
-                  <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full bg-transparent font-extrabold text-indigo-900 outline-none text-base disabled:opacity-40" />
-                  <span className="text-[10px] text-indigo-400 font-bold shrink-0">يوم</span>
+                  <input type="number" min="1" value={deferDays} onChange={(e) => setDeferDays(e.target.value)} disabled={noReminder} className="w-full bg-transparent font-extrabold text-indigo-900 outline-none text-sm disabled:opacity-40" />
+                  <span className="text-[9px] text-indigo-400 font-bold shrink-0">يوم</span>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl border-2 border-indigo-100 p-3 flex items-center gap-3 focus-within:border-indigo-400 transition-all">
-              <span className="text-xl shrink-0">🔔</span>
+            <div className="bg-white rounded-xl border-2 border-indigo-100 p-2.5 flex items-center gap-2 focus-within:border-indigo-400 transition-all">
+              <span className="text-lg shrink-0">🔔</span>
               <div className="flex-1 min-w-0">
-                <label className="block text-[9px] font-extrabold text-indigo-400 uppercase tracking-wider">تذكير كل</label>
+                <label className="block text-[9px] font-extrabold text-indigo-400 uppercase tracking-wider">تذكير كل (أيام)</label>
                 <div className="flex items-center gap-1">
-                  <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full bg-transparent font-extrabold text-indigo-900 outline-none text-base disabled:opacity-40" />
-                  <span className="text-[10px] text-indigo-400 font-bold shrink-0">سا</span>
+                  <input type="number" min="1" value={deferHours} onChange={(e) => setDeferHours(e.target.value)} disabled={noReminder} className="w-full bg-transparent font-extrabold text-indigo-900 outline-none text-sm disabled:opacity-40" />
+                  <span className="text-[9px] text-indigo-400 font-bold shrink-0">يوم</span>
                 </div>
               </div>
             </div>
-          </div>
-          <div
-            onClick={() => setNoReminder(!noReminder)}
-            className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer select-none transition-all ${
-              noReminder ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-            }`}
-          >
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-              noReminder ? 'bg-white border-white' : 'border-slate-300'
-            }`}>
-              {noReminder && <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>}
+            <div
+              onClick={() => setNoReminder(!noReminder)}
+              className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl border-2 cursor-pointer select-none transition-all ${
+                noReminder ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              <span className="text-lg">{noReminder ? '🔕' : '🔔'}</span>
+              <span className="text-[9px] font-extrabold text-center">{noReminder ? 'لا تذكير' : 'تعطيل'}</span>
             </div>
-            <span className="text-xs font-extrabold">{noReminder ? '🔕 التذكير التلقائي مُعطّل' : '🔔 تعطيل التذكير التلقائي'}</span>
           </div>
         </div>
       )}
@@ -574,6 +573,7 @@ export default function UserTransactionsModal({
   )}
 
   {/* 4. الملاحظات */}
+
   <div className="relative group">
     <span className="absolute top-3.5 right-4 text-slate-300 group-focus-within:text-blue-400 transition-colors text-lg pointer-events-none">✎</span>
     <textarea
