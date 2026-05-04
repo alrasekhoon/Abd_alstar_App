@@ -693,8 +693,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
       
       <div className="flex flex-col md:flex-row gap-8">
         {/* قسم الصورة */}
-        <div className="flex-shrink-0 w-64">
-  <div className="bg-white border shadow-md rounded-xl p-4 text-center mb-4">
+        <div className="flex-shrink-0">
+          <div className="bg-gray-100 rounded-lg p-4 text-center">
             <div className="relative w-48 h-48 mx-auto mb-4">
   <Image
     src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
@@ -716,15 +716,14 @@ const openNotificationsModal = (userId: number, userName: string) => {
               onClick={() => {
                 window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
               }}
-              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
               </svg>
-              عرض الصورة
+              عرض الصورة كاملة
             </button>
-            </div>
-          <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
+            <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-bold text-blue-700">رمز OTP</span>
                 <button
@@ -740,7 +739,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-blue-900 font-extrabold tracking-widest text-xl">{selectedUser.auth || '-'}</p>
 <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
-        </div>
 
 {/* نوع المستخدم + زر الحظر */}
             <div className="mt-3 flex gap-2 items-stretch">
@@ -950,6 +948,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </div>
           </div>
         </div>
+      </div>
 
 
          <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
@@ -960,10 +959,12 @@ const openNotificationsModal = (userId: number, userName: string) => {
           إغلاق
         </button>
       </div>
+    </div>
   </div>
 )}
 
- 
+
+
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] transition-all duration-300"></div>
@@ -1002,7 +1003,3 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
-
-
-
-
