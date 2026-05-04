@@ -960,12 +960,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
           إغلاق
         </button>
       </div>
-    </div>
   </div>
 )}
 
-
-
+ 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] transition-all duration-300"></div>
