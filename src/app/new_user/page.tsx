@@ -780,7 +780,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
                     <div className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-extrabold flex items-center justify-center py-2 gap-1 transition">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524L13.477 14.89zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd"/>
-                      </svg>
+                     </svg>
                       حظر
                     </div>
                   </div>
@@ -790,7 +790,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
           </div>
         </div>
       {/* قسم البيانات */}
-}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
