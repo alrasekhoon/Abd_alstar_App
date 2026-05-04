@@ -429,11 +429,9 @@ export default function UserTransactionsModal({
 
   {/* 1. شاشة المبلغ */}
   <div className="bg-slate-50 border border-slate-200 rounded-[1.2rem] p-3 transition-all duration-300 focus-within:bg-white focus-within:border-blue-500 focus-within:shadow-md focus-within:shadow-blue-500/10 flex flex-col justify-center relative">
-    
     <label className="text-slate-400 text-[11px] font-extrabold tracking-wider px-2 mb-1 uppercase">
       المبلغ
     </label>
-
     <div className="flex items-center justify-between px-2">
       <input
         type="number"
@@ -451,44 +449,59 @@ export default function UserTransactionsModal({
     </div>
   </div>
 
-  {/* 2. أزرار نوع العملية */}
+  {/* 2. أزرار نوع العملية - بدون تحديد افتراضي */}
   <div className="flex gap-3 mt-1">
     <div
       onClick={() => setNewTransaction(prev => ({ ...prev, type: 'deposit' }))}
-      className={`flex-1 py-3 px-2 rounded-[1.2rem] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 border-2 ${
+      className={`flex-1 py-3.5 px-2 rounded-[1.2rem] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 border-2 ${
         newTransaction.type === 'deposit'
           ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-[1.02]'
-          : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200 hover:border-slate-400 hover:text-slate-700'
+          : newTransaction.type === 'withdraw'
+          ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-pointer'
+          : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200 hover:border-slate-300'
       }`}
     >
-      <span className="text-xl opacity-80">⬇</span> إيداع (استلام)
+      <span className="text-xl">⬇</span>
+      <span>إيداع</span>
     </div>
 
     <div
-      onClick={() => { setNewTransaction(prev => ({ ...prev, type: 'withdraw' })); setIsDeferred(false); }}
-      className={`flex-1 py-3 px-2 rounded-[1.2rem] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 border-2 ${
+      onClick={() => {
+        setNewTransaction(prev => ({ ...prev, type: 'withdraw' }));
+        setIsDeferred(false);
+      }}
+      className={`flex-1 py-3.5 px-2 rounded-[1.2rem] font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 border-2 ${
         newTransaction.type === 'withdraw'
           ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-500/30 scale-[1.02]'
-          : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200 hover:border-slate-400 hover:text-slate-700'
+          : newTransaction.type === 'deposit'
+          ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-pointer'
+          : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200 hover:border-slate-300'
       }`}
     >
-      <span className="text-xl opacity-80">⬆</span> سحب (دفع)
+      <span className="text-xl">⬆</span>
+      <span>سحب</span>
     </div>
   </div>
 
-  {/* 3. بطاقة التأجيل (المهلة والتنبيه بالثواني) */}
+  {/* تنبيه إذا لم يتم اختيار نوع */}
+  {!newTransaction.type && (
+    <p className="text-center text-xs text-slate-400 font-bold -mt-2">
+      ← اختر نوع العملية للمتابعة
+    </p>
+  )}
+
+  {/* 3. بطاقة التأجيل */}
   {newTransaction.type === 'deposit' && (
-    <div className={`mt-2 rounded-[1.5rem] border-2 transition-all duration-500 overflow-hidden shadow-sm ${
+    <div className={`rounded-[1.5rem] border-2 transition-all duration-500 overflow-hidden shadow-sm ${
       isDeferred ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 bg-white hover:border-slate-200'
     }`}>
-      
       <div
         onClick={() => setIsDeferred(!isDeferred)}
         className="flex items-center justify-between p-4 cursor-pointer select-none"
       >
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 ${
-            isDeferred ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 rotate-12' : 'bg-slate-100 text-slate-400'
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 ${
+            isDeferred ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-400'
           }`}>
             ⏱
           </div>
@@ -496,62 +509,63 @@ export default function UserTransactionsModal({
             <span className={`font-black text-sm tracking-tight ${isDeferred ? 'text-indigo-900' : 'text-slate-700'}`}>
               جدولة الدفع (رصيد مؤجل)
             </span>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
               تفعيل التنبيهات والمهلة الزمنية
             </span>
           </div>
         </div>
-
         <div className={`w-12 h-6 rounded-full p-1 flex items-center transition-all duration-300 ${
           isDeferred ? 'bg-indigo-600 justify-end' : 'bg-slate-200 justify-start'
         }`}>
-          <div className="w-4 h-4 bg-white rounded-full shadow-md transition-all"></div>
+          <div className="w-4 h-4 bg-white rounded-full shadow-md"></div>
         </div>
       </div>
 
       {isDeferred && (
-        <div className="px-4 pb-5 pt-2 animate-in fade-in zoom-in-95 duration-300">
-          <div className="h-px w-full bg-indigo-100/50 mb-4"></div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* حقل المهلة (ثواني) */}
-            <div className="flex items-center bg-white rounded-2xl border-2 p-1.5 transition-all focus-within:border-indigo-400 border-indigo-100 shadow-sm">
-              <div className="bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center text-indigo-500">
+        <div className="px-4 pb-5 pt-1">
+          <div className="h-px w-full bg-indigo-100 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center bg-white rounded-2xl border-2 border-indigo-100 p-1.5 shadow-sm focus-within:border-indigo-400 transition-all">
+              <div className="bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
                 📅
               </div>
               <div className="flex-1 px-3">
-                <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-tighter">المهلة (ثواني)</label>
+                <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-tighter">المهلة (أيام)</label>
                 <input
                   type="number" min="1" value={deferDays}
                   onChange={(e) => setDeferDays(e.target.value)}
-                  className="w-full bg-transparent font-black text-indigo-900 outline-none text-sm"
+                  disabled={noReminder}
+                  className="w-full bg-transparent font-black text-indigo-900 outline-none text-sm disabled:opacity-40"
                 />
               </div>
             </div>
-
-            {/* حقل التذكير (ثواني) */}
-            <div className="flex items-center bg-white rounded-2xl border-2 p-1.5 transition-all focus-within:border-indigo-400 border-indigo-100 shadow-sm">
-              <div className="bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center text-indigo-500">
-                ⏳
+            <div className="flex items-center bg-white rounded-2xl border-2 border-indigo-100 p-1.5 shadow-sm focus-within:border-indigo-400 transition-all">
+              <div className="bg-indigo-50 w-10 h-10 rounded-xl flex items-center justify-center text-indigo-500 shrink-0">
+                🔔
               </div>
               <div className="flex-1 px-3">
-                <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-tighter">تذكير كل (ثانية)</label>
+                <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-tighter">تذكير كل (ساعات)</label>
                 <input
                   type="number" min="1" value={deferHours}
                   onChange={(e) => setDeferHours(e.target.value)}
-                  className="w-full bg-transparent font-black text-indigo-900 outline-none text-sm"
+                  disabled={noReminder}
+                  className="w-full bg-transparent font-black text-indigo-900 outline-none text-sm disabled:opacity-40"
                 />
               </div>
             </div>
-
           </div>
-          
-          <div className="mt-4 flex items-center gap-2 px-2">
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-emerald-500"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-              النظام مفعل بالثواني لأغراض الاختبار السريع
-            </span>
+          <div
+            onClick={() => setNoReminder(!noReminder)}
+            className={`mt-3 flex items-center gap-3 px-4 py-3 rounded-2xl border-2 cursor-pointer select-none transition-all ${
+              noReminder ? 'bg-slate-700 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+            }`}
+          >
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+              noReminder ? 'bg-white border-white' : 'border-slate-300'
+            }`}>
+              {noReminder && <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>}
+            </div>
+            <span className="text-xs font-extrabold">{noReminder ? '🔕 التذكير التلقائي مُعطّل' : '🔔 تعطيل التذكير التلقائي'}</span>
           </div>
         </div>
       )}
@@ -559,7 +573,7 @@ export default function UserTransactionsModal({
   )}
 
   {/* 4. حقل الملاحظات */}
-  <div className="group relative mt-1">
+  <div className="group relative">
     <div className="absolute top-4 right-4 text-xl text-slate-300 group-focus-within:text-blue-500 transition-colors pointer-events-none">
       ✎
     </div>
@@ -568,11 +582,11 @@ export default function UserTransactionsModal({
       value={newTransaction.note}
       onChange={(e) => setNewTransaction(prev => ({ ...prev, note: e.target.value }))}
       className="w-full bg-slate-50 border border-slate-200 rounded-[1.2rem] py-4 pr-12 pl-4 text-sm font-medium text-slate-700 outline-none resize-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder-slate-400"
-      placeholder="إضافة ملاحظات أو تفاصيل إضافية للعملية..."
+      placeholder="إضافة ملاحظات أو تفاصيل إضافية..."
     />
   </div>
 
-                  {/* إعدادات الرصيد المؤجل - القسم السفلي محذوف وأصبح بجانب الزر */}
+                   {/* إعدادات الرصيد المؤجل - القسم السفلي محذوف وأصبح بجانب الزر */}
                   {newTransaction.type === 'deposit' && isDeferred && (
                     <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 shadow-sm hidden">
                       <p className="text-xs font-extrabold text-orange-700 mb-3 uppercase tracking-wide">⚙️ إعدادات الرصيد المؤجل</p>
@@ -610,10 +624,17 @@ export default function UserTransactionsModal({
                   )}
 
                   <div className="flex gap-3 pt-2 border-t border-gray-100">
-                    <button type="submit" disabled={isAdding} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base hover:from-blue-700 hover:to-blue-800 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                    <button type="submit" disabled={isAdding || !newTransaction.type} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold text-base hover:from-blue-700 hover:to-blue-800 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2 transform active:scale-[0.98]">
                       {isAdding ? 'جاري التنفيذ...' : 'تنفيذ وحفظ الدفعة'}
                     </button>
-                    <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 bg-white border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold text-base hover:bg-gray-50 transition-all shadow-sm transform active:scale-[0.98]">
+                    <button type="button" onClick={() => {
+                      setShowAddForm(false);
+                      setNewTransaction({ mony: '', type: '' as 'deposit' | 'withdraw' | '', note: '' });
+                      setIsDeferred(false);
+                      setDeferDays('7');
+                      setDeferHours('5');
+                      setNoReminder(false);
+                    }} className="flex-1 bg-white border-2 border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold text-base hover:bg-gray-50 transition-all shadow-sm transform active:scale-[0.98]">
                       إلغاء
                     </button>
                   </div>
