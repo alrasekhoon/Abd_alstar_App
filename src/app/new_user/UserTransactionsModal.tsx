@@ -345,7 +345,7 @@ export default function UserTransactionsModal({
           <div className="text-left md:order-last ml-auto"> 
             <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
             <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
-              {userName} - ID: {usشerId} {user && `| الهاتف: ${user.phone}`}
+              {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
             </p>
           </div>
 
