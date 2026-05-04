@@ -341,44 +341,13 @@ export default function UserTransactionsModal({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
         
         {/* الهيدر */}
-        <div className="flex flex-col gap-3 p-4 md:p-6 border-b border-gray-200 bg-gray-50 shrink-0">
-          {/* الصف الأول: العنوان + الأزرار */}
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={() => setIsDrawerOpen(true)}
-                className="bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-                <span className="hidden md:inline">سجل المحذوفات</span>
-                <span className="md:hidden">المحذوفات</span>
-                {deletedTransactions.length > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
-                )}
-              </button>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                إضافة دفعة
-              </button>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div>
-              <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium text-left">
-                {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
-              </p>
-            </div>
+        <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 shrink-0">
+          <div>
+            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
+            <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
+              {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
+            </p>
           </div>
-
 
           {/* الإحصائيات العلوية المحسنة */}
           {summary && !isLoading && !error && (
@@ -408,7 +377,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-end items-center">
+          <div className="flex gap-2 w-full md:w-auto justify-start items-center md:order-first">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
