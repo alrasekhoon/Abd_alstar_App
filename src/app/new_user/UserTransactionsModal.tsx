@@ -377,7 +377,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-start items-center md:order-first">
+          <div className="flex gap-2 w-full md:w-auto justify-end items-center md:order-last">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
