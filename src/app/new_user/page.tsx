@@ -801,7 +801,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
           </div>
         </div>
       {/* قسم البيانات */}
-}
+
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
