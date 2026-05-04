@@ -753,7 +753,7 @@ export default function UserTransactionsModal({
                         )}
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full">
                         <button
                           onClick={() => handleDeleteTransaction(transaction.id)}
                           className="w-24 shrink-0 border-2 border-red-200 text-red-600 bg-white hover:bg-red-50 py-2.5 rounded-xl text-sm font-bold transition text-center"
@@ -761,7 +761,7 @@ export default function UserTransactionsModal({
                           حذف
                         </button>
                         {transaction.type === 'deposit' && !transaction.note?.startsWith('DEFERRED|') && (
-                          <div className="flex-1 bg-green-50 text-green-700 border border-green-200 py-2.5 rounded-xl text-sm font-bold text-center select-none">
+                          <div className="flex-1 w-full bg-green-50 text-green-700 border border-green-200 py-2.5 rounded-xl text-sm font-bold text-center select-none">
                             رصيد نقدي 💵
                           </div>
                         )}
