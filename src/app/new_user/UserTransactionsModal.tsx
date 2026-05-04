@@ -161,7 +161,7 @@ export default function UserTransactionsModal({
       }, intervalMs);
     });
 
-    return () => clearInterval(interval);
+    return () => intervals.forEach(i => i && clearInterval(i));
   }, [isOpen, transactions, paidTransactions, userId, getGreeting]);
 
   const handleAddTransaction = async (e: React.FormEvent) => {
