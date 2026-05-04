@@ -950,7 +950,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </div>
           </div>
         </div>
-      </div>
 
 
          <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
