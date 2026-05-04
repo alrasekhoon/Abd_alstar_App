@@ -342,7 +342,7 @@ export default function UserTransactionsModal({
         
         {/* الهيدر */}
         <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 shrink-0">
-          <div className="text-left order-last">
+          <div className="text-left md:order-last ml-auto"> 
             <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
             <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
               {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
