@@ -780,26 +780,18 @@ export default function UserTransactionsModal({
                   );
                 })}
               </div>
+            </>
+          )}
+        </div> {/* إغلاق منطقة المحتوى p-4 md:p-6 */}
 
-  {/* زر الحذف: في الأسفل لسهولة الوصول */}
-            <button 
-              onClick={() => handleDeleteTransaction(transaction.id)} 
-              className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition"
-            >
-              حذف المعاملة
-            </button>
-          </div>
-        );
-      })}
-    </div> 
-    {/* نهاية قسم الموبايل */}
-
-    </>
-  )}
-</div> {/* إغلاق منطقة المحتوى */}
-</div> {/* إغلاق جسم المودال الأبيض */}
-</div> {/* إغلاق الخلفية الشفافة (التعتيم) */}
-
+        {/* الفوتر: يجب أن يكون هنا ليكون داخل النافذة البيضاء */}
+        <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 relative z-20">
+          <button onClick={onClose} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition">
+            إغلاق النافذة
+          </button>
+        </div>
+      </div> {/* إغلاق جسم المودال الأبيض max-w-6xl */}
+    </div> {/* إغلاق الخلفية الشفافة والطبقة العائمة fixed inset-0 */}
  
         {/* الفوتر */}
         <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none relative z-20">
