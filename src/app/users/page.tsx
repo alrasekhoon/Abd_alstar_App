@@ -337,45 +337,7 @@ export default function UserManagement() {
           </div>
         </div>
 
-           {/* Search and Filter Bar */}
-        <div className="mb-6 flex flex-col md:flex-row gap-4">
           
-          <div className="relative flex-1 max-w-md">
-            <label className="block text-sm font-medium text-gray-700 mb-1">فلترة حسب رقم الهاتف او لأسم</label>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
-            
-            <input
-              type="text"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pr-10 p-2.5"
-              placeholder="ابحث بالاسم، الهاتف، البريد أو الرقم الجامعي..."
-              onChange={(e) => handleSearch(e.target.value)}
-              defaultValue={searchTerm}
-            />
-          </div>
-          
-          <div className="w-full md:w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">فلترة حسب النوع</label>
-            <select
-              value={userTypeFilter}
-              onChange={(e) => {
-                setUserTypeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            >
-              <option value="الكل">الكل</option>
-              <option value="غير موثوق">غير موثوق</option>
-              <option value="موثوق">موثوق</option>
-              <option value="vip">VIP</option>
-            </select>
-          </div>
-        </div>
-
         {/* Data Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
