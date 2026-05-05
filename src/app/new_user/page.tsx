@@ -806,10 +806,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
             </div>
           </div>
         </div>
-      
       </div>
-
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
+
         <button
           onClick={() => setIsUserModalOpen(false)}
           className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
