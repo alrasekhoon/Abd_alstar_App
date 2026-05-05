@@ -674,177 +674,19 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <img
                 src={`/api/proxy/uploads/${selectedUser.id}_card.jpg`}
                 alt={`صورة ${selectedUser.name}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 onError={(e) => {
                   const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
                   e.currentTarget.src = defaultImageUrl;
                 }}
-              />
-            </div>
-            <div className="p-2">
-              <p className="text-[10px] text-center text-gray-400 font-bold mb-1.5">ID: {selectedUser.id}</p>
-              <button
-                onClick={() => setImageModal(`/api/proxy/uploads/${selectedUser.id}_card.jpg`)}
-                className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 border border-blue-200"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                </svg>
-                عرض الصورة
-              </button>
-            </div>
-          </div>
-
-          {/* OTP - زر تفاعلي */}
-          <button
-            onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
-            className="w-full bg-blue-50 border-2 border-blue-200 hover:bg-blue-100 hover:border-blue-400 rounded-2xl p-3 text-center shadow-sm transition group"
-          >
-            <span className="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest block mb-1">🔑 رمز OTP — اضغط للتحديث</span>
-            <span className="text-blue-900 font-extrabold tracking-widest text-2xl block">{selectedUser.auth || '-'}</span>
-            <span className="text-[9px] text-blue-400 mt-1 block">{formatDateTime(selectedUser.updated_at)}</span>
-          </button>
-
-          {/* نوع المستخدم */}
-          {/* نوع المستخدم + الحالة في صف واحد */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 flex flex-col gap-2">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
-                <select
-                  value={selectedUser.user_type || ''}
-                  onChange={(e) => {
-                    handleUserTypeChange(selectedUser.id, e.target.value);
-                    setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                  }}
-                  disabled={updatingUser === selectedUser.id}
-                  className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-                >
-                  <option value="غير موثوق">غير موثوق</option>
-                  <option value="موثوق">موثوق</option>
-                  <option value="vip">VIP</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
-                <button
-                  onClick={() => {
-                    const newBlock = selectedUser.block === 1 ? 0 : 1;
-                    handleBlockUser(selectedUser.id, newBlock);
-                    setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-                  }}
-                  disabled={updatingUser === selectedUser.id}
-                  className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
-                >
-                  {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-
-          {/* الجهاز */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الجهاز</label>
-            <p className="text-gray-700 text-xs font-mono break-all">{selectedUser.device_uuid || '-'}</p>
-          </div>
-
-        </div>
-
-
-      {/* قسم البيانات */}
-        <div className="flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            {/* الصف الأول: الاسم الأول - الاسم الأخير - الهاتف */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الاسم الأول</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.f_name || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الاسم الأخير</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.last_name || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الهاتف</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium" dir="ltr">{selectedUser.phone}</p>
-            </div>
-
-            {/* الصف الثاني: الجامعة - السنة - الرقم الجامعي */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجامعة</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.university || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">السنة</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.year1 || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الرقم الجامعي</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.uni_number || '-'}</p>
-            </div>
-
-            {/* الصف الثالث: الجنس - المسمى الوظيفي - المدينة */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجنس</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.gender || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">المسمى الوظيفي</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.title || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">المدينة</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
-            </div>
-
-
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
-            </div>
-
-
-            {/* ملاحظات - صف كامل */}
-            <div className="md:col-span-3">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">ملاحظات</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm min-h-[80px] whitespace-pre-wrap">{selectedUser.note || '-'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
-
-       <button
-          onClick={() => setIsUserModalOpen(false)}
-          className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-        >
-          إغلاق
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-{/* مودال عرض الصورة */}
-{imageModal && (
+              />{imageModal && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
-    <div className="relative max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+    <div className="relative w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto rounded-2xl" onClick={(e) => e.stopPropagation()}>
       <button
         onClick={() => setImageModal(null)}
-        className="absolute -top-10 right-0 text-white hover:text-gray-300 transition"
+        className="sticky top-2 right-2 float-right z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1.5 transition"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -853,14 +695,12 @@ const openNotificationsModal = (userId: number, userName: string) => {
         alt="صورة المستخدم"
         className="w-full rounded-2xl shadow-2xl"
         onError={(e) => {
-          e.currentTarget.style.display = 'none';
+          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser?.name || 'User')}&background=random&size=400&color=fff`;
         }}
       />
     </div>
   </div>
 )}
-
-
 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
