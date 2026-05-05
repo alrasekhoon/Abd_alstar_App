@@ -464,6 +464,7 @@ export default function MoneyManagement() {
                           )}
                         </div>
                       </div>
+                    </td>
                   </tr>
                 );
               })}
