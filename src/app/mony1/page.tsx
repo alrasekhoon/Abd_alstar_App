@@ -236,23 +236,15 @@ export default function MoneyManagement() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+       <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">إدارة الدفعات المالية</h1>
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <div className="text-sm bg-[#fef08a] border border-[#fde047] text-gray-800 px-6 py-2.5 rounded-xl font-extrabold shadow-sm">
-              إجمالي المعاملات: {transactions.filter(t => t.type !== 'withdraw').length}
-            </div>
-            <button onClick={fetchData} className="p-2.5 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition border border-blue-200" title="تحديث البيانات">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            </button>
-          </div>
         </div>
 
-        <div className="mb-6">
-          <div className="relative">
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1 relative">
             <input
               type="text"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
               placeholder="ابحث عن طالب بالاسم أو رقم الهاتف أو الرقم التعريفي..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -272,17 +264,25 @@ export default function MoneyManagement() {
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
             </div>
+            {searchTerm && (
+              <div className="absolute top-full mt-1 right-0 text-sm text-gray-600 bg-white p-2 rounded-lg shadow-md border z-10 w-full max-w-xs">
+                {filteredUsers.length === 0 ? (
+                  <span className="text-red-500 font-bold">لا توجد نتائج للبحث</span>
+                ) : (
+                  <span className="font-medium">تم العثور على {filteredUsers.length} طالب</span>
+                )}
+              </div>
+            )}
           </div>
           
-          {searchTerm && (
-            <div className="mt-2 text-sm text-gray-600">
-              {filteredUsers.length === 0 ? (
-                <span className="text-red-500">لا توجد نتائج للبحث</span>
-              ) : (
-                <span>تم العثور على {filteredUsers.length} طالب</span>
-              )}
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={fetchData} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition border border-blue-200" title="تحديث البيانات">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+            <div className="text-sm bg-[#fef08a] border border-[#fde047] text-gray-800 px-6 py-2.5 rounded-xl font-extrabold shadow-sm flex items-center justify-center min-w-[160px]">
+              إجمالي المعاملات: {transactions.filter(t => t.type !== 'withdraw').length}
             </div>
-          )}
+          </div>
         </div>
 
         {editingTransaction && (
@@ -404,7 +404,7 @@ export default function MoneyManagement() {
             </thead>
 
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.filter(t => t.type !== 'withdraw').map((transaction) => {
+              {transactions.map((transaction) => {
                 const isDeleted = deletedIds.has(transaction.id!);
                 const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
 const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
@@ -475,7 +475,7 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
 
         {/* نسخة الموبايل - بطاقات */}
         <div className="md:hidden space-y-3 mt-4">
-          {transactions.filter(t => t.type !== 'withdraw').map((transaction) => {
+          {transactions.map((transaction) => {
             const isDeleted = deletedIds.has(transaction.id!);
             const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
             const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
@@ -525,7 +525,7 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
           })}
         </div>
 
-        {transactions.filter(t => t.type !== 'withdraw').length === 0 && !isLoading && (
+        {transactions.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
