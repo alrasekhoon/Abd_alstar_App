@@ -387,8 +387,8 @@ export default function MoneyManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {transactions.map((transaction) => {
                 const isDeleted = deletedIds.has(transaction.id!);
-                const isDeferred = transaction.note?.includes('مؤجل') && !transaction.note?.includes('تم دفعه');
-                const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('مؤجل وتم دفعه');
+                const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
+const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
                 const isDeposit = parseFloat(transaction.mony) >= 0;
 
                 return (
