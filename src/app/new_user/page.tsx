@@ -67,6 +67,8 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
+const [imageModal, setImageModal] = useState<string | null>(null);
+
 
   const API_URL = '/api/proxy/cp_news_new.php';
 
@@ -671,11 +673,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
           {/* إطار الصورة */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="relative w-full aspect-square">
-              <Image
-                src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+              <img
+                src={`/api/proxy/uploads/${selectedUser.id}_card.jpg`}
                 alt={`صورة ${selectedUser.name}`}
-                width={224}
-                height={224}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
@@ -686,7 +686,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             <div className="p-2">
               <p className="text-[10px] text-center text-gray-400 font-bold mb-1.5">ID: {selectedUser.id}</p>
               <button
-                onClick={() => window.open(`/api/proxy/uploads/card_${selectedUser.id}.jpg`, '_blank')}
+                onClick={() => setImageModal(`/api/proxy/uploads/${selectedUser.id}_card.jpg`)}
                 className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 border border-blue-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -708,42 +708,38 @@ const openNotificationsModal = (userId: number, userName: string) => {
           </button>
 
           {/* نوع المستخدم */}
-          {/* نوع المستخدم + الحالة في صف واحد */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 flex flex-col gap-2">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
-                <select
-                  value={selectedUser.user_type || ''}
-                  onChange={(e) => {
-                    handleUserTypeChange(selectedUser.id, e.target.value);
-                    setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                  }}
-                  disabled={updatingUser === selectedUser.id}
-                  className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-                >
-                  <option value="غير موثوق">غير موثوق</option>
-                  <option value="موثوق">موثوق</option>
-                  <option value="vip">VIP</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
-                <button
-                  onClick={() => {
-                    const newBlock = selectedUser.block === 1 ? 0 : 1;
-                    handleBlockUser(selectedUser.id, newBlock);
-                    setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-                  }}
-                  disabled={updatingUser === selectedUser.id}
-                  className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
-                >
-                  {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
-                </button>
-              </div>
-            </div>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
+            <select
+              value={selectedUser.user_type || ''}
+              onChange={(e) => {
+                handleUserTypeChange(selectedUser.id, e.target.value);
+                setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+              }}
+              disabled={updatingUser === selectedUser.id}
+              className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+            >
+              <option value="غير موثوق">غير موثوق</option>
+              <option value="موثوق">موثوق</option>
+              <option value="vip">VIP</option>
+            </select>
           </div>
 
+          {/* الحالة */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
+            <button
+              onClick={() => {
+                const newBlock = selectedUser.block === 1 ? 0 : 1;
+                handleBlockUser(selectedUser.id, newBlock);
+                setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+              }}
+              disabled={updatingUser === selectedUser.id}
+              className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+            >
+              {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
+            </button>
+          </div>
 
           {/* الجهاز */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
@@ -800,11 +796,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            <div>
+            <div className="md:col-span-3">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
-
 
 
             <div>
@@ -839,6 +834,33 @@ const openNotificationsModal = (userId: number, userName: string) => {
 )}
 
 
+
+{/* مودال عرض الصورة المكبرة */}
+{imageModal && (
+  <div
+    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+    onClick={() => setImageModal(null)}
+  >
+    <div className="relative max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setImageModal(null)}
+        className="absolute -top-10 right-0 text-white hover:text-gray-300 transition"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <img
+        src={imageModal}
+        alt="صورة المستخدم"
+        className="w-full rounded-2xl shadow-2xl"
+        onError={(e) => {
+          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser?.name || 'User')}&background=random&size=400&color=fff`;
+        }}
+      />
+    </div>
+  </div>
+)}
 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
@@ -878,3 +900,6 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
+
+
+
