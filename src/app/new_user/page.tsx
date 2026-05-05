@@ -671,11 +671,9 @@ const openNotificationsModal = (userId: number, userName: string) => {
           {/* إطار الصورة */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="relative w-full aspect-square">
-              <Image
+              <img
                 src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
                 alt={`صورة ${selectedUser.name}`}
-                width={224}
-                height={224}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
@@ -855,7 +853,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
         alt="صورة المستخدم"
         className="w-full rounded-2xl shadow-2xl"
         onError={(e) => {
-          e.currentTarget.src = `https://ui-avatars.com/api/?name=User&background=random&size=400&color=fff`;
+          e.currentTarget.style.display = 'none';
         }}
       />
     </div>
