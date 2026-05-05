@@ -67,7 +67,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
-
+  const [imageModal, setImageModal] = useState<string | null>(null);
   const API_URL = '/api/proxy/cp_news_new.php';
 
   const [subscriptionsModal, setSubscriptionsModal] = useState({
@@ -686,7 +686,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             <div className="p-2">
               <p className="text-[10px] text-center text-gray-400 font-bold mb-1.5">ID: {selectedUser.id}</p>
               <button
-                onClick={() => window.open(`/api/proxy/uploads/card_${selectedUser.id}.jpg`, '_blank')}
+                onClick={() => setImageModal(`/api/proxy/uploads/card_${selectedUser.id}.jpg`)}
                 className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 border border-blue-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -834,6 +834,30 @@ const openNotificationsModal = (userId: number, userName: string) => {
           إغلاق
         </button>
       </div>
+    </div>
+  </div>
+)}
+
+{/* مودال عرض الصورة */}
+{imageModal && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
+    <div className="relative max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setImageModal(null)}
+        className="absolute -top-10 right-0 text-white hover:text-gray-300 transition"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <img
+        src={imageModal}
+        alt="صورة المستخدم"
+        className="w-full rounded-2xl shadow-2xl"
+        onError={(e) => {
+          e.currentTarget.src = `https://ui-avatars.com/api/?name=User&background=random&size=400&color=fff`;
+        }}
+      />
     </div>
   </div>
 )}
