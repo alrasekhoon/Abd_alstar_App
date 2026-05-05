@@ -653,7 +653,19 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
         {/* مودال تفاصيل المستخدم */}
 
-<div className="flex flex-col md:flex-row gap-8">
+{isUserModalOpen && selectedUser && (
+  <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/60 backdrop-blur-sm transition-all duration-300">
+    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">تفاصيل المستخدم</h2>
+        <button onClick={() => setIsUserModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="flex flex-col md:flex-row gap-8">
+
         <div className="flex-shrink-0 w-full md:w-56 flex flex-col gap-3">
           
           {/* إطار الصورة */}
@@ -810,7 +822,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
       <div className="flex justify-end pt-6 mt-6 border-t border-gray-200">
 
-        <button
+       <button
           onClick={() => setIsUserModalOpen(false)}
           className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
         >
@@ -819,8 +831,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
       </div>
     </div>
   </div>
-</div>
 )}
+
 
 
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
