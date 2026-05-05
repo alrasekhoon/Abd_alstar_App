@@ -762,12 +762,12 @@ export default function UserTransactionsModal({
 
     {/* عرض ثابت 70px لزر الحذف */}
     <div className="w-[70px] flex-shrink-0 text-center">
-      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-white border border-red-200 text-red-500 hover:bg-red-50 transition">
-        حذف
+      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-white border border-red-200 text-red-500 hover:bg-red-50 transition">حذف
       </button>
     </div>
   </div>
-</td>
+</div>
+);
                 })}
               </div>
             </>
