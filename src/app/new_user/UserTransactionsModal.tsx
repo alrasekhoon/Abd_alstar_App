@@ -781,19 +781,24 @@ export default function UserTransactionsModal({
                 })}
               </div>
 
-    {/* زر الحذف: في الأسفل لسهولة الوصول */}
-            <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition">
+  {/* زر الحذف: في الأسفل لسهولة الوصول */}
+            <button 
+              onClick={() => handleDeleteTransaction(transaction.id)} 
+              className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition"
+            >
               حذف المعاملة
             </button>
           </div>
         );
       })}
     </div> 
+    {/* نهاية قسم الموبايل */}
+
     </>
   )}
-</div> {/* 1. إغلاق منطقة المحتوى (p-4 md:p-6) */}
-</div> {/* 2. إغلاق جسم المودال الأبيض (max-w-6xl) */}
-</div> {/* 3. إغلاق الخلفية الشفافة (fixed inset-0) */}
+</div> {/* إغلاق منطقة المحتوى */}
+</div> {/* إغلاق جسم المودال الأبيض */}
+</div> {/* إغلاق الخلفية الشفافة (التعتيم) */}
 
  
         {/* الفوتر */}
@@ -892,5 +897,3 @@ export default function UserTransactionsModal({
     </div>
   );
 }
-
-
