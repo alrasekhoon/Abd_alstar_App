@@ -735,28 +735,51 @@ export default function UserTransactionsModal({
                 {transactions.map((transaction, index) => {
                   const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
                   
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-  <div className="flex items-center gap-2">
-    {/* عرض ثابت 130px لخانة الحالة لضمان استقامة الأسطر */}
-    <div className="w-[130px] flex-shrink-0">
-      {isPaid ? (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-blue-50 text-blue-700 border border-blue-100">
-          مؤجل وتم دفعه ✓
-        </span>
-      ) : isDeferred ? (
-        <button onClick={() => handleMarkAsPaid(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-[#f97316] text-white shadow-sm active:scale-95 transition">
-          دفع الرصيد المؤجل
-        </button>
-      ) : transaction.type === 'deposit' ? (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-green-50 text-green-700 border border-green-100">
-          رصيد نقدي 💵
-        </span>
-      ) : (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-red-50 text-red-700 border border-red-100">
-          رصيد مسترد 💸
-        </span>
-      )}
-    </div>
+                  // تم إضافة الـ return هنا وإصلاح الأوسمة
+                  return (
+                    <div key={`mob-${transaction.id}`} className={`bg-white p-4 rounded-2xl shadow-sm border mb-1 relative overflow-hidden ${isDeferred && !isPaid ? 'border-orange-200' : 'border-gray-100'}`}>
+                      
+                      {/* الهيدر: رقم العملية والملاحظة */}
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-400 font-bold text-[10px] bg-gray-50 px-2 py-0.5 rounded-lg">#{index + 1}</span>
+                        <span className="text-[10px] font-bold text-gray-400 truncate max-w-[150px]">{actualNote !== '-' ? actualNote : 'بدون ملاحظات'}</span>
+                      </div>
+                      
+                      {/* المبلغ: في المنتصف تماماً */}
+                      <div className="text-center my-4">
+                        <div className={`text-3xl font-black tracking-tight ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                          {Number(transaction.mony).toLocaleString()} <span className="text-sm font-bold opacity-70">ل.س</span>
+                        </div>
+                      </div>
+
+                      {/* صف الحالة: عرض كامل متناسق مع الصور التي أرسلتها */}
+                      <div className="mb-3">
+                        {isPaid ? (
+                          <span className="block text-center py-2.5 text-xs font-bold rounded-xl bg-blue-50 text-blue-700 border border-blue-100">مؤجل وتم دفعه ✓</span>
+                        ) : isDeferred ? (
+                          <button onClick={() => handleMarkAsPaid(transaction.id)} className="w-full py-2.5 text-xs font-bold rounded-xl bg-[#f97316] text-white shadow-md active:scale-95 transition">دفع الرصيد المؤجل</button>
+                        ) : transaction.type === 'deposit' ? (
+                          <span className="block text-center py-2.5 text-xs font-bold rounded-xl bg-green-50 text-green-700 border border-green-100">رصيد نقدي 💵</span>
+                        ) : (
+                          <span className="block text-center py-2.5 text-xs font-bold rounded-xl bg-red-50 text-red-700 border border-red-100">رصيد مسترد 💸</span>
+                        )}
+                      </div>
+
+                      {/* صف التاريخ: كبسولة رمادية هادئة */}
+                      <div className="text-center mb-4">
+                        <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-4 py-1 rounded-full border border-gray-100">
+                          {transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--/--/--'}
+                        </span>
+                      </div>
+
+                      {/* زر الحذف: في الأسفل لسهولة الوصول */}
+                      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition">
+                        حذف المعاملة
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
 
     {/* عرض ثابت 70px لزر الحذف */}
     <div className="w-[70px] flex-shrink-0 text-center">
