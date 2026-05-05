@@ -337,27 +337,7 @@ export default function UserManagement() {
           </div>
         </div>
 
-        {/* إحصائيات أنواع المستخدمين */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="text-blue-800 font-bold text-xl">{userTypeStats['غير موثوق']}</div>
-            <div className="text-blue-600 text-sm">غير موثوق</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="text-green-800 font-bold text-xl">{userTypeStats['موثوق']}</div>
-            <div className="text-green-600 text-sm">موثوق</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div className="text-purple-800 font-bold text-xl">{userTypeStats['vip']}</div>
-            <div className="text-purple-600 text-sm">VIP</div>
-          </div>
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div className="text-gray-800 font-bold text-xl">{userTypeStats['آخر']}</div>
-            <div className="text-gray-600 text-sm">آخر</div>
-          </div>
-        </div>
-
-        {/* Search and Filter Bar */}
+           {/* Search and Filter Bar */}
         <div className="mb-6 flex flex-col md:flex-row gap-4">
           
           <div className="relative flex-1 max-w-md">
@@ -914,3 +894,5 @@ export default function UserManagement() {
     </div>
   );
 }
+
+
