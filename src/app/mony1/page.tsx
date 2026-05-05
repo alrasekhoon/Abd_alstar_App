@@ -403,68 +403,61 @@ export default function MoneyManagement() {
               </tr>
             </thead>
 
-            <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200">
               {transactions.map((transaction) => {
                 const isDeleted = deletedIds.has(transaction.id!);
                 const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
-const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
-                const isDeposit = parseFloat(transaction.mony) >= 0;
+                const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
+                // الاعتماد على نوع المعاملة لضمان الدقة
+                const isDeposit = transaction.type === 'deposit';
 
                 return (
                   <tr key={transaction.id} className={`transition ${isDeleted ? 'bg-red-50 opacity-60' : 'hover:bg-gray-50'}`}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium text-gray-900 ${isDeleted ? 'line-through text-gray-400' : ''}`}>
                         {getUserName(transaction.user_id)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className={`text-sm font-bold ${isDeleted ? 'line-through text-gray-400' : isDeposit ? 'text-green-600' : 'text-red-600'}`}>
                         {transaction.mony} {transaction.dolar === 'yes' ? '$' : 'ل.س'}
                       </div>
                     </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                      {isPaidDeferred ? (
-                        <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
-                      ) : isDeferred ? (
-                        <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-orange-100 text-orange-800">رصيد مؤجل ⏳</span>
-                      ) : isDeposit ? (
-                        <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-green-100 text-green-800">رصيد نقدي 💵</span>
-                      ) : (
-                        <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-red-100 text-red-800">رصيد مسترد 💸</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{currentUser.name}</div>
                     </td>
-                    <td className="px-6 py-4 max-w-xs">
-                      <div className={`text-sm ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`}>{transaction.note}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {transaction.add_date ? new Date(transaction.add_date).toLocaleString() : '--'}
+                    <td className="px-4 py-4 max-w-xs truncate">
+                      <div className={`text-sm ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`} title={transaction.note}>
+                        {transaction.note}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {isDeleted ? (
-                        <span className="text-xs text-red-400 font-bold">محذوف</span>
-                      ) : (
-                        <div className="flex gap-2">
-                          {isDeferred && !isPaidDeferred && (
-                            <button
-                              onClick={() => transaction.id && handlePayDeferred(transaction.id)}
-                              className="px-2 py-1 text-xs font-bold rounded-lg bg-orange-50 border border-orange-300 text-orange-600 hover:bg-orange-100 transition"
-                            >
-                              دفع المؤجل
-                            </button>
-                          )}
-                          <button
-                            onClick={() => transaction.id && handleDelete(transaction.id)}
-                            className="px-2 py-1 text-xs font-bold rounded-lg bg-white border border-red-300 text-red-600 hover:bg-red-50 transition"
-                          >
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        {isPaidDeferred ? (
+                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">مؤجل وتم دفعه ✓</span>
+                        ) : isDeferred ? (
+                          <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
+                            دفع المؤجل
+                          </button>
+                        ) : isDeposit ? (
+                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-green-50 text-green-700 border border-green-200">رصيد نقدي 💵</span>
+                        ) : (
+                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200">رصيد مسترد 💸</span>
+                        )}
+                        
+                        {!isDeleted ? (
+                          <button onClick={() => transaction.id && handleDelete(transaction.id)} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-red-300 text-red-500 hover:bg-red-50 transition">
                             حذف
                           </button>
-                        </div>
-                      )}
+                        ) : (
+                          <span className="text-xs text-red-400 font-bold">محذوف</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -474,12 +467,13 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
         </div>
 
         {/* نسخة الموبايل - بطاقات */}
+      {/* نسخة الموبايل - بطاقات */}
         <div className="md:hidden space-y-3 mt-4">
           {transactions.map((transaction) => {
             const isDeleted = deletedIds.has(transaction.id!);
             const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
             const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
-            const isDeposit = parseFloat(transaction.mony) >= 0;
+            const isDeposit = transaction.type === 'deposit';
 
             return (
               <div key={transaction.id} className={`rounded-2xl border p-4 shadow-sm ${isDeleted ? 'bg-red-50 border-red-200 opacity-60' : 'bg-white border-gray-200'}`}>
@@ -487,7 +481,7 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
                   <span className="text-xs text-gray-400 font-bold">#{transaction.id}</span>
                   <span className={`text-sm font-bold ${isDeleted ? 'line-through text-gray-400' : ''}`}>{getUserName(transaction.user_id)}</span>
                 </div>
-                <div className={`text-2xl font-extrabold text-center my-3 ${isDeleted ? 'line-through text-gray-400' : 'text-green-600'}`}>
+                <div className={`text-2xl font-extrabold text-center my-3 ${isDeleted ? 'line-through text-gray-400' : isDeposit ? 'text-green-600' : 'text-red-600'}`}>
                   {transaction.mony} {transaction.dolar === 'yes' ? '$' : 'ل.س'}
                 </div>
                 
@@ -497,10 +491,12 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
                       <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
                     ) : isDeferred ? (
                       <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
-                        دفع الرصيد المؤجل
+                        دفع المؤجل
                       </button>
-                    ) : (
+                    ) : isDeposit ? (
                       <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-green-100 text-green-800">رصيد نقدي 💵</span>
+                    ) : (
+                      <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-red-100 text-red-800">رصيد مسترد 💸</span>
                     )}
                   </div>
                   <span className="text-xs text-gray-400 shrink-0">{transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}</span>
@@ -538,6 +534,5 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
     </div>
   );
 }
-
 
 
