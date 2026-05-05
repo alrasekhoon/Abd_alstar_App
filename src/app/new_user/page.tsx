@@ -740,5 +740,3 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
-
-
