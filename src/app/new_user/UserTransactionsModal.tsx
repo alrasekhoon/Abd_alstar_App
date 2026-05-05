@@ -772,8 +772,11 @@ export default function UserTransactionsModal({
                         </span>
                       </div>
 
-                      {/* زر الحذف: في الأسفل لسهولة الوصول */}
-                      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition">
+                    {/* زر الحذف: في الأسفل لسهولة الوصول */}
+                      <button 
+                        onClick={() => handleDeleteTransaction(transaction.id)} 
+                        className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition"
+                      >
                         حذف المعاملة
                       </button>
                     </div>
@@ -782,24 +785,20 @@ export default function UserTransactionsModal({
               </div>
             </>
           )}
-        </div> {/* إغلاق منطقة المحتوى p-4 md:p-6 */}
+        </div> {/* إغلاق منطقة المحتوى القابلة للتمرير */}
 
-        {/* الفوتر: يجب أن يكون هنا ليكون داخل النافذة البيضاء */}
+        {/* الفوتر: يظهر مرة واحدة فقط داخل جسم المودال */}
         <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 relative z-20">
-          <button onClick={onClose} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition">
+          <button 
+            onClick={onClose} 
+            className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition"
+          >
             إغلاق النافذة
           </button>
         </div>
-      </div> {/* إغلاق جسم المودال الأبيض max-w-6xl */}
-    </div> {/* إغلاق الخلفية الشفافة والطبقة العائمة fixed inset-0 */}
- 
-        {/* الفوتر */}
-        <div className="flex justify-end p-4 border-t border-gray-200 bg-white md:bg-gray-50 rounded-b-xl shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none relative z-20">
-          <button onClick={onClose} className="w-full md:w-auto px-6 py-3 md:py-2.5 bg-gray-600 text-white font-bold rounded-xl hover:bg-gray-700 shadow-sm transition">
-            إغلاق النافذة
-          </button>
-        </div>
-      </div>
+      </div> {/* إغلاق جسم المودال الأبيض (max-w-6xl) */}
+    </div> {/* إغلاق الخلفية الشفافة والطبقة العائمة (fixed inset-0) */}
+
 
       {/* الدرج الجانبي للمحذوفات */}
       <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -889,3 +888,4 @@ export default function UserTransactionsModal({
     </div>
   );
 }
+
