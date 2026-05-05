@@ -236,10 +236,15 @@ export default function MoneyManagement() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-gray-800">إدارة الدفعات المالية</h1>
-          <div className="text-sm bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg font-bold">
-            إجمالي المعاملات: {transactions.length}
+          <div className="flex items-center gap-2 self-end md:self-auto">
+            <div className="text-sm bg-[#fef08a] border border-[#fde047] text-gray-800 px-6 py-2.5 rounded-xl font-extrabold shadow-sm">
+              إجمالي المعاملات: {transactions.filter(t => t.type !== 'withdraw').length}
+            </div>
+            <button onClick={fetchData} className="p-2.5 bg-blue-100 text-blue-600 rounded-xl hover:bg-blue-200 transition border border-blue-200" title="تحديث البيانات">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
           </div>
         </div>
 
@@ -386,21 +391,20 @@ export default function MoneyManagement() {
         )}
 
         <div className="hidden md:block overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 table-fixed">
             <thead>
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800]">الطالب</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800]">المبلغ</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800]">النوع</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800]">المسؤول</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800]">ملاحظات</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800]">التاريخ</th>
-                <th className="px-6 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800]">الإجراءات</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800] w-[16%]">الطالب</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800] w-[12%]">المبلغ</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800] w-[12%]">المسؤول</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800] w-[20%]">ملاحظات</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f5e97a] border-b border-[#c8b800] w-[15%]">التاريخ</th>
+                <th className="px-4 py-3 text-right text-xs font-extrabold text-gray-800 uppercase tracking-wider bg-[#f0e060] border-b border-[#c8b800] w-[25%]">الإجراءات</th>
               </tr>
             </thead>
 
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((transaction) => {
+              {transactions.filter(t => t.type !== 'withdraw').map((transaction) => {
                 const isDeleted = deletedIds.has(transaction.id!);
                 const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
 const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
@@ -418,7 +422,7 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
                         {transaction.mony} {transaction.dolar === 'yes' ? '$' : 'ل.س'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                       {isPaidDeferred ? (
                         <span className="px-2 py-1 inline-flex text-xs font-semibold rounded-full bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
                       ) : isDeferred ? (
@@ -471,10 +475,10 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
 
         {/* نسخة الموبايل - بطاقات */}
         <div className="md:hidden space-y-3 mt-4">
-          {transactions.map((transaction) => {
+          {transactions.filter(t => t.type !== 'withdraw').map((transaction) => {
             const isDeleted = deletedIds.has(transaction.id!);
-            const isDeferred = transaction.note?.includes('مؤجل') && !transaction.note?.includes('تم دفعه');
-            const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('مؤجل وتم دفعه');
+            const isDeferred = (transaction.note?.includes('DEFERRED') || transaction.note?.includes('مؤجل')) && !transaction.note?.includes('تم دفعه');
+            const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?.includes('تم دفعه');
             const isDeposit = parseFloat(transaction.mony) >= 0;
 
             return (
@@ -483,48 +487,45 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
                   <span className="text-xs text-gray-400 font-bold">#{transaction.id}</span>
                   <span className={`text-sm font-bold ${isDeleted ? 'line-through text-gray-400' : ''}`}>{getUserName(transaction.user_id)}</span>
                 </div>
-                <div className={`text-2xl font-extrabold text-center my-3 ${isDeleted ? 'line-through text-gray-400' : isDeposit ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-extrabold text-center my-3 ${isDeleted ? 'line-through text-gray-400' : 'text-green-600'}`}>
                   {transaction.mony} {transaction.dolar === 'yes' ? '$' : 'ل.س'}
                 </div>
-                <div className="flex justify-between items-center mb-2">
-                  {isPaidDeferred ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
-                  ) : isDeferred ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">رصيد مؤجل ⏳</span>
-                  ) : isDeposit ? (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">رصيد نقدي 💵</span>
-                  ) : (
-                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">رصيد مسترد 💸</span>
-                  )}
-                  <span className="text-xs text-gray-400">{transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}</span>
-                </div>
-                {transaction.note ? <p className={`text-xs mb-3 ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`}>{transaction.note}</p> : null}
-                {isDeleted ? (
-                  <div className="text-center text-xs text-red-400 font-bold py-1">محذوف</div>
-                ) : (
-                  <div className="flex gap-2 mt-2">
-                    {isDeferred && !isPaidDeferred && (
-                      <button
-                        onClick={() => transaction.id && handlePayDeferred(transaction.id)}
-                        className="flex-1 py-2 text-xs font-bold rounded-xl bg-orange-50 border border-orange-300 text-orange-600 hover:bg-orange-100 transition"
-                      >
-                        دفع المؤجل
+                
+                <div className="flex justify-between items-center mb-3 gap-2">
+                  <div className="flex-1">
+                    {isPaidDeferred ? (
+                      <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
+                    ) : isDeferred ? (
+                      <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
+                        دفع الرصيد المؤجل
                       </button>
+                    ) : (
+                      <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-green-100 text-green-800">رصيد نقدي 💵</span>
                     )}
+                  </div>
+                  <span className="text-xs text-gray-400 shrink-0">{transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}</span>
+                </div>
+                
+                {transaction.note ? <p className={`text-xs mb-3 ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`}>{transaction.note}</p> : null}
+                
+                <div className="mt-2">
+                  {!isDeleted ? (
                     <button
                       onClick={() => transaction.id && handleDelete(transaction.id)}
-                      className="flex-1 py-2 text-xs font-bold rounded-xl bg-white border border-red-300 text-red-600 hover:bg-red-50 transition"
+                      className="w-full py-2 text-xs font-bold rounded-xl bg-white border border-red-300 text-red-500 hover:bg-red-50 transition"
                     >
                       حذف
                     </button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full text-center py-2 text-xs text-red-400 font-bold border border-red-100 rounded-xl bg-red-50">محذوف</div>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
 
-        {transactions.length === 0 && !isLoading && (
+        {transactions.filter(t => t.type !== 'withdraw').length === 0 && !isLoading && (
           <div className="text-center py-12">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -537,5 +538,6 @@ const isPaidDeferred = paidDeferredIds.has(transaction.id!) || transaction.note?
     </div>
   );
 }
+
 
 
