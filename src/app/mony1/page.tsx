@@ -95,7 +95,7 @@ export default function MoneyManagement() {
     }
   };
 
-  const filteredUsers = users.filter(user => 
+ const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
     user.phone.includes(debouncedSearchTerm) ||
     user.id.toString().includes(debouncedSearchTerm)
@@ -116,6 +116,36 @@ export default function MoneyManagement() {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
     }
   };
+
+  // ---- الصق الدالة هنا ----
+  const handlePayDeferred = async (id: number) => {
+    if (!confirm('هل تريد تحويل هذا الرصيد المؤجل إلى مدفوع؟')) return;
+    
+    const transactionToUpdate = transactions.find(t => t.id === id);
+    if (!transactionToUpdate) return;
+
+    try {
+      const dataToSend = {
+        ...transactionToUpdate,
+        note: 'مؤجل وتم دفعه',
+        update_date: new Date().toISOString()
+      };
+
+      const response = await fetch(`${API_URL}?id=${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSend),
+      });
+
+      if (!response.ok) throw new Error('فشل في تحديث الدفعة');
+      
+      setPaidDeferredIds(prev => new Set(prev).add(id));
+      fetchData(); 
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
+    }
+  };
+  // -------------------------
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
