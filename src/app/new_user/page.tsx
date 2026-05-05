@@ -674,7 +674,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <img
                 src={`/api/proxy/uploads/${selectedUser.id}_card.jpg`}
                 alt={`صورة ${selectedUser.name}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 onError={(e) => {
                   const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
                   e.currentTarget.src = defaultImageUrl;
@@ -839,10 +839,10 @@ const openNotificationsModal = (userId: number, userName: string) => {
 {/* مودال عرض الصورة */}
 {imageModal && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setImageModal(null)}>
-    <div className="relative w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto rounded-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="relative w-[500px] h-[600px] mx-4 rounded-2xl overflow-hidden bg-black shadow-2xl" onClick={(e) => e.stopPropagation()}>
       <button
         onClick={() => setImageModal(null)}
-        className="sticky top-2 right-2 float-right z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1.5 transition"
+        className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/80 text-white rounded-full p-1.5 transition"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -851,7 +851,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
       <img
         src={imageModal}
         alt="صورة المستخدم"
-        className="w-full rounded-2xl shadow-2xl"
+        className="w-full h-full object-contain"
         onError={(e) => {
           e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser?.name || 'User')}&background=random&size=400&color=fff`;
         }}
