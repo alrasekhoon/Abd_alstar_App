@@ -662,7 +662,7 @@ export default function UserTransactionsModal({
                       <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">المبلغ</th>
                       <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">النوع</th>
                       <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">ملاحظة / حالة</th>
-                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
+                      <th className="px-4 py-4 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[1%] whitespace-nowrap">الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -692,7 +692,7 @@ export default function UserTransactionsModal({
                               </div>
                             )}
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium w-[1%]">
   <div className="flex items-center gap-2">
     {/* حاوية الحالة: عرض ثابت 130px لضمان المحاذاة */}
     <div className="w-[130px] flex-shrink-0">
@@ -733,41 +733,48 @@ export default function UserTransactionsModal({
               {/* نسخة الموبايل - بطاقات احترافية */}
               <div className="md:hidden flex flex-col gap-4">
                 {transactions.map((transaction, index) => {
-                  const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
-  
-  return (
-    <div key={transaction.id} className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-      <div className="flex items-center gap-2">
+                  return (
+    <div key={`mob-${transaction.id}`} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3">
+      {/* سطر المبلغ والنوع */}
+      <div className="flex justify-between items-center">
+        <span className={`font-extrabold text-lg ${transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+          {Number(transaction.mony).toLocaleString()} ل.س
+        </span>
+        <span className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+          {transaction.type === 'deposit' ? 'إيداع' : 'رصيد مسترد'}
+        </span>
+      </div>
 
-    {/* عرض ثابت 130px لخانة الحالة لضمان استقامة الأسطر */}
-    <div className="w-[130px] flex-shrink-0">
-      {isPaid ? (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-blue-50 text-blue-700 border border-blue-100">
-          مؤجل وتم دفعه ✓
-        </span>
-      ) : isDeferred ? (
-        <button onClick={() => handleMarkAsPaid(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-[#f97316] text-white shadow-sm active:scale-95 transition">
-          دفع الرصيد المؤجل
-        </button>
-      ) : transaction.type === 'deposit' ? (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-green-50 text-green-700 border border-green-100">
-          رصيد نقدي 💵
-        </span>
-      ) : (
-        <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-red-50 text-red-700 border border-red-100">
-          رصيد مسترد 💸
-        </span>
-      )}
-    </div>
+      {/* الملاحظة */}
+      <div className="text-sm text-gray-600">
+        <p className="truncate opacity-80">{actualNote}</p>
+        {isDeferred && (
+          <div className="mt-1 text-[10px] text-orange-700 font-extrabold bg-orange-100 inline-block px-2 py-1 rounded border border-orange-200">
+            ⏳ مؤجل لـ {days} أيام
+          </div>
+        )}
+      </div>
 
-    {/* عرض ثابت 70px لزر الحذف */}
-    <div className="w-[70px] flex-shrink-0 text-center">
-      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-white border border-red-200 text-red-500 hover:bg-red-50 transition">حذف
-      </button>
+      {/* الأزرار */}
+      <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
+        <div className="flex-1">
+          {isPaid ? (
+            <span className="block text-center py-2 text-[11px] font-bold rounded-xl bg-blue-50 text-blue-700 border border-blue-100">مؤجل وتم دفعه ✓</span>
+          ) : isDeferred ? (
+            <button onClick={() => handleMarkAsPaid(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-[#f97316] text-white active:scale-95 transition shadow-sm">دفع المؤجل</button>
+          ) : (
+            <span className={`block text-center py-2 text-[11px] font-bold rounded-xl ${transaction.type === 'deposit' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {transaction.type === 'deposit' ? 'رصيد نقدي 💵' : 'رصيد مسترد 💸'}
+            </span>
+          )}
+        </div>
+        <div className="w-[70px] flex-shrink-0 text-center">
+          <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-white border border-red-200 text-red-500 hover:bg-red-50 transition">حذف</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-);
+  );
+
                 })}
               </div>
             </>
