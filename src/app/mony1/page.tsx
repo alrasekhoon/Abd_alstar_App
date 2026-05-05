@@ -1,132 +1,28 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-
-type Transaction = {
-  id?: number;
-  user_id: number;
-  mony: string;
-  type: 'deposit' | 'withdraw';
-  dolar: 'yes' | 'no';
-  admin_user: number;
-  note: string;
-  add_date?: string;
-  update_date?: string;
-};
-
-type User = {
-  id: number;
-  name: string;
-  phone: string;
-};
-
-export default function MoneyManagement() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
-  const API_URL = '/api/proxy/cp_money.php';
-  const USERS_API_URL = '/api/proxy/cp_mony_getuser.php';
-
-  // تعريف المستخدم الحالي كمتغير ثابت بدلاً من state
-  const currentUser = { id: 1, name: 'Admin' };
-  const [deletedIds, setDeletedIds] = useState<Set<number>>(new Set());
-  const [paidDeferredIds, setPaidDeferredIds] = useState<Set<number>>(new Set());
-
-
-  useEffect(() => {
-    fetchData();
-    fetchUsers();
-  }, []);
-
-  // تأخير البحث لتجنب طلبات متكررة
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
- const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const url = `${API_URL}?_t=${new Date().getTime()}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        cache: 'no-store' as RequestCache
-      });
-      if (!response.ok) throw new Error('فشل في جلب البيانات');
-      const result = await response.json();
-      setTransactions(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const url = `${USERS_API_URL}?_t=${new Date().getTime()}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        cache: 'no-store' as RequestCache
-      });
-      if (!response.ok) throw new Error('فشل في جلب بيانات الطلاب');
-      const result = await response.json();
-      setUsers(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب بيانات الطلاب');
-    }
-  };
-
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
-    user.phone.includes(debouncedSearchTerm) ||
-    user.id.toString().includes(debouncedSearchTerm)
-  );
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه المعاملة؟')) return;
-    
-    try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('فشل في حذف المعاملة');
-      
-      setDeletedIds(prev => new Set(prev).add(id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
-    }
-  };
-
-  const handlePayDeferred = async (id: number) => {
+const handlePayDeferred = async (id: number) => {
     if (!confirm('هل تريد تحويل هذا الرصيد المؤجل إلى مدفوع؟')) return;
+    
+    // البحث عن بيانات الدفعة كاملة
+    const transactionToUpdate = transactions.find(t => t.id === id);
+    if (!transactionToUpdate) return;
+
     try {
+      // تجهيز البيانات كاملة للإرسال مع تعديل الملاحظة فقط
+      const dataToSend = {
+        ...transactionToUpdate,
+        note: 'مؤجل وتم دفعه',
+        update_date: new Date().toISOString()
+      };
+
       const response = await fetch(`${API_URL}?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: 'مؤجل وتم دفعه' }),
+        body: JSON.stringify(dataToSend),
       });
+
       if (!response.ok) throw new Error('فشل في تحديث الدفعة');
+      
       setPaidDeferredIds(prev => new Set(prev).add(id));
+      fetchData(); // تحديث الجدول فوراً
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
     }
