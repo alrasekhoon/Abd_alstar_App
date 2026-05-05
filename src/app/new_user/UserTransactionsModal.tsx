@@ -781,19 +781,18 @@ export default function UserTransactionsModal({
                 })}
               </div>
 
-    {/* عرض ثابت 70px لزر الحذف */}
-    <div className="w-[70px] flex-shrink-0 text-center">
-      <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2 text-[11px] font-bold rounded-xl bg-white border border-red-200 text-red-500 hover:bg-red-50 transition">
-        حذف
-      </button>
-    </div>
-  </div>
-</td>
-                })}
-              </div>
-            </>
-          )}
-        </div>
+    {/* زر الحذف: في الأسفل لسهولة الوصول */}
+            <button onClick={() => handleDeleteTransaction(transaction.id)} className="w-full py-2.5 text-xs font-bold rounded-xl bg-white border border-red-100 text-red-400 hover:bg-red-50 transition">
+              حذف المعاملة
+            </button>
+          </div>
+        );
+      })}
+    </div> 
+    {/* تم حذف الـ div الزائد الذي كان هنا */}
+    </>
+  )}
+</div>
 
  
         {/* الفوتر */}
