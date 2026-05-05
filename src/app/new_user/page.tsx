@@ -67,6 +67,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [updatingUser, setUpdatingUser] = useState<number | null>(null);
+const [imageModal, setImageModal] = useState<string | null>(null);
   const [imageModal, setImageModal] = useState<string | null>(null);
   const API_URL = '/api/proxy/cp_news_new.php';
 
@@ -672,7 +673,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="relative w-full aspect-square">
               <img
-                src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+                src={`/api/proxy/uploads/${selectedUser.id}_card.jpg`}
                 alt={`صورة ${selectedUser.name}`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -862,6 +863,33 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
 
 
+{/* مودال عرض الصورة المكبرة */}
+{imageModal && (
+  <div
+    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+    onClick={() => setImageModal(null)}
+  >
+    <div className="relative max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setImageModal(null)}
+        className="absolute -top-10 right-0 text-white hover:text-gray-300 transition"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <img
+        src={imageModal}
+        alt="صورة المستخدم"
+        className="w-full rounded-2xl shadow-2xl"
+        onError={(e) => {
+          e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser?.name || 'User')}&background=random&size=400&color=fff`;
+        }}
+      />
+    </div>
+  </div>
+)}
+
 {/* خلفية التعتيم الشاملة للنوافذ المستقلة */}
       {(transactionsModal.isOpen || subscriptionsModal.isOpen || notificationsModal.isOpen) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] transition-all duration-300"></div>
@@ -900,3 +928,4 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
+
