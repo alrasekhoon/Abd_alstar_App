@@ -653,7 +653,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
         {/* مودال تفاصيل المستخدم */}
 
-<div className="flex-shrink-0 w-full md:w-56 flex flex-col gap-3">
+<div className="flex flex-col md:flex-row gap-8">
+        <div className="flex-shrink-0 w-full md:w-56 flex flex-col gap-3">
           
           {/* إطار الصورة */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
