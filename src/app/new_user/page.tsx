@@ -672,7 +672,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="relative w-full aspect-square">
               <img
-                src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+                src={`/api/proxy/uploads/${selectedUser.id}_card.jpg`}
                 alt={`صورة ${selectedUser.name}`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -684,7 +684,7 @@ const openNotificationsModal = (userId: number, userName: string) => {
             <div className="p-2">
               <p className="text-[10px] text-center text-gray-400 font-bold mb-1.5">ID: {selectedUser.id}</p>
               <button
-                onClick={() => setImageModal(`/api/proxy/uploads/card_${selectedUser.id}.jpg`)}
+                onClick={() => setImageModal(`/api/proxy/uploads/${selectedUser.id}_card.jpg`)}
                 className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 border border-blue-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -900,3 +900,5 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
+
+
