@@ -52,10 +52,19 @@ export default function MoneyManagement() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const fetchData = async () => {
+ const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const url = `${API_URL}?_t=${new Date().getTime()}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
       setTransactions(result);
@@ -68,7 +77,16 @@ export default function MoneyManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(USERS_API_URL);
+      const url = `${USERS_API_URL}?_t=${new Date().getTime()}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        cache: 'no-store' as RequestCache
+      });
       if (!response.ok) throw new Error('فشل في جلب بيانات الطلاب');
       const result = await response.json();
       setUsers(result);
@@ -205,25 +223,8 @@ export default function MoneyManagement() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">إدارة الدفعات المالية</h1>
-          <div className="flex space-x-3">
-            <button
-              onClick={openAddDepositForm}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg shadow hover:bg-green-700 transition duration-300 flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              إضافة دفعة
-            </button>
-            <button
-              onClick={openAddWithdrawForm}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg shadow hover:bg-red-700 transition duration-300 flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-              سحب مبلغ
-            </button>
+          <div className="text-sm bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg font-bold">
+            إجمالي المعاملات: {transactions.length}
           </div>
         </div>
 
