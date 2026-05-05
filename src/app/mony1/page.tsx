@@ -234,7 +234,7 @@ export default function MoneyManagement() {
   );
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="w-full p-2 md:p-6">
       <div className="bg-white rounded-lg shadow-md p-6">
        <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">إدارة الدفعات المالية</h1>
@@ -438,27 +438,32 @@ export default function MoneyManagement() {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
-                        {isPaidDeferred ? (
-                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">مؤجل وتم دفعه ✓</span>
-                        ) : isDeferred ? (
-                          <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
-                            دفع المؤجل
-                          </button>
-                        ) : isDeposit ? (
-                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-green-50 text-green-700 border border-green-200">رصيد نقدي 💵</span>
-                        ) : (
-                          <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200">رصيد مسترد 💸</span>
-                        )}
-                        
-                        {!isDeleted ? (
-                          <button onClick={() => transaction.id && handleDelete(transaction.id)} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-red-300 text-red-500 hover:bg-red-50 transition">
-                            حذف
-                          </button>
-                        ) : (
-                          <span className="text-xs text-red-400 font-bold">محذوف</span>
-                        )}
+                        {/* حاوية النوع: عرض ثابت لضمان التساوي */}
+                        <div className="w-32 flex-shrink-0">
+                          {isPaidDeferred ? (
+                            <span className="block text-center py-1.5 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">مؤجل وتم دفعه ✓</span>
+                          ) : isDeferred ? (
+                            <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
+                              دفع المؤجل
+                            </button>
+                          ) : isDeposit ? (
+                            <span className="block text-center py-1.5 text-xs font-bold rounded-lg bg-green-50 text-green-700 border border-green-200">رصيد نقدي 💵</span>
+                          ) : (
+                            <span className="block text-center py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200">رصيد مسترد 💸</span>
+                          )}
+                        </div>
+
+                        {/* زر الحذف: عرض ثابت */}
+                        <div className="w-20 flex-shrink-0">
+                          {!isDeleted ? (
+                            <button onClick={() => transaction.id && handleDelete(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-white border border-red-300 text-red-500 hover:bg-red-50 transition text-center">
+                              حذف
+                            </button>
+                          ) : (
+                            <span className="block text-center text-xs text-red-400 font-bold">محذوف</span>
+                          )}
+                        </div>
                       </div>
-                    </td>
                   </tr>
                 );
               })}
@@ -466,7 +471,6 @@ export default function MoneyManagement() {
           </table>
         </div>
 
-        {/* نسخة الموبايل - بطاقات */}
       {/* نسخة الموبايل - بطاقات */}
         <div className="md:hidden space-y-3 mt-4">
           {transactions.map((transaction) => {
@@ -476,7 +480,7 @@ export default function MoneyManagement() {
             const isDeposit = transaction.type === 'deposit';
 
             return (
-              <div key={transaction.id} className={`rounded-2xl border p-4 shadow-sm ${isDeleted ? 'bg-red-50 border-red-200 opacity-60' : 'bg-white border-gray-200'}`}>
+              <div key={transaction.id} className={`rounded-xl border p-3 mb-3 shadow-sm ${isDeleted ? 'bg-red-50 border-red-200 opacity-60' : 'bg-white border-gray-200'}`}>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-gray-400 font-bold">#{transaction.id}</span>
                   <span className={`text-sm font-bold ${isDeleted ? 'line-through text-gray-400' : ''}`}>{getUserName(transaction.user_id)}</span>
@@ -502,7 +506,7 @@ export default function MoneyManagement() {
                   <span className="text-xs text-gray-400 shrink-0">{transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}</span>
                 </div>
                 
-                {transaction.note ? <p className={`text-xs mb-3 ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`}>{transaction.note}</p> : null}
+                {transaction.note ? <p className={`text-xs my-4 block w-full border-t pt-2 ${isDeleted ? 'line-through text-gray-400' : 'text-gray-500'}`}>{transaction.note}</p> : null}
                 
                 <div className="mt-2">
                   {!isDeleted ? (
