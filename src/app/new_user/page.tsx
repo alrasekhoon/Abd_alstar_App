@@ -589,8 +589,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
         </div>
 
        {/* التحميل التدريجي */}
-        {!isLoading && pagination && pagination.totalPages > 1 && (
-         <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-3">
+        {!isLoading && pagination && pagination.totalPages > 1 && (
+         <div className="flex flex-col md:flex-row items-center justify-between mt-6 gap-3">
   <div className="bg-white border border-gray-200 shadow-sm px-4 py-2.5 rounded-xl text-sm font-bold text-gray-700 text-right w-full md:w-auto">
     عرض{' '}
     <span className="text-blue-600">{((pagination.currentPage - 1) * pagination.usersPerPage) + 1}</span>
@@ -653,71 +653,90 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
         {/* مودال تفاصيل المستخدم */}
 
-{isUserModalOpen && selectedUser && (
-  <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/60 backdrop-blur-sm transition-all duration-300">
-    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">تفاصيل المستخدم</h2>
-        <button 
-          onClick={() => setIsUserModalOpen(false)}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* قسم الصورة */}
-        <div className="flex-shrink-0">
-          <div className="bg-gray-100 rounded-lg p-4 text-center">
-            <div className="relative w-48 h-48 mx-auto mb-4">
-  <Image
-    src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
-    alt={`صورة ${selectedUser.name}`}
-    width={192}
-    height={192}
-    className="w-full h-full object-cover rounded-lg border-2 border-gray-300"
-    onError={(e) => {
-      // استخدام صورة افتراضية
-      const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
-      e.currentTarget.src = defaultImageUrl;
-    }}
-  />
-</div>
-            <p className="text-sm text-gray-600">
-              ID: {selectedUser.id}
-            </p>
-            <button
-              onClick={() => {
-                window.open(`/api/proxy/uploads/${selectedUser.id}_card.jpg`, '_blank');
-              }}
-              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-              </svg>
-              عرض الصورة كاملة
-            </button>
-            <div className="mt-4 bg-blue-50 border-2 border-blue-300 rounded-xl p-3 text-center shadow-sm">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-blue-700">رمز OTP</span>
-                <button
-                  onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
-                  className="text-blue-500 hover:text-blue-700 transition"
-                  title="تحديث"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-blue-900 font-extrabold tracking-widest text-xl">{selectedUser.auth || '-'}</p>
-              <p className="text-[10px] text-blue-500 mt-1">{formatDateTime(selectedUser.updated_at)}</p>
+<div className="flex-shrink-0 w-full md:w-56 flex flex-col gap-3">
+          
+          {/* إطار الصورة */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="relative w-full aspect-square">
+              <Image
+                src={`/api/proxy/uploads/card_${selectedUser.id}.jpg`}
+                alt={`صورة ${selectedUser.name}`}
+                width={224}
+                height={224}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const defaultImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&background=random&size=200&color=fff`;
+                  e.currentTarget.src = defaultImageUrl;
+                }}
+              />
+            </div>
+            <div className="p-2">
+              <p className="text-[10px] text-center text-gray-400 font-bold mb-1.5">ID: {selectedUser.id}</p>
+              <button
+                onClick={() => window.open(`/api/proxy/uploads/card_${selectedUser.id}.jpg`, '_blank')}
+                className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 border border-blue-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                </svg>
+                عرض الصورة
+              </button>
             </div>
           </div>
+
+          {/* OTP - زر تفاعلي */}
+          <button
+            onClick={() => fetchUsers(pagination?.currentPage || 1, debouncedSearch, filters)}
+            className="w-full bg-blue-50 border-2 border-blue-200 hover:bg-blue-100 hover:border-blue-400 rounded-2xl p-3 text-center shadow-sm transition group"
+          >
+            <span className="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest block mb-1">🔑 رمز OTP — اضغط للتحديث</span>
+            <span className="text-blue-900 font-extrabold tracking-widest text-2xl block">{selectedUser.auth || '-'}</span>
+            <span className="text-[9px] text-blue-400 mt-1 block">{formatDateTime(selectedUser.updated_at)}</span>
+          </button>
+
+          {/* نوع المستخدم */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
+            <select
+              value={selectedUser.user_type || ''}
+              onChange={(e) => {
+                handleUserTypeChange(selectedUser.id, e.target.value);
+                setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+              }}
+              disabled={updatingUser === selectedUser.id}
+              className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+            >
+              <option value="غير موثوق">غير موثوق</option>
+              <option value="موثوق">موثوق</option>
+              <option value="vip">VIP</option>
+            </select>
+          </div>
+
+          {/* الحالة */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
+            <button
+              onClick={() => {
+                const newBlock = selectedUser.block === 1 ? 0 : 1;
+                handleBlockUser(selectedUser.id, newBlock);
+                setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+              }}
+              disabled={updatingUser === selectedUser.id}
+              className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+            >
+              {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
+            </button>
+          </div>
+
+          {/* الجهاز */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الجهاز</label>
+            <p className="text-gray-700 text-xs font-mono break-all">{selectedUser.device_uuid || '-'}</p>
+          </div>
+
         </div>
+
+
       {/* قسم البيانات */}
         <div className="flex-1">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -752,8 +771,8 @@ const openNotificationsModal = (userId: number, userName: string) => {
 
             {/* الصف الثالث: الجنس - المسمى الوظيفي - المدينة */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الجنس</label>
-              <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-200">{selectedUser.gender || '-'}</p>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجنس</label>
+              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.gender || '-'}</p>
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">المسمى الوظيفي</label>
@@ -764,56 +783,21 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            {/* الصف الرابع: نوع المستخدم - الحالة - العنوان */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">نوع المستخدم</label>
-              <select
-                value={selectedUser.user_type || ''}
-                onChange={(e) => {
-                  handleUserTypeChange(selectedUser.id, e.target.value);
-                  setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition shadow-sm ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-              >
-                <option value="غير موثوق">غير موثوق</option>
-                <option value="موثوق">موثوق</option>
-                <option value="vip">VIP</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الحالة</label>
-              <button
-                onClick={() => {
-                  const newBlock = selectedUser.block === 1 ? 0 : 1;
-                  handleBlockUser(selectedUser.id, newBlock);
-                  setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-                }}
-                disabled={updatingUser === selectedUser.id}
-                className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
-              >
-                {selectedUser.block === 1 ? 'فك الحظر' : 'حظر'}
-              </button>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
+            <div className="md:col-span-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
 
-            <div className="md:col-span-3">
+
+            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">وقت إنشاء الحساب</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.created_at)}</p>
             </div>
-
-            {/* الصف السادس: آخر تحديث - الجهاز */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">آخر تحديث للحساب</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs" dir="ltr">{formatDateTime(selectedUser.updated_at)}</p>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">الجهاز</label>
-              <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm text-xs font-mono">{selectedUser.device_uuid || '-'}</p>
-            </div>
+
 
             {/* ملاحظات - صف كامل */}
             <div className="md:col-span-3">
@@ -876,3 +860,5 @@ const openNotificationsModal = (userId: number, userName: string) => {
     </div>
   );
 }
+
+
