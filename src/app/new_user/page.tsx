@@ -708,38 +708,42 @@ const openNotificationsModal = (userId: number, userName: string) => {
           </button>
 
           {/* نوع المستخدم */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
-            <select
-              value={selectedUser.user_type || ''}
-              onChange={(e) => {
-                handleUserTypeChange(selectedUser.id, e.target.value);
-                setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
-              }}
-              disabled={updatingUser === selectedUser.id}
-              className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
-            >
-              <option value="غير موثوق">غير موثوق</option>
-              <option value="موثوق">موثوق</option>
-              <option value="vip">VIP</option>
-            </select>
+          {/* نوع المستخدم + الحالة في صف واحد */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">نوع المستخدم</label>
+                <select
+                  value={selectedUser.user_type || ''}
+                  onChange={(e) => {
+                    handleUserTypeChange(selectedUser.id, e.target.value);
+                    setSelectedUser(prev => prev ? {...prev, user_type: e.target.value} : prev);
+                  }}
+                  disabled={updatingUser === selectedUser.id}
+                  className={`w-full text-sm border-2 rounded-xl px-3 py-2 font-bold focus:ring-2 focus:ring-[#c4a900] outline-none cursor-pointer transition ${selectedUser.user_type === 'vip' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : selectedUser.user_type === 'موثوق' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-gray-100 border-gray-400 text-gray-700'}`}
+                >
+                  <option value="غير موثوق">غير موثوق</option>
+                  <option value="موثوق">موثوق</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
+                <button
+                  onClick={() => {
+                    const newBlock = selectedUser.block === 1 ? 0 : 1;
+                    handleBlockUser(selectedUser.id, newBlock);
+                    setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
+                  }}
+                  disabled={updatingUser === selectedUser.id}
+                  className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+                >
+                  {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* الحالة */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">الحالة</label>
-            <button
-              onClick={() => {
-                const newBlock = selectedUser.block === 1 ? 0 : 1;
-                handleBlockUser(selectedUser.id, newBlock);
-                setSelectedUser(prev => prev ? {...prev, block: newBlock} : prev);
-              }}
-              disabled={updatingUser === selectedUser.id}
-              className={`w-full py-2 px-3 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 ${selectedUser.block === 1 ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-red-500 hover:bg-red-600 text-white'}`}
-            >
-              {selectedUser.block === 1 ? '✅ فك الحظر' : '🚫 حظر'}
-            </button>
-          </div>
 
           {/* الجهاز */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3">
@@ -796,10 +800,11 @@ const openNotificationsModal = (userId: number, userName: string) => {
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.city || '-'}</p>
             </div>
 
-            <div className="md:col-span-3">
+            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">العنوان</label>
               <p className="text-gray-900 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm font-medium">{selectedUser.address || '-'}</p>
             </div>
+
 
 
             <div>
