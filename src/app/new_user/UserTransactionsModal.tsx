@@ -419,21 +419,22 @@ export default function UserTransactionsModal({
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
               )}
             </button>
-            <div className="flex-1 md:flex-none flex flex-col gap-2">
+            <div className="flex-1 md:flex-none flex items-center gap-2">
               <button
-                onClick={() => setShowAddForm(true)}
-                className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
-              >
+  onClick={() => setShowAddForm(true)}
+  className="justify-center bg-blue-600 text-white px-3 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm h-[42px]"
+>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
                 إضافة دفعة
               </button>
               <button 
-                onClick={fetchData} 
-                disabled={isLoading} 
-                className="w-full flex items-center justify-center bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition shadow-sm disabled:opacity-50"
-              >
+  onClick={fetchData} 
+  disabled={isLoading} 
+  title="تحديث البيانات"
+  className="flex items-center justify-center bg-blue-50 text-blue-600 w-[42px] h-[42px] rounded-xl border border-blue-100 hover:bg-blue-100 transition shadow-sm disabled:opacity-50 shrink-0"
+>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 md:h-6 md:w-6 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               </button>
             </div>
