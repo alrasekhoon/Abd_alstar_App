@@ -422,7 +422,6 @@ export default function UserTransactionsModal({
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
               )}
             </button>
-            className="justify-center bg-blue-600 text-white px-3 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-sm whitespace-nowrap h-[42px]"
               <button
                 onClick={() => setShowAddForm(true)}
                 className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
