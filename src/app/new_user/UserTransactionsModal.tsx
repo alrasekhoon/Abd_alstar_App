@@ -368,80 +368,97 @@ export default function UserTransactionsModal({
       
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
         
-        {/* الهيدر */}
-        <div className="flex flex-row items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 gap-3 shrink-0 overflow-x-auto">
-          <div className="text-right order-first"> 
-            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
-            <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
-              <span className="block">{userName}</span>
-<span className="block">ID: {userId}</span>
-{user && <span className="block">الهاتف: {user.phone}</span>}
+       {/* الهيدر */}
+<div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 shrink-0">
+  <div className="text-right order-first"> 
+    <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
+    <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
+      <span className="block">{userName}</span>
+      <span className="block">ID: {userId}</span>
+      {user && <span className="block">الهاتف: {user.phone}</span>}
+    </p>
+  </div>
 
-            </p>
-          </div>
+  {/* الإحصائيات العلوية المحسنة */}
+  {summary && !isLoading && !error && (
+    <div className="grid grid-cols-2 md:flex md:flex-row-reverse gap-2 md:gap-3 w-full lg:w-auto md:mx-auto">
+      <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm ${summary.balance < 0 ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+        <span className={`text-[11px] font-bold mb-1 ${summary.balance < 0 ? 'text-red-500' : 'text-blue-500'}`}>الرصيد الحالي</span>
+        <span className={`font-extrabold text-lg md:text-xl leading-none ${summary.balance < 0 ? 'text-red-600' : 'text-blue-600'}`}>
+          {summary.balance < 0 ? '⚠️' : '💰'} {summary.balance.toLocaleString()}
+        </span>
+      </div>
+      <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-purple-50 border-purple-200">
+        <span className="text-[11px] font-bold mb-1 text-purple-500">مشتريات الفصل</span>
+        <span className="font-extrabold text-lg md:text-xl leading-none text-purple-600">🛒 {semesterPurchases.toLocaleString()}</span>
+      </div>
+      <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-green-50 border-green-200">
+        <span className="text-[11px] font-bold mb-1 text-green-500">إجمالي الإيداع</span>
+        <span className="font-extrabold text-lg md:text-xl leading-none text-green-600">⬆️ {summary.total_deposit.toLocaleString()}</span>
+      </div>
+      <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-red-50 border-red-200">
+        <span className="text-[11px] font-bold mb-1 text-red-500">الرصيد المسترد</span>
+        <span className="font-extrabold text-lg md:text-xl leading-none text-red-600">⬇️ {summary.total_withdraw.toLocaleString()}</span>
+      </div>
+    </div>
+  )}
 
-          {/* الإحصائيات العلوية المحسنة */}
-          {summary && !isLoading && !error && (
-            <div className="grid grid-cols-2 md:flex md:flex-row-reverse gap-2 md:gap-3 w-full lg:w-auto md:mx-auto shrink-0">
-              {/* بطاقة الرصيد الحالي */}
-              <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm ${summary.balance < 0 ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
-                <span className={`text-[11px] font-bold mb-1 ${summary.balance < 0 ? 'text-red-500' : 'text-blue-500'}`}>الرصيد الحالي</span>
-                <span className={`font-extrabold text-lg md:text-xl leading-none ${summary.balance < 0 ? 'text-red-600' : 'text-blue-600'}`}>
-                  {summary.balance < 0 ? '⚠️' : '💰'} {summary.balance.toLocaleString()}
-                </span>
-              </div>
-              {/* بطاقة مشتريات الفصل */}
-              <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-purple-50 border-purple-200">
-                <span className="text-[11px] font-bold mb-1 text-purple-500">مشتريات الفصل</span>
-                <span className="font-extrabold text-lg md:text-xl leading-none text-purple-600">🛒 {semesterPurchases.toLocaleString()}</span>
-              </div>
-              {/* بطاقة إجمالي الإيداع */}
-              <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-green-50 border-green-200">
-                <span className="text-[11px] font-bold mb-1 text-green-500">إجمالي الإيداع</span>
-                <span className="font-extrabold text-lg md:text-xl leading-none text-green-600">⬆️ {summary.total_deposit.toLocaleString()}</span>
-              </div>
-              {/* بطاقة الرصيد المسترد */}
-              <div className="flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm bg-red-50 border-red-200">
-                <span className="text-[11px] font-bold mb-1 text-red-500">الرصيد المسترد</span>
-                <span className="font-extrabold text-lg md:text-xl leading-none text-red-600">⬇️ {summary.total_withdraw.toLocaleString()}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2 w-full md:w-auto items-start mr-auto">
-            <button onClick={onClose} className="hidden md:flex text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <div className="flex flex-row gap-2 items-center">
-              <button 
-                onClick={fetchData} 
-                disabled={isLoading} 
-                className="flex items-center justify-center bg-blue-50 text-blue-600 w-[42px] h-[42px] rounded-xl border border-blue-100 hover:bg-blue-100 transition shadow-sm disabled:opacity-50"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 md:h-6 md:w-6 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              </button>
+  <div className="flex gap-2 w-full md:w-auto justify-end items-center mr-auto">
+    <button onClick={onClose} className="hidden md:flex text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+    <div className="flex-1 md:flex-none flex flex-col gap-2">
+      <div className="flex flex-row gap-2">
+        <button 
+          onClick={fetchData} 
+          disabled={isLoading} 
+          className="flex items-center justify-center bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition shadow-sm disabled:opacity-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 md:h-6 md:w-6 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+        </button>
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          إضافة دفعة
+        </button>
+      </div>
+      <button
+        onClick={() => setIsDrawerOpen(true)}
+        className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+        <span className="hidden md:inline">سجل المحذوفات</span>
+        <span className="md:hidden">المحذوفات</span>
+        {deletedTransactions.length > 0 && (
+          <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
+        )}
+      </button>
+            <div className="flex-1 md:flex-none flex flex-col gap-2">
               <button
                 onClick={() => setShowAddForm(true)}
-                className="justify-center bg-blue-600 text-white px-3 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-sm whitespace-nowrap h-[42px]"
+                className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
                 إضافة دفعة
               </button>
+              <button 
+                onClick={fetchData} 
+                disabled={isLoading} 
+                className="w-full flex items-center justify-center bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition shadow-sm disabled:opacity-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 md:h-6 md:w-6 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              </button>
             </div>
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-              <span className="hidden md:inline">سجل المحذوفات</span>
-              <span className="md:hidden">المحذوفات</span>
-              {deletedTransactions.length > 0 && (
-                <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
-              )}
+            <button onClick={onClose} className="hidden md:flex text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
         </div>
@@ -926,5 +943,4 @@ export default function UserTransactionsModal({
     </div>
   );
 }
-
 
