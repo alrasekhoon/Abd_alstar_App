@@ -369,17 +369,20 @@ export default function UserTransactionsModal({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
         
         {/* الهيدر */}
-        <div className="flex justify-between items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 flex-wrap gap-4 shrink-0">
+        <div className="flex flex-row items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 gap-3 shrink-0 overflow-x-auto">
           <div className="text-right order-first"> 
             <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
             <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
-              {userName} - ID: {userId} {user && `| الهاتف: ${user.phone}`}
+              <span className="block">{userName}</span>
+<span className="block">ID: {userId}</span>
+{user && <span className="block">الهاتف: {user.phone}</span>}
+
             </p>
           </div>
 
           {/* الإحصائيات العلوية المحسنة */}
           {summary && !isLoading && !error && (
-            <div className="grid grid-cols-2 md:flex md:flex-row-reverse gap-2 md:gap-3 w-full lg:w-auto md:mx-auto">
+            <div className="flex flex-row-reverse gap-2 md:gap-3 shrink-0">
               {/* بطاقة الرصيد الحالي */}
               <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm ${summary.balance < 0 ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
                 <span className={`text-[11px] font-bold mb-1 ${summary.balance < 0 ? 'text-red-500' : 'text-blue-500'}`}>الرصيد الحالي</span>
@@ -419,7 +422,7 @@ export default function UserTransactionsModal({
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
               )}
             </button>
-            <div className="flex-1 md:flex-none flex flex-col gap-2">
+            <div className="flex-none flex flex-row gap-2 items-center">
               <button
                 onClick={() => setShowAddForm(true)}
                 className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
@@ -923,3 +926,5 @@ export default function UserTransactionsModal({
     </div>
   );
 }
+
+
