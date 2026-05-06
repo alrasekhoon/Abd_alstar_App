@@ -708,8 +708,6 @@ export default function UserTransactionsModal({
                           <td className="px-4 py-4 text-sm text-gray-500">
                             {transaction.id ? new Date().toLocaleDateString('ar-EG') : '--'}
                           </td>
-                            </span>
-                          </td>
                           <td className="px-4 py-4 text-sm font-medium text-gray-600">
                             <div className="truncate max-w-[200px]" title={actualNote}>{actualNote}</div>
                             {isDeferred && (
@@ -753,7 +751,7 @@ export default function UserTransactionsModal({
                   const { isDeferred, isPaid, days, hours, actualNote } = parseNote(transaction.note, transaction.id);
                   
                   return (
-                    <div key={`mob-${transaction.id}`} className={`p-5 rounded-2xl shadow-sm border relative overflow-hidden ${deletedIds.has(transaction.id) ? 'bg-red-50 border-red-200 opacity-60' : isDeferred ? 'bg-white border-orange-200' : 'bg-white border-gray-100'}`}>
+                    <div key={`mob-${transaction.id}`} className={`bg-white p-5 rounded-2xl shadow-sm border relative overflow-hidden ${isDeferred ? 'border-orange-200' : 'border-gray-100'}`}>
                       {isDeferred && <div className="absolute top-0 right-0 w-1.5 h-full bg-orange-400"></div>}
                       
                       <div className="flex justify-between items-center mb-4">
