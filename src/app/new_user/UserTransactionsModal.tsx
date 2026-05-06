@@ -407,7 +407,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex flex-col gap-2 w-full md:w-auto justify-end items-end mr-auto pl-2">
+          <div className="flex flex-row gap-2 w-full md:w-auto justify-end items-center mr-auto pl-2 flex-wrap">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 text-sm"
@@ -421,7 +421,7 @@ export default function UserTransactionsModal({
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
               )}
             </button>
-            <div className="flex-1 md:flex-none flex items-center gap-2">
+            <div className="flex flex-col gap-2 items-start">
               <button
   onClick={() => setShowAddForm(true)}
   className="justify-center bg-blue-600 text-white px-3 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm h-[42px]"
