@@ -382,7 +382,7 @@ export default function UserTransactionsModal({
 
           {/* الإحصائيات العلوية المحسنة */}
           {summary && !isLoading && !error && (
-            <div className="flex flex-row-reverse gap-2 md:gap-3 shrink-0">
+            <div className="grid grid-cols-2 md:flex md:flex-row-reverse gap-2 md:gap-3 w-full lg:w-auto md:mx-auto shrink-0">
               {/* بطاقة الرصيد الحالي */}
               <div className={`flex flex-col items-center justify-center px-4 py-3 rounded-xl border shadow-sm ${summary.balance < 0 ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
                 <span className={`text-[11px] font-bold mb-1 ${summary.balance < 0 ? 'text-red-500' : 'text-blue-500'}`}>الرصيد الحالي</span>
@@ -408,7 +408,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-end items-center mr-auto">
+          <div className="flex flex-col gap-2 w-full md:w-auto items-start mr-auto">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
@@ -422,7 +422,7 @@ export default function UserTransactionsModal({
                 <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm">{deletedTransactions.length}</span>
               )}
             </button>
-            <div className="flex-none flex flex-row gap-2 items-center">
+            className="justify-center bg-blue-600 text-white px-3 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-sm whitespace-nowrap h-[42px]"
               <button
                 onClick={() => setShowAddForm(true)}
                 className="w-full justify-center bg-blue-600 text-white px-3 py-2 rounded-xl font-bold hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
