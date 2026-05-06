@@ -405,10 +405,10 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-2 w-full md:w-auto justify-end items-center mr-auto">
+          <div className="flex gap-4 w-full md:w-auto justify-end items-center mr-auto pl-2">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="flex-1 md:flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-1.5 text-xs md:text-sm"
+              className="flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 text-sm"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -437,8 +437,9 @@ export default function UserTransactionsModal({
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 md:h-6 md:w-6 ${isLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
               </button>
             </div>
-            <button onClick={onClose} className="hidden md:flex text-gray-500 hover:text-gray-700 p-2 rounded-xl hover:bg-gray-200 transition border border-transparent hover:border-gray-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <div className="hidden md:block w-px h-12 bg-gray-200 mx-1"></div>
+            <button onClick={onClose} className="hidden md:flex text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition border border-transparent">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
         </div>
