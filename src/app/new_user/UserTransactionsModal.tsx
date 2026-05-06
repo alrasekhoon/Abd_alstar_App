@@ -927,6 +927,3 @@ export default function UserTransactionsModal({
     </div>
   );
 }
-
-
-
