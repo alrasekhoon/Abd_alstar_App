@@ -111,6 +111,12 @@ export default function MoneyManagement() {
       
       if (!response.ok) throw new Error('فشل في حذف المعاملة');
       
+      // مزامنة مع الكود الأول
+      await fetch(`/api/proxy/user_transactions.php?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
+      });
+
       setDeletedIds(prev => new Set(prev).add(id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
@@ -138,6 +144,18 @@ export default function MoneyManagement() {
       });
 
       if (!response.ok) throw new Error('فشل في تحديث الدفعة');
+
+      // مزامنة مع الكود الأول
+      await fetch('/api/proxy/user_transactions.php', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: id,
+          user_id: transactionToUpdate.user_id,
+          status: 'paid',
+          note: 'مؤجل وتم دفعه'
+        })
+      });
       
       setPaidDeferredIds(prev => new Set(prev).add(id));
       fetchData(); 
@@ -442,8 +460,8 @@ export default function MoneyManagement() {
                         <div className="w-32 flex-shrink-0">
                           {isPaidDeferred ? (
                             <span className="block text-center py-1.5 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">مؤجل وتم دفعه ✓</span>
-                          ) : isDeferred ? (
-                            <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
+                         ) : isDeferred ? (
+                            <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition shadow-sm">
                               دفع المؤجل
                             </button>
                           ) : isDeposit ? (
@@ -495,13 +513,13 @@ export default function MoneyManagement() {
                     {isPaidDeferred ? (
                       <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-blue-100 text-blue-800">مؤجل وتم دفعه ✓</span>
                     ) : isDeferred ? (
-                      <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-[#f97316] text-white hover:bg-[#ea580c] transition shadow-sm">
+                      <button onClick={() => transaction.id && handlePayDeferred(transaction.id)} className="w-full py-1.5 text-xs font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition shadow-sm">
                         دفع المؤجل
                       </button>
                     ) : isDeposit ? (
-                      <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-green-100 text-green-800">رصيد نقدي 💵</span>
+                      <span className="block text-center px-2 py-1.5 text-xs font-bold rounded-lg bg-green-50 text-green-700 border border-green-200">رصيد نقدي 💵</span>
                     ) : (
-                      <span className="block text-center px-2 py-1.5 text-xs font-semibold rounded-lg bg-red-100 text-red-800">رصيد مسترد 💸</span>
+                      <span className="block text-center px-2 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200">رصيد مسترد 💸</span>
                     )}
                   </div>
                   <span className="text-xs text-gray-400 shrink-0">{transaction.add_date ? new Date(transaction.add_date).toLocaleDateString('ar-EG') : '--'}</span>
