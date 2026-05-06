@@ -369,7 +369,7 @@ export default function UserTransactionsModal({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[90vh] overflow-hidden relative z-10 flex flex-col">
         
         {/* الهيدر */}
-        <div className="flex flex-row-reverse items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 gap-3 shrink-0 overflow-x-auto">
+        <div className="flex flex-row items-center p-4 md:p-6 border-b border-gray-200 bg-gray-50 gap-3 shrink-0 overflow-x-auto">
           <div className="text-right order-first"> 
             <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 tracking-tight">إدارة الدفعات المالية</h2>
             <p className="text-xs md:text-sm text-gray-600 mt-1 font-medium">
@@ -407,7 +407,7 @@ export default function UserTransactionsModal({
             </div>
           )}
 
-          <div className="flex gap-4 w-full md:w-auto justify-end items-center mr-auto pl-2">
+          <div className="flex flex-col gap-2 w-full md:w-auto justify-end items-end mr-auto pl-2">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex-none justify-center bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 text-sm"
