@@ -17,7 +17,7 @@ const routePermissions: Record<string, string[]> = {
   '/users': ['admin'],
   '/settings': ['admin'],
 }
-
+ 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
   const token = request.cookies.get('authToken')?.value
