@@ -11,6 +11,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   const [userPermissions, setUserPermissions] = useState<string[]>([])
   const [activeSectionId, setActiveSectionId] = useState<string>('main')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   const lastVisitedRef = useRef<Record<string, string>>({})
 
   const getMenuSections = useCallback(() => {
@@ -24,12 +25,12 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           { name: 'الأخبار', href: '/news', roles: ['admin', 'editor'] },
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
-          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] }
+          { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
         ]
       },
       {
         id: 'education',
-        name: 'المقررات',
+        name: 'إدارة المقررات',
         items: [
           { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
           { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
@@ -69,19 +70,18 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       }
     ]
 
-    
+    // ✅ منطق الصلاحيات المحافظ عليه من الكود الثاني بالكامل
     return sections.map(section => ({
       ...section,
       items: section.items.filter(item => {
         if (userRole === 'admin' || userRole === 'owner') return true;
         if (userPermissions && userPermissions.includes(item.href)) return true;
-        // fallback in case of no token yet (viewer default) or hardcoded roles if needed, 
-        // but now we rely on custom permissions.
         return false;
       })
     })).filter(section => section.items.length > 0)
   }, [userRole, userPermissions])
 
+  // ✅ منطق قراءة البيانات المحافظ عليه من الكود الثاني
   useEffect(() => {
     const role = localStorage.getItem('userRole')
     setUserRole(role)
@@ -91,6 +91,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     } catch(e) {}
   }, [])
 
+  // ✅ تتبع آخر صفحة مزارة في كل قسم (من الكود الأول)
   useEffect(() => {
     const sections = getMenuSections()
     for (const section of sections) {
@@ -106,8 +107,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     setActiveSectionId(sectionId)
     setIsMobileMenuOpen(false)
   }, [])
-
-  const menuSections = getMenuSections()
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
@@ -131,8 +130,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen text-right font-sans bg-gray-100" dir="rtl">
 
+      {/* --- الشريط العلوي --- */}
       <header className="bg-blue-600 text-white shadow-md z-50 relative">
         <div className="flex items-center justify-between px-6 py-3">
+
           <div className="flex items-center space-x-6 space-x-reverse w-full md:w-auto">
             <button
               className="md:hidden text-2xl ml-4 p-1 text-white hover:text-blue-200 transition-colors"
@@ -140,6 +141,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
             >
               {isMobileMenuOpen ? '✕' : '☰'}
             </button>
+
             <nav className="hidden md:flex space-x-2 space-x-reverse">
               {sections.map(section => (
                 <button
@@ -158,6 +160,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
 
+        {/* القائمة المنسدلة للهاتف */}
         {isMobileMenuOpen && (
           <>
             <div
@@ -195,14 +198,17 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         )}
       </header>
 
+      {/* --- منطقة المحتوى السفلية --- */}
       <div className="flex flex-1 overflow-hidden">
 
+        {/* الشريط الجانبي الذهبي */}
         {activeSection && activeSection.items.length > 0 && (
           <aside className="w-fit min-w-[10rem] bg-[#c4a900] shadow-xl border-l border-[#a89000] z-40 hidden md:flex flex-col flex-shrink-0">
             <div className="p-5 border-b border-[#a89000] bg-[#b39a00] flex-shrink-0">
               <h2 className="text-lg font-extrabold text-black whitespace-nowrap">{activeSection.name}</h2>
               <p className="text-xs text-black/70 mt-1 whitespace-nowrap">اختر من القائمة أدناه</p>
             </div>
+
             <nav className="p-3 flex-1 overflow-y-auto min-h-0">
               <ul className="space-y-1.5">
                 {activeSection.items.map(item => (
@@ -221,6 +227,7 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
                 ))}
               </ul>
             </nav>
+
             <div className="p-4 border-t border-[#a89000] bg-[#b39a00] flex-shrink-0">
               <div className="text-sm text-black mb-3 text-center whitespace-nowrap">
                 الصلاحيات: <span className="font-bold text-black">{userRole || 'غير معروف'}</span>
@@ -235,8 +242,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
           </aside>
         )}
 
+        {/* مساحة عرض محتوى الصفحات */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
 
+          {/* شريط التنقل الأفقي للهاتف */}
           {activeSection && activeSection.items.length > 0 && (
             <div className="md:hidden bg-[#c4a900] border-b border-[#a89000] shadow-sm overflow-x-auto whitespace-nowrap p-3 flex-shrink-0">
               {activeSection.items.map(item => (
@@ -285,4 +294,4 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
       </div>
     </div>
   )
-
+}
