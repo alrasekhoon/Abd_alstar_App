@@ -72,7 +72,11 @@ export default function UserManagement() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(API_URL);
+      const timestamp = Date.now();
+      const response = await fetch(`${API_URL}?_t=${timestamp}`, {
+        cache: 'no-store',
+        next: { revalidate: 0 }
+      });
       if (!response.ok) throw new Error('فشل في جلب بيانات المستخدمين');
       const result = await response.json();
       const parsedUsers = result.map((u: any) => ({
@@ -108,7 +112,7 @@ export default function UserManagement() {
       
       if (!response.ok) throw new Error('فشل في حذف المستخدم');
       
-      fetchData();
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
     }
@@ -202,7 +206,11 @@ export default function UserManagement() {
 
       if (!response.ok) throw new Error('فشل في تغيير حالة الحظر');
       
-      fetchData();
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === id ? { ...user, block_status: !currentStatus } : user
+        )
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تغيير الحالة');
     }
@@ -535,3 +543,4 @@ export default function UserManagement() {
     </div>
   );
 }
+
