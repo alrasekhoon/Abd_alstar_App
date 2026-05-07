@@ -423,12 +423,12 @@ const [showPassword, setShowPassword] = useState(false);
                         </h4>
                         
                        {/* شبكة الصلاحيات داخل البطاقة */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                           {AVAILABLE_PERMISSIONS.filter(p => p.group === group).map(perm => (
-                            <label key={perm.id} className="flex items-center justify-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+                            <label key={perm.id} className="flex items-center justify-start gap-2 p-2 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
                               <input 
                                 type="checkbox"
-                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-5 h-5 cursor-pointer"
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                                 checked={(editingUser.permissions || []).includes(perm.id)}
                                 onChange={(e) => {
                                   const currentPerms = editingUser.permissions || [];
@@ -439,14 +439,10 @@ const [showPassword, setShowPassword] = useState(false);
                                   }
                                 }}
                               />
-                              <span className="text-sm font-medium text-gray-700">{perm.name}</span>
+                              <span className="text-[13px] font-medium text-gray-700 leading-tight">{perm.name}</span>
                             </label>
                           ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
