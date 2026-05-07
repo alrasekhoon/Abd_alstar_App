@@ -353,10 +353,8 @@ const [showPassword, setShowPassword] = useState(false);
                       </div>
                     </>
                   )}
-                </div>
-                
                 {(showPasswordFields || !editingUser.id) && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <>
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
                       <input
@@ -385,8 +383,9 @@ const [showPassword, setShowPassword] = useState(false);
                         required={!editingUser.id}
                       />
                     </div>
-                  </div>
+                  </>
                 )}
+                </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
