@@ -422,9 +422,10 @@ const [showPassword, setShowPassword] = useState(false);
                           {group}
                         </h4>
                         
-                        {/* شبكة الصلاحيات داخل البطاقة */}
+                       {/* شبكة الصلاحيات داخل البطاقة */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                          {AVAILABLE_PERMISSIONS.filter(p => p<label key={perm.id} className="flex items-center justify-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+                          {AVAILABLE_PERMISSIONS.filter(p => p.group === group).map(perm => (
+                            <label key={perm.id} className="flex items-center justify-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
                               <input 
                                 type="checkbox"
                                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-5 h-5 cursor-pointer"
