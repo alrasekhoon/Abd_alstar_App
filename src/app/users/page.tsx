@@ -85,8 +85,8 @@ export default function UserManagement() {
     try {
       setIsLoading(true);
       const timestamp = Date.now();
-      const response = await fetch(`${API_URL}?refresh=${timestamp}`, {
-        cache: 'no-store',
+      const response = await fetch(`${API_URL}?_t=${timestamp}`, {
+        cache: 'no-store' as RequestCache,
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -107,8 +107,8 @@ export default function UserManagement() {
     try {
       setLoadingSubscriptions(prev => ({ ...prev, [userId]: true }));
       const timestamp = Date.now();
-      const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}&refresh=${timestamp}`, {
-        cache: 'no-store',
+      const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}&_t=${timestamp}`, {
+        cache: 'no-store' as RequestCache,
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -129,8 +129,8 @@ export default function UserManagement() {
     try {
       setLoadingPayments(prev => ({ ...prev, [userId]: true }));
       const timestamp = Date.now();
-      const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}&refresh=${timestamp}`, {
-        cache: 'no-store',
+      const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}&_t=${timestamp}`, {
+        cache: 'no-store' as RequestCache,
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -151,8 +151,8 @@ export default function UserManagement() {
     try {
       setLoadingBills(prev => ({ ...prev, [userId]: true }));
       const timestamp = Date.now();
-      const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}&refresh=${timestamp}`, {
-        cache: 'no-store',
+      const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}&_t=${timestamp}`, {
+        cache: 'no-store' as RequestCache,
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -193,7 +193,7 @@ export default function UserManagement() {
   const updateUserType = async (userId: number, newUserType: string) => {
     try {
       const timestamp = Date.now();
-      const response = await fetch(`${API_URL}?id=${userId}&refresh=${timestamp}`, {
+      const response = await fetch(`${API_URL}?id=${userId}&_t=${timestamp}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ export default function UserManagement() {
           'Pragma': 'no-cache',
           'Expires': '0'
         },
-        cache: 'no-store',
+        cache: 'no-store' as RequestCache,
         body: JSON.stringify({ user_type: newUserType }),
       });
       
@@ -256,7 +256,7 @@ export default function UserManagement() {
     
     try {
       const timestamp = Date.now();
-      const response = await fetch(`${API_URL}?id=${userId}&refresh=${timestamp}`, {
+      const response = await fetch(`${API_URL}?id=${userId}&_t=${timestamp}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -264,6 +264,7 @@ export default function UserManagement() {
           'Pragma': 'no-cache',
           'Expires': '0'
         },
+        cache: 'no-store' as RequestCache,
         cache: 'no-store',
         body: JSON.stringify({ block: newBlock }),
       });
