@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
- 
+
 type User = {
   id?: number;
   username: string;
@@ -59,6 +59,7 @@ export default function UserManagement() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
 
 
   const API_URL = '/api/proxy/cp_users1.php';
@@ -258,7 +259,7 @@ export default function UserManagement() {
 
         {/* Modal for Add/Edit */}
         {editingUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all duration-300">
             <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">
@@ -399,7 +400,7 @@ export default function UserManagement() {
                     ملاحظة: إذا كان اسم الدور "admin" أو "owner"، فلن يتأثر المستخدم بهذه الاختيارات وسيتمكن من رؤية كل شيء، لكن يمكنك تخصيص الصلاحيات لبقية الأدوار.
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     {Array.from(new Set(AVAILABLE_PERMISSIONS.map(p => p.group))).map(group => (
                       <div key={group} className="bg-gray-50 bg-opacity-50 border border-gray-100 rounded-lg p-4 shadow-sm">
                         <h4 className="font-semibold text-indigo-800 mb-3 border-b border-indigo-100 pb-2">{group}</h4>
@@ -454,14 +455,14 @@ export default function UserManagement() {
         {/* Data Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-500">
+            <thead className="bg-[#fbedaa] border-b-2 border-yellow-200">
               <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اسم المستخدم</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">البريد الإلكتروني</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الدور</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">آخر دخول</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tr-lg">اسم المستخدم</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">البريد الإلكتروني</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">الدور</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">الحالة</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">آخر دخول</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tl-lg">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
