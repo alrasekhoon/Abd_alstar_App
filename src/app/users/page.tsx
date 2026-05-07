@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import debounce from 'lodash.debounce';
- 
+
 type User = {
   id: number;
   name: string;
@@ -87,6 +87,7 @@ export default function UserManagement() {
       const timestamp = Date.now();
       const response = await fetch(`${API_URL}?_t=${timestamp}`, {
         cache: 'no-store' as RequestCache,
+next: { revalidate: 0 },
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -109,6 +110,7 @@ export default function UserManagement() {
       const timestamp = Date.now();
       const response = await fetch(`/api/proxy/cp_subscriptions.php?userid=${userId}&_t=${timestamp}`, {
         cache: 'no-store' as RequestCache,
+next: { revalidate: 0 },
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -131,6 +133,7 @@ export default function UserManagement() {
       const timestamp = Date.now();
       const response = await fetch(`/api/proxy/cp_payments.php?userid=${userId}&_t=${timestamp}`, {
         cache: 'no-store' as RequestCache,
+next: { revalidate: 0 },
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -153,6 +156,7 @@ export default function UserManagement() {
       const timestamp = Date.now();
       const response = await fetch(`/api/proxy/cp_user_show_bill.php?userid=${userId}&_t=${timestamp}`, {
         cache: 'no-store' as RequestCache,
+next: { revalidate: 0 },
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
@@ -176,12 +180,10 @@ export default function UserManagement() {
         : { ...prev, [userId]: tab }
     );
     
-    if (tab === 'subscriptions' && !subscriptions[userId]) {
-      fetchUserSubscriptions(userId);
-    } else if (tab === 'payments' && !payments[userId]) {
-      fetchUserPayments(userId);
-    } else if (tab === 'bills' && !bills[userId]) {
-      fetchUserBills(userId);
+    if (expandedTab[userId] !== tab) {
+      if (tab === 'subscriptions') fetchUserSubscriptions(userId);
+      else if (tab === 'payments') fetchUserPayments(userId);
+      else if (tab === 'bills') fetchUserBills(userId);
     }
   };
 
@@ -202,6 +204,7 @@ export default function UserManagement() {
           'Expires': '0'
         },
         cache: 'no-store' as RequestCache,
+next: { revalidate: 0 },
         body: JSON.stringify({ user_type: newUserType }),
       });
       
@@ -265,6 +268,8 @@ export default function UserManagement() {
           'Expires': '0'
         },
         cache: 'no-store' as RequestCache,
+        next: { revalidate: 0 },
+next: { revalidate: 0 },
         body: JSON.stringify({ block: newBlock }),
       });
       
