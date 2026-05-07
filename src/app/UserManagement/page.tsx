@@ -28,14 +28,14 @@ const AVAILABLE_PERMISSIONS = [
   { id: '/material', name: 'المواد الدراسية', group: 'المقررات' },
   { id: '/quiz', name: 'إستخراج الاسئلة', group: 'المقررات' },
   { id: '/voice', name: 'الأصوات', group: 'المقررات' },
-  { id: '/quiz_questions', name: 'استفسارات الاختبارات', group: 'المقررات' },
+  { id: '/quiz_questions', name: 'شات الاختبارت', group: 'المقررات' },
   { id: '/print', name: 'الطباعة', group: 'الطباعة والتوصيل' },
   { id: '/delv', name: 'التوصيل والشحن', group: 'الطباعة والتوصيل' },
   { id: '/print_bill', name: 'الفواتير', group: 'الطباعة والتوصيل' },
   { id: '/users', name: 'المستخدمين', group: 'المستخدمين والمالية' },
   { id: '/mony1', name: 'الدفعات المالية', group: 'المستخدمين والمالية' },
   { id: '/new_user', name: 'إدارة المستخدمين', group: 'المستخدمين والمالية' },
-  { id: '/verify_users', name: 'مراجعة وتوثيق الحسابات', group: 'المستخدمين والمالية' },
+  { id: '/verify_users', name: 'توثيق الحسابات', group: 'المستخدمين والمالية' },
   { id: '/finance', name: 'الجدوى المالية', group: 'المستخدمين والمالية' },
   { id: '/settings', name: 'الإعدادات', group: 'إدارة النظام' },
   { id: '/UserManagement', name: 'ادارة لوحة التحكم', group: 'إدارة النظام' },
@@ -213,7 +213,7 @@ const [showPassword, setShowPassword] = useState(false);
         )
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تغيير الحالة');
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تغيير حالة الحساب');
     }
   };
 
@@ -245,7 +245,7 @@ const [showPassword, setShowPassword] = useState(false);
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">إدارة المستخدمين</h1>
+          <h1 className="text-3xl font-bold text-gray-800">إدارة المشرفين</h1>
           <button
             onClick={openAddForm}
             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition duration-300 flex items-center"
@@ -253,7 +253,7 @@ const [showPassword, setShowPassword] = useState(false);
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
-            إضافة مستخدم جديد
+            إضافة مشرف جديد
           </button>
         </div>
 
@@ -263,7 +263,7 @@ const [showPassword, setShowPassword] = useState(false);
             <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">
-                  {editingUser.id ? 'تعديل المستخدم' : 'إضافة مستخدم جديد'}
+                  {editingUser.id ? 'تعديل المستخدم' : 'إضافة مشرف جديد'}
                 </h2>
                 <button 
                   onClick={() => setEditingUser(null)}
@@ -278,10 +278,10 @@ const [showPassword, setShowPassword] = useState(false);
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">اسم المشرف</label>
                     <input
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:rinاg-2 focus:ring-blue-500 focus:border-blue-500 transition"
                       value={editingUser.username}
                       onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
                       required
@@ -400,10 +400,10 @@ const [showPassword, setShowPassword] = useState(false);
                {/* قسم الصلاحيات المخصصة */}
                 <div className="mt-8 border-t border-gray-200 pt-6">
                   <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                     صلاحيات الوصول للقوائم (Custom Permissions)
+                     صلاحيات الوصول للقوائم
                   </h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    ملاحظة: إذا كان اسم الدور "admin" أو "owner"، فلن يتأثر المستخدم بهذه الاختيارات وسيتمكن من رؤية كل شيء، لكن يمكنك تخصيص الصلاحيات لبقية الأدوار.
+                    ملاحظة: الصلاحيات المخصصة تنطبق على كافة الأدوار باستثناء دور "admin" لامتلاكه وصولاً شاملاً.
                   </p>
                   
                   <div className="flex flex-col gap-6">
@@ -473,10 +473,10 @@ const [showPassword, setShowPassword] = useState(false);
           <table className="w-full text-right whitespace-nowrap min-w-max divide-y divide-gray-200">
             <thead className="bg-[#fbedaa] border-b-2 border-yellow-200">
               <tr>
-                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tr-lg">اسم المستخدم</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tr-lg">اسم المشرف</th>
                 <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">البريد الإلكتروني</th>
                 <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">الدور</th>
-                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">الحالة</th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">حالة الحساب</th>
                 <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider">آخر دخول</th>
                 <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tl-lg">الإجراءات</th>
               </tr>
@@ -553,7 +553,7 @@ const [showPassword, setShowPassword] = useState(false);
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
             <h3 className="mt-4 text-lg font-medium text-gray-900">لا يوجد مستخدمون</h3>
-            <p className="mt-1 text-sm text-gray-500">ابدأ بإضافة مستخدم جديد بالنقر على الزر أعلاه</p>
+            <p className="mt-1 text-sm text-gray-500">ابدأ بإضافة مشرف جديد بالنقر على الزر أعلاه</p>
           </div>
         )}
       </div>
