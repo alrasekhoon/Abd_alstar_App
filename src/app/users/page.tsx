@@ -269,7 +269,6 @@ next: { revalidate: 0 },
         },
         cache: 'no-store' as RequestCache,
         next: { revalidate: 0 },
-next: { revalidate: 0 },
         body: JSON.stringify({ block: newBlock }),
       });
       
