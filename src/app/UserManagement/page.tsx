@@ -276,7 +276,7 @@ const [showPassword, setShowPassword] = useState(false);
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
                     <input
@@ -356,7 +356,7 @@ const [showPassword, setShowPassword] = useState(false);
                 </div>
                 
                 {(showPasswordFields || !editingUser.id) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="relative">
                       <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
                       <input
@@ -409,11 +409,11 @@ const [showPassword, setShowPassword] = useState(false);
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                     {Array.from(new Set(AVAILABLE_PERMISSIONS.map(p => p.group))).map(group => (
-                      <div key={group} className="bg-gray-50 bg-opacity-50 border border-gray-100 rounded-lg p-4 shadow-sm">
-                        <h4 className="font-semibold text-indigo-800 mb-3 border-b border-indigo-100 pb-2">{group}</h4>
+                      <div key={group} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm pb-2">
+                        <h4 className="bg-[#fbedaa] py-2 px-3 font-bold text-gray-800 text-center border-b border-yellow-200 mb-3">{group}</h4>
                         <div className="space-y-2">
                           {AVAILABLE_PERMISSIONS.filter(p => p.group === group).map(perm => (
-                            <label key={perm.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-1 rounded transition">
+                            <label key={perm.id} className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
                               <input 
                                 type="checkbox"
                                 className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
@@ -460,8 +460,8 @@ const [showPassword, setShowPassword] = useState(false);
         )}
 
         {/* Data Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm w-full">
+          <table className="w-full text-right whitespace-nowrap min-w-max divide-y divide-gray-200">
             <thead className="bg-[#fbedaa] border-b-2 border-yellow-200">
               <tr>
                 <th className="px-6 py-4 text-right text-sm font-bold text-gray-800 tracking-wider rounded-tr-lg">اسم المستخدم</th>
