@@ -265,7 +265,6 @@ export default function UserManagement() {
           'Expires': '0'
         },
         cache: 'no-store' as RequestCache,
-        cache: 'no-store',
         body: JSON.stringify({ block: newBlock }),
       });
       
