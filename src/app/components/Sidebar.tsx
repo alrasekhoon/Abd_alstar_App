@@ -21,8 +21,6 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         name: 'الواجهة الرئيسية',
         items: [
           { name: 'الاعلانات', href: '/adv', roles: ['admin', 'editor'] },
-          { name: 'الوظائف', href: '/home_work', roles: ['admin', 'editor'] },
-          { name: 'الأخبار', href: '/news', roles: ['admin', 'editor'] },
           { name: 'الاشعارات', href: '/Notification', roles: ['admin', 'editor'] },
           { name: 'الروابط الجامعة', href: '/uni_link', roles: ['admin', 'editor'] },
           { name: 'مواد الجامعة', href: '/uni_material', roles: ['admin', 'editor'] },
