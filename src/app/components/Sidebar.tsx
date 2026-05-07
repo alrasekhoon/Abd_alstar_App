@@ -107,7 +107,10 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken')
+    document.cookie = 'authToken=; path=/; max-age=0'
+document.cookie = 'userRole=; path=/; max-age=0'
+localStorage.removeItem('userRole')
+localStorage.removeItem('userPermissions')
     router.push('/login')
   }
 
@@ -293,3 +296,5 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
     </div>
   )
 }
+
+
