@@ -236,7 +236,7 @@ export default function UniLinksPage() {
                   <td className="px-3 py-4 text-right">
   
     <td className="px-3 py-4 text-right">
-                    
+            <a        
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
