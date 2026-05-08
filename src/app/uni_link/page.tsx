@@ -200,12 +200,12 @@ export default function UniLinksPage() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* إدارة الروابط الجامعية */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">إدارة الروابط الجامعية</h1>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
+  <h1 className="text-2xl font-bold text-blue-900">إدارة الروابط الجامعية</h1>
           <button
             onClick={openAddModal}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg shadow hover:from-blue-600 hover:to-blue-700 transition duration-300 flex items-center"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -215,51 +215,51 @@ export default function UniLinksPage() {
         </div>
 
         {/* جدول البيانات */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-500">
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اسم الرابط</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الرابط</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
-              </tr>
-            </thead>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 hidden md:block">
+  <table className="min-w-full divide-y divide-gray-200" dir="rtl">
+            <thead>
+  <tr>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">#</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-40">اسم الرابط</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الرابط</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">الحالة</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-32">الإجراءات</th>
+  </tr>
+</thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {links.map((link, index) => (
                 <tr key={link.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{link.url_name}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
-                      title={link.url}
-                    >
-                      {link.url}
-                    </a>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      onClick={() => toggleShow(link.id, link.show1)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${link.show1 === 1
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                        }`}
-                    >
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{index + 1}</td>
+<td className="px-3 py-4 text-right">
+  <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">{link.url_name}</div>
+</td>
+                  <td className="px-3 py-4 text-right">
+  
+    href={link.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
+    title={link.url}
+  >
+    {link.url}
+  </a>
+</td>
+                  <td className="px-3 py-4 whitespace-nowrap text-right">
+  <button
+    onClick={() => toggleShow(link.id, link.show1)}
+    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${link.show1 === 1
+        ? 'bg-green-100 text-green-800 hover:bg-green-200'
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
+  >
                       {link.show1 === 1 ? 'مفعل' : 'معطل'}
                     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                  <td className="px-3 py-4 whitespace-nowrap text-right">
+                    <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openEditModal(link)}
-                        className="text-yellow-600 hover:text-yellow-900 flex items-center"
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-1 text-xs"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -283,6 +283,38 @@ export default function UniLinksPage() {
           </table>
         </div>
 
+{/* بطاقات الموبايل */}
+<div className="md:hidden space-y-3 mt-4">
+  {links.map((link, index) => (
+    <div key={link.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div className="flex justify-between items-start mb-2">
+        <span className="text-xs text-gray-400">#{index + 1}</span>
+        <button
+          onClick={() => toggleShow(link.id, link.show1)}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition ${link.show1 === 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}
+        >
+          {link.show1 === 1 ? 'مفعل' : 'معطل'}
+        </button>
+      </div>
+      <p className="text-sm font-bold text-gray-800 mb-1 truncate">{link.url_name}</p>
+      <a href={link.url} target="_blank" rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 text-xs truncate block max-w-full mb-3">
+        {link.url}
+      </a>
+      <div className="flex gap-2 justify-end">
+        <button onClick={() => openEditModal(link)}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-1 text-xs">
+          تعديل
+        </button>
+        <button onClick={() => handleDelete(link.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-1 text-xs">
+          حذف
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
         {links.length === 0 && (
           <div className="text-center py-12">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -296,8 +328,8 @@ export default function UniLinksPage() {
 
       {/* Modal للإضافة والتعديل */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto">   <div className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">
                 {editingLink ? 'تعديل الرابط' : 'إضافة رابط جديد'}
@@ -314,27 +346,27 @@ export default function UniLinksPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الرابط *</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم الرابط *</label>
                 <input
                   type="text"
                   name="url_name"
                   value={formData.url_name}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   placeholder="أدخل اسم الرابط"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">الرابط *</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">الرابط *</label>
                 <input
                   type="url"
                   name="url"
                   value={formData.url}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   placeholder="https://example.com"
                 />
               </div>
@@ -356,19 +388,19 @@ export default function UniLinksPage() {
                 </label>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
-                  disabled={isLoading}
-                >
+  type="button"
+  onClick={closeModal}
+  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+>
+  إلغاء
+</button>
+<button
+  type="submit"
+  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+  disabled={isLoading}
+>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -382,3 +414,5 @@ export default function UniLinksPage() {
     </div>
   );
 }
+
+
