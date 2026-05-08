@@ -688,8 +688,8 @@ const [showAddModal, setShowAddModal] = useState(false);
         }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                      (newItem as any)[field] === 1 ? 'translate-x-4' : 'translate-x-1'
+  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+    (newItem as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
                     }`}
                   />
                 </button>
@@ -1071,12 +1071,12 @@ const [showAddModal, setShowAddModal] = useState(false);
           }
         }}
         className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                    (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
+                    (item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
                   }`}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-            (item as any)[field] === 1 ? 'translate-x-5' : 'translate-x-1'
+            (item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
           }`}
         />
       </button>
@@ -1111,7 +1111,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                               }}
                              className={`relative inline-flex h-6 w-11 flex-shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'}`}
                             >
-                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? 'translate-x-5' : 'translate-x-1'}`} />
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
                             </button>
                           </div>
                         ))}
