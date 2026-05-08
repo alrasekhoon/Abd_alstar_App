@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -55,6 +57,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
   
   // Subscribers Modal State
   const [showSubscribersModal, setShowSubscribersModal] = useState(false);
+const [showAddModal, setShowAddModal] = useState(false);
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [isSubscribersLoading, setIsSubscribersLoading] = useState(false);
   const [selectedMaterialName, setSelectedMaterialName] = useState('');
@@ -292,6 +295,7 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         voice_active: 1
       });
       fetchData();
+      setShowAddModal(false);
       alert('تم إضافة المادة بنجاح');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
@@ -533,6 +537,192 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         </div>
       )}
 
+{/* Add Material Modal */}
+{showAddModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col">
+      {/* Modal Header */}
+      <div className="flex justify-between items-center p-5 border-b bg-green-50 rounded-t-xl">
+        <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          إضافة مادة جديدة
+        </h3>
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>{/* End Modal Header */}
+
+      {/* Modal Body */}
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto max-h-[70vh]">
+        {/* كود المادة */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">كود المادة <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.material_code || ''}
+            onChange={(e) => handleNewItemChange('material_code', e.target.value)}
+          />
+        </div>
+
+        {/* اسم المادة */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">اسم المادة <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.material_name || ''}
+            onChange={(e) => handleNewItemChange('material_name', e.target.value)}
+          />
+        </div>
+
+        {/* الفئة */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">الفئة</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.category_id || 0}
+            onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
+          >
+            <option value="0">اختر الفئة</option>
+            {categories.map(category => (
+              <option key={category.id} value={category.id}>{category.category_name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* السنة */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.year1 || 1}
+            onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
+          >
+            <option value="1">السنة 1</option>
+            <option value="2">السنة 2</option>
+            <option value="3">السنة 3</option>
+            <option value="4">السنة 4</option>
+          </select>
+        </div>
+
+        {/* عدد الصفحات */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">عدد الصفحات</label>
+          <input
+            type="number"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.page_count || 0}
+            onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
+          />
+        </div>
+
+        {/* سعر المقرر */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">سعر المقرر</label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.unit_price || ''}
+            onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
+          />
+        </div>
+
+        {/* سعر أسئلة تدريبية */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">سعر أسئلة تدريبية</label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.quizall_price || ''}
+            onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
+          />
+        </div>
+
+        {/* سعر ملغى */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">سعر ملغى</label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.quiz_price || ''}
+            onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+          />
+        </div>
+
+        {/* سعر الصوت */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">سعر الصوت</label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+            value={newItem.voice_price || ''}
+            onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+          />
+        </div>
+
+        {/* أزرار الحالة */}
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-3">الحالة</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'نشط', field: 'active' },
+              { label: 'مقرر', field: 'mokarar_active' },
+              { label: 'كويز', field: 'quiz_active' },
+              { label: 'صوت', field: 'voice_active' },
+            ].map(({ label, field }) => (
+              <div key={field} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                <span className="text-sm text-gray-700">{label}</span>
+                <button
+                  type="button"
+                  onClick={() => handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                    (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                      (newItem as any)[field] === 1 ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>{/* End Modal Body */}
+
+      {/* Modal Footer */}
+      <div className="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition text-sm"
+        >
+          إلغاء
+        </button>
+        <button
+          onClick={() => { handleAdd(); setShowAddModal(false); }}
+          className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          إضافة المادة
+        </button>
+      </div>{/* End Modal Footer */}
+    </div>
+  </div>
+)}
+{/* End Add Material Modal */}
+
+
       {/* Subscribers Modal */}
       {showSubscribersModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
@@ -647,6 +837,15 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl font-bold text-gray-800">إدارة المواد</h1>
+<button
+  onClick={() => setShowAddModal(true)}
+  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium shadow"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+  </svg>
+  إضافة مادة جديدة
+</button>
 
             {/* قائمة تصفية الفئات */}
             <div className="relative">
@@ -702,186 +901,6 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Add new row */}
-              <tr className="bg-blue-50">
-                <td className="px-4 py-4">
-                  <div className="space-y-3">
-                    {/* كود المادة */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">كود المادة:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.material_code || ''}
-                        onChange={(e) => handleNewItemChange('material_code', e.target.value)}
-                      />
-                    </div>
-
-                    {/* اسم المادة */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">اسم المادة:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.material_name || ''}
-                        onChange={(e) => handleNewItemChange('material_name', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4">
-                  <div className="space-y-3">
-                    {/* الفئة */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">الفئة:</label>
-                      <select
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.category_id || 0}
-                        onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
-                      >
-                        <option value="0">اختر الفئة</option>
-                        {categories.map(category => (
-                          <option key={category.id} value={category.id}>{category.category_name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* السنة */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">السنة:</label>
-                      <select
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.year1 || 1}
-                        onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
-                      >
-                        <option value="1">السنة 1</option>
-                        <option value="2">السنة 2</option>
-                        <option value="3">السنة 3</option>
-                        <option value="4">السنة 4</option>
-                      </select>
-                    </div>
-
-                    {/* عدد الصفحات */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">الصفحات:</label>
-                      <input
-                        type="number"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.page_count || 0}
-                        onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="space-y-3">
-                    {/* سعر المقرر */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">المقرر:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.unit_price || ''}
-                        onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-                      />
-                    </div>
-
-                    {/* سعر اسئلة تدريبية */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">اسئلة تدريبية:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.quizall_price || ''}
-                        onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-                      />
-                    </div>
-
-                    {/* سعر ملغى */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">ملغى:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.quiz_price || ''}
-                        onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                      />
-                    </div>
-
-                    {/* سعر الصوت */}
-                    <div className="flex items-center gap-3">
-                      <label className="w-10 text-sm text-gray-700">الصوت:</label>
-                      <input
-                        type="text"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.voice_price || ''}
-                        onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600">نشط:</span>
-                      <select
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.active || 1}
-                        onChange={(e) => handleNewItemChange('active', parseInt(e.target.value))}
-                      >
-                        <option value={1}>نعم</option>
-                        <option value={0}>لا</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600">مقرر:</span>
-                      <select
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.mokarar_active || 1}
-                        onChange={(e) => handleNewItemChange('mokarar_active', parseInt(e.target.value))}
-                      >
-                        <option value={1}>نعم</option>
-                        <option value={0}>لا</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600">كويز:</span>
-                      <select
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.quiz_active || 1}
-                        onChange={(e) => handleNewItemChange('quiz_active', parseInt(e.target.value))}
-                      >
-                        <option value={1}>نعم</option>
-                        <option value={0}>لا</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600">صوت</span>
-                      <select
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                        value={newItem.voice_active || 1}
-                        onChange={(e) => handleNewItemChange('voice_active', parseInt(e.target.value))}
-                      >
-                        <option value={1}>نعم</option>
-                        <option value={0}>لا</option>
-                      </select>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-lg font-medium">
-                  <button
-                    onClick={handleAdd}
-                    className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition flex items-center justify-center text-xs w-full"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    إضافة
-                  </button>
-                </td>
-              </tr>
 
               {/* Data rows */}
               {filteredData.map((item) => (
@@ -1025,67 +1044,45 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
                   {/* الحالة */}
                   <td className="px-4 py-4">
                     {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">نشط:</span>
-                          <select
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.active}
-                            onChange={(e) => handleInputChange(item.id!, 'active', parseInt(e.target.value))}
-                          >
-                            <option value={1}>نعم</option>
-                            <option value={0}>لا</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">مقرر:</span>
-                          <select
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.mokarar_active}
-                            onChange={(e) => handleInputChange(item.id!, 'mokarar_active', parseInt(e.target.value))}
-                          >
-                            <option value={1}>نعم</option>
-                            <option value={0}>لا</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">كويز:</span>
-                          <select
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.quiz_active}
-                            onChange={(e) => handleInputChange(item.id!, 'quiz_active', parseInt(e.target.value))}
-                          >
-                            <option value={1}>نعم</option>
-                            <option value={0}>لا</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">صوت:</span>
-                          <select
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.voice_active}
-                            onChange={(e) => handleInputChange(item.id!, 'voice_active', parseInt(e.target.value))}
-                          >
-                            <option value={1}>نعم</option>
-                            <option value={0}>لا</option>
-                          </select>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">نشط:</span> {item.active ? 'نعم' : 'لا'}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">مقرر:</span> {item.mokarar_active ? 'نعم' : 'لا'}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">كويز:</span> {item.quiz_active ? 'نعم' : 'لا'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">صوت:</span> {item.voice_active ? 'نعم' : 'لا'}
-                        </div>
-                      </div>
+                      <div className="space-y-3">
+  {[
+    { label: 'نشط', field: 'active' },
+    { label: 'مقرر', field: 'mokarar_active' },
+    { label: 'كويز', field: 'quiz_active' },
+    { label: 'صوت', field: 'voice_active' },
+  ].map(({ label, field }) => (
+    <div key={field} className="flex items-center justify-between gap-2">
+      <span className="text-xs text-gray-600">{label}:</span>
+      <button
+        type="button"
+        onClick={async () => {
+          const newVal = (item as any)[field] === 1 ? 0 : 1;
+          handleInputChange(item.id!, field, newVal);
+          try {
+            const url = `${API_URL}?id=${item.id}&refresh=${Date.now()}`;
+            await fetch(url, {
+              method: 'PUT',
+              cache: 'no-store',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...item, [field]: newVal }),
+            });
+          } catch (err) {
+            console.error('Toggle save error:', err);
+          }
+        }}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+          (item as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+            (item as any)[field] === 1 ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </button>
+    </div>
+  ))}
+</div>
                     )}
                   </td>
 
@@ -1180,3 +1177,4 @@ export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
     </div>
   );
 }
+
