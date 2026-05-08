@@ -408,14 +408,12 @@ export default function UniLinksPage() {
                   {isLoading ? 'جاري الحفظ...' : (editingLink ? 'تحديث' : 'إضافة')}
                 </button>
               </div>
-            </form>
+          </form>
           </div>
         </div>
+      </div>
       )}
+
     </div>
   );
 }
-
-
-
-
