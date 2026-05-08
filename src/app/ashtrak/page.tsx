@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ export default function AshtrakManagement() {
     active: true
   });
   const [isLoading, setIsLoading] = useState(true);
+const [showAddModal, setShowAddModal] = useState(false);
   const [error, setError] = useState('');
 
   // Notification Modal State
@@ -233,6 +235,21 @@ export default function AshtrakManagement() {
     setEditingId(null);
     fetchData(); // إعادة تحميل البيانات لاستعادة القيم الأصلية
   };
+const handleToggleActive = async (item: AshtrakItem) => {
+  const updated = { ...item, active: !item.active };
+  handleInputChange(item.id!, 'active', !item.active);
+  try {
+    const url = `${API_URL}?id=${item.id}&refresh=${Date.now()}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    });
+    if (!response.ok) throw new Error('فشل التحديث');
+  } catch {
+    handleInputChange(item.id!, 'active', item.active); // rollback
+  }
+};
 
   const handleInputChange = (id: number, field: string, value: string | number | boolean) => {
     setData(prevData => 
@@ -351,10 +368,93 @@ export default function AshtrakManagement() {
         </div>
       )}
 
+{showAddModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+      <div className="flex justify-between items-center p-4 border-b bg-green-50 rounded-t-lg">
+        <h3 className="text-lg font-bold text-green-800">إضافة إشتراك جديد</h3>
+        <button onClick={() => setShowAddModal(false)} className="text-green-500 hover:bg-green-100 p-1 rounded-full transition">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="p-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">تسلسل</label>
+          <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.priority_order} onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">اسم الفئة</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.category_name} onChange={(e) => handleNewItemChange('category_name', e.target.value)} placeholder="اسم الفئة" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">مقرار ل.س</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.mokarar_price} onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">مقرار دولار</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.mokarar_dolar} onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">اختبار ل.س</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.quiz_price} onChange={(e) => handleNewItemChange('quiz_price', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">اختبار دولار</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.quiz_dolar} onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">صوتي ل.س</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.voice_price} onChange={(e) => handleNewItemChange('voice_price', e.target.value)} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">صوتي دولار</label>
+          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+            value={newItem.voice_dolar} onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)} />
+        </div>
+        <div className="flex items-center gap-2 col-span-2">
+          <label className="text-sm font-medium text-gray-700">مفعل</label>
+          <button type="button" onClick={() => handleNewItemChange('active', !newItem.active)}
+            className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${newItem.active ? 'bg-green-500' : 'bg-red-400'}`}>
+            <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${newItem.active ? '-translate-x-1' : '-translate-x-6'}`} />
+          </button>
+        </div>
+      </div>
+      <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
+        <button onClick={() => setShowAddModal(false)} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition">
+          إلغاء
+        </button>
+        <button onClick={() => { handleAdd(); setShowAddModal(false); }}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+          إضافة
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
-        </div>
+  <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+    </svg>
+    إضافة إشتراك
+  </button>
+</div>
+
 
         {/* Data Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
@@ -375,104 +475,6 @@ export default function AshtrakManagement() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Add new row */}
-              <tr className="bg-blue-50">
-                <td className="px-3 py-4">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.priority_order}
-                    onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
-                    placeholder="ترتيب"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.category_name}
-                    onChange={(e) => handleNewItemChange('category_name', e.target.value)}
-                    placeholder="اسم الفئة"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.mokarar_price}
-                    onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.mokarar_dolar}
-                    onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.quiz_price}
-                    onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.quiz_dolar}
-                    onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.voice_price}
-                    onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.voice_dolar}
-                    onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-  <button
-    type="button"
-    onClick={() => handleNewItemChange('active', !newItem.active)}
-    className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${newItem.active ? 'bg-green-500' : 'bg-gray-300'}`}
-  >
-    <span
-      className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${newItem.active ? '-translate-x-1' : 'translate-x-6'}`}
-    />
-  </button>
-</td>
-                
-                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={handleAdd}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition flex items-center text-xs"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    إضافة
-                  </button>
-                </td>
-              </tr>
 
               {/* Data rows */}
               {data.map((item) => (
@@ -578,15 +580,18 @@ export default function AshtrakManagement() {
                       <button
   type="button"
   onClick={() => handleInputChange(item.id!, 'active', !item.active)}
-  className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${item.active ? 'bg-green-500' : 'bg-gray-300'}`}
+  className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${item.active ? 'bg-green-500' : 'bg-red-400'}`}
 >
   <span
-    className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${item.active ? '-translate-x-1' : 'translate-x-6'}`}
+    className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${item.active ? '-translate-x-1' : '-translate-x-6'}`}
   />
 </button>
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
-                    )}
+                   ) : (
+  <button type="button" onClick={() => handleToggleActive(item)}
+    className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${item.active ? 'bg-green-500' : 'bg-red-400'}`}>
+    <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${item.active ? '-translate-x-1' : '-translate-x-6'}`} />
+  </button>
+)}
                   </td>
                   
                   <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
@@ -673,5 +678,6 @@ export default function AshtrakManagement() {
     </div>
   );
 }
+
 
 
