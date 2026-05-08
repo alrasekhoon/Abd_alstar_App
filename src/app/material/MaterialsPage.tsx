@@ -1083,6 +1083,39 @@ const [showAddModal, setShowAddModal] = useState(false);
     </div>
   ))}
 </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {[
+                          { label: 'نشط', field: 'active' },
+                          { label: 'مقرر', field: 'mokarar_active' },
+                          { label: 'كويز', field: 'quiz_active' },
+                          { label: 'صوت', field: 'voice_active' },
+                        ].map(({ label, field }) => (
+                          <div key={field} className="flex items-center justify-between gap-2">
+                            <span className="text-xs text-gray-600">{label}:</span>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const newVal = (item as any)[field] === 1 ? 0 : 1;
+                                handleInputChange(item.id!, field, newVal);
+                                try {
+                                  await fetch(`${API_URL}?id=${item.id}&refresh=${Date.now()}`, {
+                                    method: 'PUT',
+                                    cache: 'no-store',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ ...item, [field]: newVal }),
+                                  });
+                                } catch (err) {
+                                  console.error('Toggle save error:', err);
+                                }
+                              }}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'}`}
+                            >
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </td>
 
