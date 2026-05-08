@@ -365,7 +365,7 @@ export default function UniMaterialPage() {
       {/* Modal للإضافة والتعديل */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
-  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto mx-auto">
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto mx-auto" dir="rtl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">
                 {editingMaterial ? 'تعديل المادة' : 'إضافة مادة جديدة'}
@@ -479,7 +479,7 @@ export default function UniMaterialPage() {
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
   type="button"
   onClick={closeModal}
