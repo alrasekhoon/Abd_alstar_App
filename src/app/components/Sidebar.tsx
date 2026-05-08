@@ -32,9 +32,9 @@ export default function Sidebar({ children }: { children?: React.ReactNode }) {
         items: [
           { name: 'انواع الاشتراكات', href: '/ashtrak', roles: ['admin', 'editor'] },
           { name: 'المواد الدراسية', href: '/material', roles: ['admin', 'editor'] },
-          { name: 'الوحدات الدراسية ', href: '/material', roles: ['admin', 'editor'] },
-          { name: 'إدارة الأسئلة', href: '/material', roles: ['admin', 'editor'] },
-          { name: 'إستخراج الاسئلة', href: '/quiz', roles: ['admin', 'editor'] },
+          { name: 'الوحدات الدراسية ', href: '/mat0erial', roles: ['admin', 'editor'] },
+          { name: 'إدارة الأسئلة', href: '/mate9rial', roles: ['admin', 'editor'] },
+          { name: 'إستخراج الاسئلة', href: '/qu9iz', roles: ['admin', 'editor'] },
           { name: 'الأصوات', href: '/voice', roles: ['admin', 'editor'] },
           { name: 'استفسارات الاختبارات', href: '/quiz_questions', roles: ['admin', 'editor'] }
         ]
