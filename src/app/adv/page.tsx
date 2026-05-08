@@ -294,8 +294,7 @@ export default function AdvManagement() {
                         ref={fileInputRef}
                         accept="image/*"
                         onChange={handleImageChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${formErrors.image ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`w-full px-4 py-3 bg-white border rounded-xl shadow-sm text-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] ${formErrors.image ? 'border-red-500' : 'border-gray-200'}`}
                         required={!editingItem.image_path}
                       />
                       {formErrors.image && (
@@ -398,8 +397,68 @@ export default function AdvManagement() {
           </div>
         )}
 
-        {/* Data Table */}
-        <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+{/* Mobile Cards — mobile only */}
+<div className="md:hidden space-y-3">
+  {data.map((item) => (
+    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div className="flex items-start gap-3 mb-3">
+        {item.image_path && (
+          <Image
+            src={`/api/proxy/img/adv/${item.image_path}`}
+            alt={item.title}
+            width={64}
+            height={64}
+            className="h-16 w-16 object-cover rounded-xl flex-shrink-0"
+            unoptimized={true}
+            loading="eager"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="block text-sm font-bold text-gray-700 mb-1.5">العنوان</p>
+          <p className="text-sm text-gray-900 font-medium">{item.title || '—'}</p>
+        </div>
+      </div>
+
+      {item.description && (
+        <div className="mb-3">
+          <p className="block text-sm font-bold text-gray-700 mb-1.5">الوصف</p>
+          <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+        </div>
+      )}
+
+      {item.note && (
+        <div className="mb-3">
+          <p className="block text-sm font-bold text-gray-700 mb-1.5">ملاحظات</p>
+          <p className="text-sm text-gray-500">{item.note}</p>
+        </div>
+      )}
+
+      <div className="flex gap-2 pt-2 border-t border-gray-100">
+        <button
+          onClick={() => openEditForm(item)}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 flex-1 justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          تعديل
+        </button>
+        <button
+          onClick={() => item.id && handleDelete(item.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 flex-1 justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          حذف
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
+        {/* Data Table — desktop only */}
+<div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
