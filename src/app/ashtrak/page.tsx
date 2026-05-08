@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -102,8 +101,19 @@ const [showAddModal, setShowAddModal] = useState(false);
     }
   };
 
-  const handleEdit = (id: number) => {
-    setEditingId(id);
+  const handleEdit = (item: AshtrakItem) => {
+    setEditingId(item.id!);
+    setNewItem(item); // تعبئة النافذة ببيانات العنصر
+    setShowAddModal(true); // فتح النافذة المشتركة
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingId(null);
+    setNewItem({ // تصفير البيانات
+      priority_order: 0, category_name: '', mokarar_price: '', mokarar_dolar: '',
+      quiz_price: '', quiz_dolar: '', voice_price: '', voice_dolar: '', active: true
+    });
   };
 
   const handleSave = async (item: AshtrakItem) => {
@@ -126,7 +136,7 @@ const [showAddModal, setShowAddModal] = useState(false);
 
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
 
-      setEditingId(null);
+      handleCloseModal(); // إغلاق وتصفير النافذة الموحدة
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ التغييرات');
@@ -360,9 +370,9 @@ const [showAddModal, setShowAddModal] = useState(false);
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
       <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a]">
-        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك</h3>
+        <h3 className="text-lg font-bold text-gray-800">{editingId ? 'تعديل الاشتراك' : 'إضافة اشتراك'}</h3>
         <button
-          onClick={() => setShowAddModal(false)}
+          onClick={handleCloseModal}
           className="text-gray-500 hover:bg-gray-100 p-1 rounded-xl transition"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -469,19 +479,19 @@ const [showAddModal, setShowAddModal] = useState(false);
 
       <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
         <button
-          onClick={() => setShowAddModal(false)}
+          onClick={handleCloseModal}
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
         >
           إلغاء
         </button>
         <button
-          onClick={() => { handleAdd(); setShowAddModal(false); }}
+          onClick={() => { editingId ? handleSave(newItem) : handleAdd(); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
-          إضافة
+          {editingId ? 'حفظ التعديلات' : 'إضافة'}
         </button>
       </div>
     </div>
@@ -527,40 +537,13 @@ const [showAddModal, setShowAddModal] = useState(false);
               {data.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="number"
-                        className="w-full border border-gray-300 rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 text-sm"
-                        value={item.priority_order}
-                        onChange={(e) => handleInputChange(item.id!, 'priority_order', parseInt(e.target.value) || 0)}
-                      />
-                    ) : (
-                      <div className="text-sm font-medium text-gray-900">{item.priority_order}</div>
-                    )}
+                    <div className="text-sm font-medium text-gray-900">{item.priority_order}</div>
                   </td>
                   <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.category_name}
-                        onChange={(e) => handleInputChange(item.id!, 'category_name', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm font-medium text-gray-900">{item.category_name}</div>
-                    )}
+                    <div className="text-sm font-medium text-gray-900">{item.category_name}</div>
                   </td>
                   <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.mokarar_price}
-                        onChange={(e) => handleInputChange(item.id!, 'mokarar_price', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.mokarar_price}</div>
-                    )}
+                    <div className="text-sm text-gray-900">{item.mokarar_price}</div>
                   </td>
                   <td className="px-3 py-4">
                     {editingId === item.id ? (
@@ -623,44 +606,11 @@ const [showAddModal, setShowAddModal] = useState(false);
                     )}
                   </td>
                   <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <select
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.active ? '1' : '0'}
-                        onChange={(e) => handleInputChange(item.id!, 'active', e.target.value === '1')}
-                      >
-                        <option value="1">نعم</option>
-                        <option value="0">لا</option>
-                      </select>
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
-                    )}
+                    <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
                   </td>
                   
                   <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex flex-wrap gap-2">
-                      {editingId === item.id ? (
-                        <>
-                          <button
-                            onClick={() => handleSave(item)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl transition shadow-sm flex items-center justify-center"
-                            title="حفظ"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl transition shadow-sm flex items-center justify-center"
-                            title="إلغاء"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </>
-                      ) : (
                         <>
                           <button
                             onClick={() => handleUpdateMaterials(item.id!)}
@@ -672,10 +622,10 @@ const [showAddModal, setShowAddModal] = useState(false);
                             </svg>
                           </button>
                           <button
-                            onClick={() => handleEdit(item.id!)}
-                            className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
-                            title="تعديل"
-                          >
+                        onClick={() => handleEdit(item)}
+                        className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
+                        title="تعديل"
+                      >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
