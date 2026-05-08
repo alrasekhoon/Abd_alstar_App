@@ -254,12 +254,12 @@ export default function NotificationManagement() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       {/* إدارة الإشعارات */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">إدارة الإشعارات</h1>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
+  <h1 className="text-2xl font-bold text-blue-900">إدارة الإشعارات</h1>
           <button
             onClick={openAddForm}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg shadow hover:from-green-600 hover:to-green-700 transition duration-300 flex items-center"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -271,10 +271,10 @@ export default function NotificationManagement() {
         {/* فلترة الإشعارات */}
         <div className="mb-6">
           <div className="w-full md:w-1/3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب نوع المستخدم</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">تصفية حسب نوع المستخدم</label>
             <select
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
-              value={selectedTypeFilter}
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+value={selectedTypeFilter}
               onChange={(e) => setSelectedTypeFilter(e.target.value)}
             >
               <option value="all">جميع الأنواع</option>
@@ -287,8 +287,8 @@ export default function NotificationManagement() {
 
         {/* Modal for Add/Edit Notification */}
         {editingItem && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto p-8">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
                   {editingItem.id ? 'تعديل الإشعار' : 'إضافة إشعار جديد'}
@@ -306,10 +306,10 @@ export default function NotificationManagement() {
               <form onSubmit={handleSubmitItem} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">العنوان</label>
                     <input
                       type="text"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                       value={editingItem.title}
                       onChange={(e) => setEditingItem({...editingItem, title: e.target.value})}
                       required
@@ -317,9 +317,9 @@ export default function NotificationManagement() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">نوع المستخدم</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">نوع المستخدم</label>
                     <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                       value={editingItem.user_type}
                       onChange={(e) => setEditingItem({...editingItem, user_type: e.target.value})}
                       required
@@ -332,10 +332,10 @@ export default function NotificationManagement() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">المحتوى</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">المحتوى</label>
                   <textarea
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                     value={editingItem.body}
                     onChange={(e) => setEditingItem({...editingItem, body: e.target.value})}
                     required
@@ -344,10 +344,10 @@ export default function NotificationManagement() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">رابط URL</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">رابط URL</label>
                     <input
                       type="url"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                       value={editingItem.url1}
                       onChange={(e) => setEditingItem({...editingItem, url1: e.target.value})}
                       placeholder="https://example.com"
@@ -355,9 +355,9 @@ export default function NotificationManagement() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">الاشتراك</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">الاشتراك</label>
                     <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                       value={editingItem.ashtrak || '0'}
                       onChange={(e) => setEditingItem({...editingItem, ashtrak: e.target.value})}
                     >
@@ -372,10 +372,10 @@ export default function NotificationManagement() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظة</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">ملاحظة</label>
                   <textarea
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                     value={editingItem.note1 || ''}
                     onChange={(e) => setEditingItem({...editingItem, note1: e.target.value || null})}
                   />
@@ -385,13 +385,13 @@ export default function NotificationManagement() {
                   <button
                     type="button"
                     onClick={() => setEditingItem(null)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
                   >
                     إلغاء
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -405,24 +405,24 @@ export default function NotificationManagement() {
         )}
 
         {/* Notifications Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-500">
-              <tr>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">#</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">العنوان</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">نوع المستخدم</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الرابط</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الاشتراك</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الملاحظات</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
-              </tr>
-            </thead>
+        <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-200">
+  <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+  <tr>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-10">#</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">العنوان</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">نوع المستخدم</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-36">الرابط</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">الاشتراك</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-32">الملاحظات</th>
+    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-32">الإجراءات</th>
+  </tr>
+</thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredItems.map((item, index) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{index + 1}</td>
+                  <td className="px-3 py-4 text-right">
                     <div className="text-sm font-medium text-gray-900">
                       {item.title || 'بدون عنوان'}
                     </div>
@@ -430,7 +430,7 @@ export default function NotificationManagement() {
                       {safeSubstring(item.body, 50)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       item.user_type === 'vip' ? 'bg-purple-100 text-purple-800' :
                       item.user_type === 'موثوق' ? 'bg-green-100 text-green-800' :
@@ -439,7 +439,7 @@ export default function NotificationManagement() {
                       {item.user_type || 'غير محدد'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                     {item.url1 ? (
                       <a href={item.url1} target="_blank" rel="noopener noreferrer" 
                          className="text-blue-600 hover:text-blue-900 truncate max-w-xs block">
@@ -449,28 +449,26 @@ export default function NotificationManagement() {
                       'لا يوجد'
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                     {getSubscriptionName(item.ashtrak)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                     {safeSubstring(item.note1, 30)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2 justify-end">
                       <button
-                        onClick={() => openEditForm(item)}
-                        className="text-yellow-600 hover:text-yellow-900 flex items-center"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        تعديل
-                      </button>
+  onClick={() => openEditForm(item)}
+  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" ...
+  تعديل
+</button>
                       <button
                         onClick={() => item.id && handleDeleteItem(item.id)}
-                        className="text-red-600 hover:text-red-900 flex items-center"
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         حذف
@@ -482,6 +480,57 @@ export default function NotificationManagement() {
             </tbody>
           </table>
         </div>
+
+{/* بطاقات الموبايل */}
+<div className="md:hidden space-y-3 mt-4">
+  {filteredItems.map((item, index) => (
+    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <span className="text-xs text-gray-400">#{index + 1}</span>
+        <span className={`px-2 py-1 rounded-xl text-xs font-bold ${
+          item.user_type === 'vip' ? 'bg-purple-100 text-purple-800' :
+          item.user_type === 'موثوق' ? 'bg-green-100 text-green-800' :
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {item.user_type || 'غير محدد'}
+        </span>
+      </div>
+      <p className="text-sm font-bold text-gray-800 mb-1 truncate">{item.title || 'بدون عنوان'}</p>
+      <p className="text-xs text-gray-500 mb-2 line-clamp-2">{safeSubstring(item.body, 80)}</p>
+      <div className="text-xs text-gray-500 mb-1">
+        <span className="font-bold">الاشتراك: </span>{getSubscriptionName(item.ashtrak)}
+      </div>
+      {item.url1 && (
+        <div className="text-xs mb-2 truncate max-w-xs">
+          <a href={item.url1} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
+            {safeSubstring(item.url1, 30)}
+          </a>
+        </div>
+      )}
+      <div className="flex gap-2 mt-3 justify-end">
+        <button
+          onClick={() => openEditForm(item)}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          تعديل
+        </button>
+        <button
+          onClick={() => item.id && handleDeleteItem(item.id)}
+          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          حذف
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+
 
         {filteredItems.length === 0 && notificationItems.length > 0 && (
           <div className="text-center py-12">
@@ -506,3 +555,4 @@ export default function NotificationManagement() {
     </div>
   );
 }
+
