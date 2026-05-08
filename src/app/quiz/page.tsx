@@ -34,11 +34,11 @@ export default function AshtrakManagement() {
     active: true
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+const [error, setError] = useState('');
+const [showAddModal, setShowAddModal] = useState(false);
 
   // Notification Modal State
-  const [showAddModal, setShowAddModal] = useState(false);
-const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationTitle, setNotificationTitle] = useState('');
   const [notificationBody, setNotificationBody] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
@@ -228,6 +228,7 @@ const [showNotificationModal, setShowNotificationModal] = useState(false);
       });
       setShowAddModal(false);
       fetchData();
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
     }
   };
@@ -370,7 +371,7 @@ const [showNotificationModal, setShowNotificationModal] = useState(false);
         </button>
       </div>
 
-      <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+      <div className="p-4 overflow-y-auto max-h-[70vh]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1.5">التسلسل</label>
@@ -480,12 +481,13 @@ const [showNotificationModal, setShowNotificationModal] = useState(false);
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
-          إضافة اشتراك
+          إضافة
         </button>
       </div>
     </div>
   </div>
 )}
+
 
 
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -498,117 +500,19 @@ const [showNotificationModal, setShowNotificationModal] = useState(false);
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-800">
               <tr>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">تسلسل</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اسم الفئة</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مقرار ل.س</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مقرار دولار</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اختبار ل.س</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اختبار دولار</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">صوتي ل.س</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">صوتي دولار</th>
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مفعل</th>
-                
-                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-8">تسلسل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفئة</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">مقرار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">مقرار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">اختبار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">اختبار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">صوتي ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">صوتي $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">مفعل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-40">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* Add new row */}
-              <tr className="bg-blue-50">
-                <td className="px-3 py-4">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.priority_order}
-                    onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
-                    placeholder="ترتيب"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.category_name}
-                    onChange={(e) => handleNewItemChange('category_name', e.target.value)}
-                    placeholder="اسم الفئة"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.mokarar_price}
-                    onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.mokarar_dolar}
-                    onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.quiz_price}
-                    onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.quiz_dolar}
-                    onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.voice_price}
-                    onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.voice_dolar}
-                    onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <select
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.active ? '1' : '0'}
-                    onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
-                  >
-                    <option value="1">نعم</option>
-                    <option value="0">لا</option>
-                  </select>
-                </td>
-                
-                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={handleAdd}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition flex items-center text-xs"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    إضافة
-                  </button>
-                </td>
-              </tr>
 
               {/* Data rows */}
               {data.map((item) => (
