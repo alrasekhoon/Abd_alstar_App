@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -102,19 +100,8 @@ const [showAddModal, setShowAddModal] = useState(false);
     }
   };
 
-  const handleEdit = (item: AshtrakItem) => {
-    setEditingId(item.id!);
-    setNewItem(item); // تعبئة النافذة ببيانات العنصر
-    setShowAddModal(true); // فتح النافذة المشتركة
-  };
-
-  const handleCloseModal = () => {
-    setShowAddModal(false);
-    setEditingId(null);
-    setNewItem({ // تصفير البيانات
-      priority_order: 0, category_name: '', mokarar_price: '', mokarar_dolar: '',
-      quiz_price: '', quiz_dolar: '', voice_price: '', voice_dolar: '', active: true
-    });
+  const handleEdit = (id: number) => {
+    setEditingId(id);
   };
 
   const handleSave = async (item: AshtrakItem) => {
@@ -137,7 +124,7 @@ const [showAddModal, setShowAddModal] = useState(false);
 
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
 
-      handleCloseModal(); // إغلاق وتصفير النافذة الموحدة
+      setEditingId(null);
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ التغييرات');
@@ -242,6 +229,19 @@ const [showAddModal, setShowAddModal] = useState(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    fetchData(); // إعادة تحميل البيانات لاستعادة القيم الأصلية
+  };
+
+  const handleInputChange = (id: number, field: string, value: string | number | boolean) => {
+    setData(prevData => 
+      prevData.map(item => 
+        item.id === id ? { ...item, [field]: value } : item
+      )
+    );
   };
 
   const handleNewItemChange = (field: string, value: string | number | boolean) => {
@@ -358,9 +358,9 @@ const [showAddModal, setShowAddModal] = useState(false);
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
       <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a]">
-        <h3 className="text-lg font-bold text-gray-800">{editingId ? 'تعديل الاشتراك' : 'إضافة اشتراك'}</h3>
+        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك جديد</h3>
         <button
-          onClick={handleCloseModal}
+          onClick={() => setShowAddModal(false)}
           className="text-gray-500 hover:bg-gray-100 p-1 rounded-xl transition"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -467,19 +467,19 @@ const [showAddModal, setShowAddModal] = useState(false);
 
       <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
         <button
-          onClick={handleCloseModal}
+          onClick={() => setShowAddModal(false)}
           className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
         >
           إلغاء
         </button>
         <button
-          onClick={() => { editingId ? handleSave(newItem) : handleAdd(); }}
+          onClick={() => { handleAdd(); setShowAddModal(false); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
-          {editingId ? 'حفظ التعديلات' : 'إضافة'}
+          إضافة
         </button>
       </div>
     </div>
@@ -489,34 +489,25 @@ const [showAddModal, setShowAddModal] = useState(false);
 
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
-  <h1 className="text-2xl font-bold">إدارة الإشتراكات</h1>
-  <button
-    onClick={() => setShowAddModal(true)}
-    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-    </svg>
-    إضافة اشتراك جديد
-  </button>
-</div>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
+        </div>
 
-       {/* Data Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6 shadow-sm">
-          <table className="w-full divide-y divide-gray-200 min-w-max whitespace-nowrap">
+        {/* Data Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-800">
               <tr>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[50px] min-w-[50px]">تسلسل</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[120px] min-w-[120px]">اسم الفئة</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">مقرار ل.س</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">مقرار $</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">اختبار ل.س</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">اختبار $</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">صوتي ل.س</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">صوتي $</th>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[80px] min-w-[80px]">مفعل</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[220px] min-w-[220px]">الإجراءات</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-8">تسلسل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفئة</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">مقرار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">مقرار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">اختبار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">اختبار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">صوتي ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">صوتي $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">مفعل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-40">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -525,35 +516,141 @@ const [showAddModal, setShowAddModal] = useState(false);
               {data.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-3 py-4">
-                    <div className="text-sm font-medium text-gray-900">{item.priority_order}</div>
+                    {editingId === item.id ? (
+                      <input
+                        type="number"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.priority_order}
+                        onChange={(e) => handleInputChange(item.id!, 'priority_order', parseInt(e.target.value) || 0)}
+                      />
+                    ) : (
+                      <div className="text-sm font-medium text-gray-900">{item.priority_order}</div>
+                    )}
                   </td>
                   <td className="px-3 py-4">
-                    <div className="text-sm font-medium text-gray-900">{item.category_name}</div>
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.category_name}
+                        onChange={(e) => handleInputChange(item.id!, 'category_name', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm font-medium text-gray-900">{item.category_name}</div>
+                    )}
                   </td>
                   <td className="px-3 py-4">
-                    <div className="text-sm text-gray-900">{item.mokarar_price}</div>
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="text-sm text-gray-900">{item.mokarar_dolar}</div>
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="text-sm text-gray-900">{item.quiz_price}</div>
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="text-sm text-gray-900">{item.quiz_dolar}</div>
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="text-sm text-gray-900">{item.voice_price}</div>
-                  </td>
-                  <td className="px-3 py-4 text-right">
-                    <div className="text-sm text-gray-900">{item.voice_dolar}</div>
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.mokarar_price}
+                        onChange={(e) => handleInputChange(item.id!, 'mokarar_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.mokarar_price}</div>
+                    )}
                   </td>
                   <td className="px-3 py-4">
-                    <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.mokarar_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'mokarar_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.mokarar_dolar}</div>
+                    )}
                   </td>
-
-                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-right">
-                    <div className="flex flex-wrap gap-2 justify-end">
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.quiz_price}
+                        onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.quiz_price}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.quiz_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'quiz_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.quiz_dolar}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.voice_price}
+                        onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.voice_price}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.voice_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'voice_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.voice_dolar}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <select
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.active ? '1' : '0'}
+                        onChange={(e) => handleInputChange(item.id!, 'active', e.target.value === '1')}
+                      >
+                        <option value="1">نعم</option>
+                        <option value="0">لا</option>
+                      </select>
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
+                    )}
+                  </td>
+                  
+                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex flex-wrap gap-2">
+                      {editingId === item.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSave(item)}
+                            className="bg-blue-50 text-blue-600 p-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100"
+                            title="حفظ"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="bg-gray-50 text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                            title="إلغاء"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </>
+                      ) : (
+                        <>
                           <button
                             onClick={() => handleUpdateMaterials(item.id!)}
                             className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
@@ -564,10 +661,10 @@ const [showAddModal, setShowAddModal] = useState(false);
                             </svg>
                           </button>
                           <button
-                        onClick={() => handleEdit(item)}
-                        className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
-                        title="تعديل"
-                      >
+                            onClick={() => handleEdit(item.id!)}
+                            className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
+                            title="تعديل"
+                          >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                             </svg>
@@ -590,6 +687,8 @@ const [showAddModal, setShowAddModal] = useState(false);
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                           </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -611,4 +710,3 @@ const [showAddModal, setShowAddModal] = useState(false);
     </div>
   );
 }
-
