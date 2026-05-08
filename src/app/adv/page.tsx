@@ -492,11 +492,11 @@ export default function AdvManagement() {
                   <td className="px-6 py-4 max-w-md">
                     <div className="text-sm text-gray-500 line-clamp-2">{item.description}</div>
                   </td>
-                  <td className="px-6 py-4 max-w-xs">
-                    <div className="text-sm text-gray-500">{item.note}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                  <td className="px-3 py-4 max-w-[150px]">
+  <div className="text-sm text-gray-500 truncate">{item.note}</div>
+</td>
+                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-right">
+  <div className="flex gap-2 justify-start">
                       <button
                         onClick={() => openEditForm(item)}
                         className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
