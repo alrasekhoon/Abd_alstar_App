@@ -15,7 +15,7 @@ type AshtrakItem = {
   active: boolean;
   created_at?: string;
   updated_at?: string;
-};
+}; 
 
 export default function AshtrakManagement() {
   const [data, setData] = useState<AshtrakItem[]>([]);
