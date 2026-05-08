@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -274,9 +276,9 @@ export default function AshtrakManagement() {
     <div className="container mx-auto p-4 md:p-6 max-w-7xl">
       {/* Notification Modal */}
       {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b bg-amber-50 rounded-t-lg">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col relative z-10 overflow-hidden">
+    <div className="flex justify-between items-center p-4 border-b bg-blue-50 rounded-t-2xl">
               <h3 className="text-lg font-bold text-amber-800 flex items-center">
                 إرسال إشعار لمشتركين: {selectedAshtrakName}
               </h3>
@@ -302,7 +304,7 @@ export default function AshtrakManagement() {
                   value={notificationTitle}
                   onChange={(e) => setNotificationTitle(e.target.value)}
                   placeholder="أدخل عنوان الإشعار"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                 />
               </div>
               <div>
@@ -312,7 +314,7 @@ export default function AshtrakManagement() {
                   onChange={(e) => setNotificationBody(e.target.value)}
                   placeholder="اكتب المحتوى هنا..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                 ></textarea>
               </div>
             </div>
@@ -320,14 +322,14 @@ export default function AshtrakManagement() {
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
               <button
                 onClick={() => setShowNotificationModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition"
               >
                 إلغاء
               </button>
               <button
                 onClick={handleSendNotification}
                 disabled={isSendingNotification}
-                className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition flex items-center"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
               >
                 {isSendingNotification ? (
                   <>
@@ -593,7 +595,7 @@ export default function AshtrakManagement() {
                         <>
                           <button
                             onClick={() => handleSave(item)}
-                            className="bg-green-100 text-green-700 p-2 rounded-lg hover:bg-green-200 transition-colors"
+                            className="bg-blue-50 text-blue-600 p-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100"
                             title="حفظ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -602,7 +604,7 @@ export default function AshtrakManagement() {
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-gray-200 transition-colors"
+                            className="bg-gray-50 text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
                             title="إلغاء"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -614,7 +616,7 @@ export default function AshtrakManagement() {
                         <>
                           <button
                             onClick={() => handleUpdateMaterials(item.id!)}
-                            className="bg-purple-100 text-purple-700 p-2 rounded-lg hover:bg-purple-200 transition-colors"
+                            className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
                             title="تعميم الأسعار على المواد"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -641,7 +643,7 @@ export default function AshtrakManagement() {
                           </button>
                           <button
                             onClick={() => handleOpenNotificationModal(item)}
-                            className="bg-amber-100 text-amber-700 p-2 rounded-lg hover:bg-amber-200 transition-colors"
+                            className="bg-amber-50 text-amber-600 p-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100"
                             title="إرسال إشعار للمشتركين"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -671,3 +673,4 @@ export default function AshtrakManagement() {
     </div>
   );
 }
+
