@@ -491,9 +491,18 @@ const [showAddModal, setShowAddModal] = useState(false);
 
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
-        </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
+  <h1 className="text-2xl font-bold">إدارة الإشتراكات</h1>
+  <button
+    onClick={() => setShowAddModal(true)}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+    </svg>
+    إضافة اشتراك جديد
+  </button>
+</div>
 
         {/* Data Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
