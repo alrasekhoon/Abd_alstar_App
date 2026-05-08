@@ -551,12 +551,10 @@ const [showAddModal, setShowAddModal] = useState(false);
                   <td className="px-3 py-4">
                     <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
                   </td>
-                  
-                  </>
-                      )}
-                    </div>
-                  </td>
 
+                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-right">
+                    <div className="flex flex-wrap gap-2 justify-end">
+                          <button
                             onClick={() => handleUpdateMaterials(item.id!)}
                             className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
                             title="تعميم الأسعار على المواد"
