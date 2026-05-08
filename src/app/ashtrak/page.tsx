@@ -509,16 +509,16 @@ const [showAddModal, setShowAddModal] = useState(false);
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-800">
               <tr>
-                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-8">تسلسل</th>
-<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفئة</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">مقرار ل.س</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">مقرار $</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">اختبار ل.س</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">اختبار $</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">صوتي ل.س</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">صوتي $</th>
-<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">مفعل</th>
-<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-40">الإجراءات</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[50px] min-w-[50px]">تسلسل</th>
+                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[300px] min-w-[300px]">اسم الفئة</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">مقرار ل.س</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">مقرار $</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">اختبار ل.س</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">اختبار $</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">صوتي ل.س</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">صوتي $</th>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[80px] min-w-[80px]">مفعل</th>
+                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[400px] min-w-[400px]">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
