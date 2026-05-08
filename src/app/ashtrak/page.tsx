@@ -360,7 +360,7 @@ const [showAddModal, setShowAddModal] = useState(false);
   <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
       <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a]">
-        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك جديد</h3>
+        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك</h3>
         <button
           onClick={() => setShowAddModal(false)}
           className="text-gray-500 hover:bg-gray-100 p-1 rounded-xl transition"
@@ -510,7 +510,7 @@ const [showAddModal, setShowAddModal] = useState(false);
             <thead className="bg-gray-800">
               <tr>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[50px] min-w-[50px]">تسلسل</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[300px] min-w-[300px]">اسم الفئة</th>
+                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[120px] min-w-[120px]">اسم الفئة</th>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">مقرار ل.س</th>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">مقرار $</th>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">اختبار ل.س</th>
@@ -518,7 +518,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[100px] min-w-[100px]">صوتي ل.س</th>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[100px] min-w-[100px]">صوتي $</th>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[80px] min-w-[80px]">مفعل</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[400px] min-w-[400px]">الإجراءات</th>
+                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-[220px] min-w-[220px]">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
