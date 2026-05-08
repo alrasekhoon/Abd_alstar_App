@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -202,17 +204,17 @@ export default function SupportChatManagement() {
   }, [selectedUser]); // نضيف selectedUser كمراقب ليقرأ منه الرسائل إذا تغير
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl font-sans" dir="rtl">
+    <div className="min-h-screen bg-gray-100 p-2 md:p-4 font-sans" dir="rtl">
       <Head>
         <title>الدردشة المباشرة مع الطلاب</title>
       </Head>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden flex h-[calc(100vh-140px)] border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex h-[calc(100vh-120px)]">
         
         {/* قائمة المحادثات (Sidebar) */}
-        <div className="w-1/3 bg-gray-50 border-l border-gray-200 flex flex-col h-full z-10">
-          <div className="p-4 border-b border-gray-200 bg-white flex flex-col space-y-3">
-            <h2 className="text-xl font-bold text-gray-800">المحادثات</h2>
+        <div className="w-1/3 min-w-[260px] bg-gray-50 border-l border-gray-100 flex flex-col h-full">
+  <div className="p-4 border-b border-gray-100 bg-blue-50 flex flex-col space-y-3">
+    <h2 className="text-lg font-extrabold text-blue-900">المحادثات</h2>
             
             {/* مربع البحث */}
             <div className="relative">
@@ -221,7 +223,7 @@ export default function SupportChatManagement() {
                 value={searchQuery}
                 onChange={handleSearch}
                 placeholder="ابحث عن مستخدم بالاسم أو الرقم لتنشاء محادثة..." 
-                className="w-full text-gray-800 bg-gray-100 rounded-lg px-4 py-2 pr-10 outline-none text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                className="w-full px-4 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
               />
             <svg className="w-5 h-5 absolute right-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -263,7 +265,11 @@ export default function SupportChatManagement() {
               <div 
                 key={chat.user_id}
                 onClick={() => setSelectedUser(chat)}
-                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 hover:bg-gray-100 flex justify-between items-center ${selectedUser?.user_id === chat.user_id ? 'bg-blue-50 border-r-4 border-blue-600' : ''}`}
+                className={`p-4 border-b border-gray-100 cursor-pointer transition-colors duration-200 flex justify-between items-center ${
+  selectedUser?.user_id === chat.user_id
+    ? 'bg-blue-50 border-r-4 border-[#c4a900]'
+    : 'hover:bg-gray-100'
+}`}
               >
                 <div className="flex flex-col overflow-hidden">
                   <h3 className="font-semibold text-gray-800 text-lg">
@@ -293,12 +299,12 @@ export default function SupportChatManagement() {
       </div>
 
       {/* منطقة الدردشة (Main Chat Area) */}
-      <div className="flex-1 flex flex-col bg-[#e5ddd5] h-full relative">
+      <div className="flex-1 flex flex-col bg-gray-50 h-full relative">
         {selectedUser ? (
           <>
             {/* رأس الدردشة */}
-            <div className="p-4 bg-white border-b border-gray-200 flex items-center shadow-sm">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold ml-3">
+            <div className="p-4 bg-white border-b border-gray-100 flex items-center shadow-sm">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 font-extrabold ml-3">
                 {selectedUser.first_name?.charAt(0) || selectedUser.user_name?.charAt(0) || '?'}
               </div>
               <div>
@@ -323,14 +329,14 @@ export default function SupportChatManagement() {
                   return (
                     <div key={msg.id || idx} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                       <div 
-                        className={`max-w-[70%] rounded-lg p-3 shadow-sm relative ${
-                          isAdmin 
-                            ? 'bg-[#d9fdd3] text-gray-800 rounded-tr-none' 
-                            : 'bg-white text-gray-800 rounded-tl-none'
-                        }`}
+                        className={`max-w-[70%] rounded-2xl p-3.5 shadow-sm relative text-sm leading-relaxed ${
+  isAdmin
+    ? 'bg-blue-600 text-white rounded-tl-sm'
+    : 'bg-white text-gray-800 border border-gray-100 rounded-tr-sm'
+}`}
                       >
                         <p className="text-md mb-3 pr-2 pl-6">{msg.message_text}</p>
-                        <div className="text-[10px] text-gray-500 flex items-center justify-end">
+                        <div className={`text-[10px] flex items-center justify-end mt-1 ${isAdmin ? 'text-blue-200' : 'text-gray-400'}`}>
                           <span>{new Date(msg.created_at).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span>
                           {isAdmin && (
                             <span className="ml-1 flex items-center">
@@ -351,22 +357,20 @@ export default function SupportChatManagement() {
             </div>
 
             {/* مربع الكتابة */}
-            <div className="p-3 bg-[#f0f2f5] border-t border-gray-300 flex items-end">
+            <div className="p-3 bg-white border-t border-gray-100 flex items-end gap-2">
               <textarea
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="اكتب رسالة للرد..."
-                className="flex-1 resize-none overflow-hidden rounded-xl bg-white border border-gray-300 px-4 py-3 pb-8 outline-none focus:border-blue-500 ml-2 max-h-32 text-gray-800"
+                className="flex-1 resize-none overflow-hidden rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 outline-none text-gray-800 max-h-32 transition-all focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] focus:bg-white"
                 rows={1}
                 style={{ minHeight: '50px' }}
               />
               <button
                 onClick={sendMessage}
                 disabled={isSending || !messageInput.trim()}
-                className={`w-12 h-12 rounded-full flex justify-center items-center shrink-0 transition-colors ${
-                  isSending || !messageInput.trim() ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className={`w-11 h-11 rounded-xl flex justify-center items-center shrink-0 transition-colors shadow-sm ${ isSending ? 'bg-gray-300' : 'bg-blue-600 hover:bg-blue-700' }`} 
               >
                 {isSending ? (
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -382,11 +386,12 @@ export default function SupportChatManagement() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col justify-center items-center text-gray-500 opacity-60">
+          <div className="flex-1 flex flex-col justify-center items-center text-gray-400 bg-gray-50">
             <svg className="w-24 h-24 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
             </svg>
-            <p className="text-2xl font-light">انقر على أي محادثة للبدء في الرد</p>
+            <p className="text-lg font-bold text-gray-500 mt-3">اختر محادثة للبدء</p>
+<p className="text-sm text-gray-400 mt-1">انقر على أي محادثة من القائمة</p> 
           </div>
         )}
       </div>
@@ -394,3 +399,4 @@ export default function SupportChatManagement() {
     </div>
   );
 }
+
