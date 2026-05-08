@@ -684,7 +684,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                   type="button"
                   onClick={() => handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
                   className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-          (item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
+          (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
         }`}
                 >
                   <span
