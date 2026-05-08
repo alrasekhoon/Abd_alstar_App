@@ -1,666 +1,811 @@
-  'use client';
 
-  import { useState, useEffect, useRef } from 'react';
 
-  interface QuestionOption {
-    letter: string;
-    text: string;
-    isCorrect: boolean;
-  }
+'use client';
 
-  interface ExtractedQuestion {
-    questionNumber: string;
-    questionText: string;
-    unit: string;
-    page: string;
-    importance: string;
-    options: QuestionOption[];
-    correctAnswer: string;
-    error?: string;
-    originalText?: string;
-  }
+import { useState, useEffect } from 'react';
 
-  interface Material {
-    id: string;
-    material_name: string;
-    category_id: number;
-    category_name?: string;
-  }
+type AshtrakItem = {
+  id?: number;
+  priority_order: number;
+  category_name: string;
+  mokarar_price: string;
+  mokarar_dolar: string;
+  quiz_price: string;
+  quiz_dolar: string;
+  voice_price: string;
+  voice_dolar: string;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
 
-  interface Category {
-    id: number;
-    category_name: string;
-  }
+export default function AshtrakManagement() {
+  const [data, setData] = useState<AshtrakItem[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [newItem, setNewItem] = useState<AshtrakItem>({
+    priority_order: 0,
+    category_name: '',
+    mokarar_price: '',
+    mokarar_dolar: '',
+    quiz_price: '',
+    quiz_dolar: '',
+    voice_price: '',
+    voice_dolar: '',
+    active: true
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  interface Question {
-    material_id: number;
-    unit_num: number;
-    page_num: number;
-    parent: string;
-    q_txt: string;
-    a1: string;
-    a2: string;
-    a3: string;
-    a4: string;
-    answer: number;
-    note: string;
-    q_code: string;
-    code_q_number: string;
-    timer: number;
-    importance: number;
-  }
+  // Notification Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationBody, setNotificationBody] = useState('');
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+  const [selectedAshtrakName, setSelectedAshtrakName] = useState('');
+  const [selectedAshtrakId, setSelectedAshtrakId] = useState<number | null>(null);
 
-  // نص المساعدة مخزن في متغير منفصل
-  const HELP_TEXT = {
-    example: `01- {1}: أول من نقل استعمال مصطلح الأحوال الشخصية، هو:`,
-    explanation: `إجابة السؤال موجود في الوحدة (1) الصفحة رقم (1) أهمية السؤال (1).`,
-    points: [
-      "1- في المثال السابق سيتم استخراج رمز السؤال من البداية 01- {1}",
-      "2- سيتم استخراج نص بين علامتي (\":\") كمثال :نص السؤال:",
-      "3- وسيتم استخراج رقم الوحدة والصفحة وأهمية السؤال من السطر الثاني",
-      "4- سيتعرف النظام على الجواب الصحيح عن طريق وجود نجمة في النهاية دون فراغ",
-      "5- أهمية السؤال تكون 0 (غير مهم) أو 1 (هام)"
+  const API_URL = '/api/proxy/cp_ashtrak.php';
 
-    ]
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (!response.ok) throw new Error('فشل في جلب البيانات');
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  export default function MultiQuestionExtractor() {
-    const [inputText, setInputText] = useState<string>('');
-    const [questions, setQuestions] = useState<ExtractedQuestion[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [selectedMaterial, setSelectedMaterial] = useState<string>('');
-    const [timer, setTimer] = useState<string>('');
-    const [materials, setMaterials] = useState<Material[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoadingMaterials, setIsLoadingMaterials] = useState<boolean>(true);
-    const [selectedYear, setSelectedYear] = useState<string>('1');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [filterType, setFilterType] = useState<string>('all');
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    // جلب الفئات من الخادم
-    useEffect(() => {
-      const fetchCategories = async () => {
-        try {
-          const response = await fetch('/api/proxy/cp_ashtrak.php');
-          if (!response.ok) throw new Error('فشل جلب الفئات');
-          const data = await response.json();
-          setCategories(data);
-        } catch (error) {
-          console.error('حدث خطأ أثناء جلب الفئات:', error);
-        }
-      };
-
-      fetchCategories();
-    }, []);
-
-    // جلب المواد من الخادم عند تغيير السنة أو الفئة
-    useEffect(() => {
-      const fetchMaterials = async () => {
-        try {
-          setIsLoadingMaterials(true);
-          setMaterials([]);
-          setSelectedMaterial('');
-
-          const response = await fetch(`/api/proxy/get_material.php?year1=${selectedYear}`);
-          
-          if (!response.ok) {
-            throw new Error('فشل جلب البيانات من الخادم');
-          }
-
-          const data = await response.json();
-          
-          if (data && data.length > 0 && !data.message) {
-            // إضافة أسماء الفئات للمواد
-            const materialsWithCategories = data.map((material: Material) => ({
-              ...material,
-              category_name: categories.find(cat => cat.id === material.category_id)?.category_name || 'غير معروف'
-            }));
-            
-            setMaterials(materialsWithCategories);
-          }
-        } catch (error) {
-          console.error('حدث خطأ أثناء جلب المواد:', error);
-        } finally {
-          setIsLoadingMaterials(false);
-        }
-      };
-
-      fetchMaterials();
-    }, [selectedYear, categories]);
-
-    // تصفية المواد حسب الفئة المختارة
-    const filteredMaterials = selectedCategory === 'all' 
-      ? materials 
-      : materials.filter(material => material.category_id.toString() === selectedCategory);
-
-    // تصفية الأسئلة المعروضة حسب النوع المختار
-    const filteredQuestions = questions.filter(question => {
-      if (filterType === 'invalid') {
-        return question.error;
-      } else if (filterType === 'valid') {
-        return !question.error;
-      }
-      return true;
-    });
-
-    const extractAllQuestions = (): ExtractedQuestion[] => {
-      const extractedQuestions: ExtractedQuestion[] = [];
+  const handleDelete = async (id: number) => {
+    if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
+    
+    try {
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${id}&refresh=${timestamp}`;
       
-      if (!inputText.trim()) return extractedQuestions;
-
-      const questionBlocks = inputText.split(/(?=\d{2}- \{\d+\}:)/g);
-      
-      questionBlocks.forEach((block, index) => {
-        if (!block.trim()) return;
-        
-        try {
-          const questionNumberMatch = block.match(/^(\d{2})- \{(\d+)\}:/);
-          if (!questionNumberMatch) {
-            throw new Error('تنسيق رقم السؤال غير صحيح');
-          }
-          const questionNumber = `${questionNumberMatch[2]}/${questionNumberMatch[1]}`;
-
-          const questionTextParts = block.split(/^.*?:\s*/)[1]?.split(/\n\s*(?:الوحدة|إجابة|أ-|ب-|ج-|د-|A-|B-|C-|D-)/)[0];
-          const questionText = questionTextParts?.trim() || '';
-
-          const unitPageMatch = block.match(/الوحدة\s*\((.*?)\)\s*الصفحة\s*رقم\s*\((\d+)\)\s*أهمية السؤال\s*\((\d+)\)/);
-          const unit = unitPageMatch?.[1]?.trim() || 'غير معروف';
-          if (unit == "غير معروف"){
-            throw new Error('لم يتم العثور على رقم الوحدة، تأكد من وجوده في التنسيق الصحيح');
-          }
-          const page = unitPageMatch?.[2]?.trim() || 'غير معروف';
-          if (page == "غير معروف"){
-            throw new Error('لم يتم العثور على رقم الصفحة تأكد من وجوده في التنسيق الصحيح');
-          }
-          const importance = unitPageMatch?.[3]?.trim() || '0';
-
-          const optionsSection = block.split(/(?:الوحدة|إجابة).*?(?:[أ-د]-|[A-D]-)/).pop() || '';
-          const optionsMatch = optionsSection.match(/(?:[أ-د]|[A-D])-\s*[\s\S]*?(?:\.\*|\.)(?=\s*(?:[أ-د]-|[A-D]-|$))/g) || [];
-          
-          if (optionsMatch.length < 2) {
-            throw new Error('يجب أن يحتوي السؤال على خيارين على الأقل');
-          }
-
-          const options: QuestionOption[] = optionsMatch.map(opt => {
-            const isCorrect = opt.trim().endsWith('.*');
-            const cleanText = opt.replace(/^([أ-د]|[A-D])-\s*/, '').replace(/\.\*?$/, '').trim();
-            const letter = opt.charAt(0);
-
-            return {
-              letter,
-              text: cleanText,
-              isCorrect
-            };
-          });
-
-          if (!options.some(opt => opt.isCorrect)) {
-            throw new Error('لم يتم تحديد إجابة صحيحة (يجب أن ينتهي أحد الخيارات بـ .*)');
-          }
-
-          const correctAnswerOption = options.find(opt => opt.isCorrect);
-          const correctAnswer = correctAnswerOption 
-            ? `${correctAnswerOption.letter}- ${correctAnswerOption.text}`
-            : '';
-
-          extractedQuestions.push({
-            questionNumber,
-            questionText,
-            unit,
-            page,
-            importance,
-            options,
-            correctAnswer,
-            originalText: block.trim()
-          });
-
-        } catch (error) {
-          extractedQuestions.push({
-            questionNumber: `سؤال ${index + 1}`,
-            questionText: block.split('\n')[0]?.substring(0, 100) + (block.length > 100 ? '...' : ''),
-            unit: '--',
-            page: '--',
-            importance: '1',
-            options: [],
-            correctAnswer: '',
-            error: error instanceof Error ? error.message : 'خطأ غير معروف',
-            originalText: block.trim()
-          });
+      const response = await fetch(url, {
+        method: 'DELETE',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
-
-      setQuestions(extractedQuestions);
-      return extractedQuestions;
-    };
-
-    const scrollToInvalidQuestion = (question: ExtractedQuestion) => {
-      if (!question.originalText || !textareaRef.current) return;
-
-      const textarea = textareaRef.current;
-      const questionText = question.originalText;
-      const startIndex = inputText.indexOf(questionText);
       
-      if (startIndex !== -1) {
-        textarea.focus();
-        textarea.setSelectionRange(startIndex, startIndex + questionText.length);
-        
-        const lineHeight = parseInt(getComputedStyle(textarea).lineHeight);
-        const linesBefore = (inputText.substring(0, startIndex).match(/\n/g) || []).length;
-        textarea.scrollTop = linesBefore * lineHeight;
-      }
-    };
+      if (!response.ok) throw new Error('فشل في حذف العنصر');
+      
+      fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
+    }
+  };
 
-    const hasInvalidQuestions = () => {
-      return questions.some(q => q.error);
-    };
+  const handleEdit = (id: number) => {
+    setEditingId(id);
+  };
 
-    const extractAndUploadQuestions = async () => {
-      if (hasInvalidQuestions()) {
-        alert('لا يمكن رفع الأسئلة لأن هناك أسئلة غير صالحة. يرجى تصحيحها أولاً.');
-        return { success: false, error: 'يوجد أسئلة غير صالحة' };
-      }
+  const handleSave = async (item: AshtrakItem) => {
+    try {
+      const method = 'PUT';
+      const timestamp = Date.now();
+      const url = `${API_URL}?id=${item.id}&refresh=${timestamp}`;
 
-      setIsLoading(true);
-      try {
-        const extractedQuestions = extractAllQuestions();
-        const validQuestions = extractedQuestions.filter(q => !q.error);
-        
-        if (validQuestions.length === 0) {
-          throw new Error('لا توجد أسئلة صالحة للرفع');
-        }
-
-        if (!selectedMaterial || !timer) {
-          throw new Error('يجب اختيار المادة وإدخال الوقت');
-        }
-
-        const questionsToUpload = convertToTquizFormat(validQuestions, selectedMaterial, timer);
-        await uploadQuestions(questionsToUpload); 
-        
-        const verification = await verifyQuestionsOnServer(questionsToUpload[0].material_id, questionsToUpload[0].unit_num);
-        
-        if (verification.length === 0) {
-          throw new Error('الأسئلة لم تظهر في الخادم بعد الرفع');
-        }
-
-        alert(`تم رفع ${questionsToUpload.length} سؤال بنجاح وتأكيد حفظها`);
-        setInputText('');
-        setQuestions([]);
-        setTimer('');
-        return { success: true, data: verification };
-      } catch (error) {
-        console.error('Error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'حدث خطأ غير متوقع';
-        alert(`فشل في الرفع: ${errorMessage}`);
-        return { success: false, error: errorMessage };
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const verifyQuestionsOnServer = async (materialId: number, unitNum: number) => {
-      try {
-        const response = await fetch(
-          `/api/proxy/cp_multi_quiz.php?material_id=${materialId}&unit_num=${unitNum}`
-        );
-        return await response.json();
-      } catch (error) {
-        console.error('Verification failed:', error);
-        return [];
-      }
-    };
-
-    const convertToTquizFormat = (
-      questions: ExtractedQuestion[],
-      materialId: string,
-      timerValue: string
-    ): Question[] => {
-      return questions.map((q) => {
-        const unitNumMatch = q.unit.match(/\d+/);
-        const unitNum = unitNumMatch ? parseInt(unitNumMatch[0]) : 1;
-        const pageNum = parseInt(q.page) || 1;
-        const importance = parseInt(q.importance) === 1 ? 1 : 0;
-        const correctOption = q.options.find(opt => opt.isCorrect);
-        const answerMap: Record<string, number> = {
-          'أ': 1, 'ب': 2, 'ج': 3, 'د': 4,
-          'A': 1, 'B': 2, 'C': 3, 'D': 4
-        };
-        const answer = correctOption ? answerMap[correctOption.letter] || 1 : 1;
-
-        const questionCodeParts = q.questionNumber.split('/');
-        const q_code = questionCodeParts[0] || `gen-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        const code_q_number = questionCodeParts[1] || '';
-
-        const options = q.options || [];
-        const isEnglish = options.length > 0 && ['A', 'B', 'C', 'D'].includes(options[0].letter.toUpperCase());
-        const defaultOptions = isEnglish ? ['A', 'B', 'C', 'D'] : ['أ', 'ب', 'ج', 'د'];
-        
-        const allOptions = defaultOptions.map((letter, index) => ({
-          letter,
-          text: options[index] ? `${letter}- ${options[index].text}` : `${letter}- `,
-          isCorrect: options[index]?.isCorrect || false
-        }));
-
-        return {
-          material_id: parseInt(materialId) || 0,
-          unit_num: unitNum,
-          page_num: pageNum,
-          parent: '',
-          q_txt: q.questionText.trim(),
-          a1: allOptions[0].text,
-          a2: allOptions[1].text,
-          a3: allOptions[2].text,
-          a4: allOptions[3].text,
-          answer: answer,
-          note: q.error || '',
-          q_code: q_code,
-          code_q_number: code_q_number,
-          timer: parseInt(timerValue) || 30,
-          importance: importance
-        };
+      const response = await fetch(url, {
+        method,
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(item),
       });
-    };
 
-    const uploadQuestions = async (questions: Question[]) => {
-      setIsLoading(true);
-      try {
-        console.log('Sending data:', JSON.stringify(questions, null, 2));
+      if (!response.ok) throw new Error('فشل في حفظ البيانات');
 
-        const response = await fetch('/api/proxy/cp_multi_quiz.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(questions),
-        });
+      setEditingId(null);
+      fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ التغييرات');
+    }
+  };
 
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
+  const handleOpenNotificationModal = (item: AshtrakItem) => {
+    setSelectedAshtrakId(item.id!);
+    setSelectedAshtrakName(item.category_name);
+    setNotificationTitle('');
+    setNotificationBody('');
+    setShowNotificationModal(true);
+  };
 
-        if (!responseText.trim().startsWith('{') && !responseText.trim().startsWith('[')) {
-          if (response.ok) {
-            const verifyResponse = await fetch(`/api/proxy/cp_multi_quiz.php?material_id=${questions[0].material_id}&unit_num=${questions[0].unit_num}`);
-            const verifiedData = await verifyResponse.json();
+  const handleSendNotification = async () => {
+    if (!notificationTitle.trim() || !notificationBody.trim()) {
+      alert('الرجاء إدخال عنوان ونص الإشعار');
+      return;
+    }
+    
+    setIsSendingNotification(true);
+    try {
+      const response = await fetch('/api/proxy/cp_ashtrak.php?action=send_notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category_id: selectedAshtrakId,
+          title: notificationTitle,
+          body: notificationBody
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      
+      alert(`نجاح: ${data.message}`);
+      setShowNotificationModal(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+
+  const handleUpdateMaterials = async (id: number) => {
+    if (!confirm('تنبيه: هل أنت متأكد أنك تريد تطبيق هذه الأسعار بشكل آلي على جميع المواد المرتبطة بهذه الفئة؟\nهذا الإجراء سيقوم بتحديث أسعار المواد المتطابقة ولا يمكن التراجع عنه.')) return;
+    
+    try {
+      const timestamp = Date.now();
+      const url = `${API_URL}?action=update_materials_prices&id=${id}&refresh=${timestamp}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+      });
+      
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'فشل في تحديث المواد');
+      
+      alert('تم تحديث أسعار المواد التابعة لهذه الفئة بنجاح');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ أثناء التحديث');
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!newItem.category_name.trim()) {
+      alert('يرجى إدخال اسم الفئة');
+      return;
+    }
+
+    try {
+      const timestamp = Date.now();
+      const url = `${API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(newItem),
+      });
+
+      if (!response.ok) throw new Error('فشل في إضافة العنصر');
+
+      setNewItem({
+        priority_order: 0,
+        category_name: '',
+        mokarar_price: '',
+        mokarar_dolar: '',
+        quiz_price: '',
+        quiz_dolar: '',
+        voice_price: '',
+        voice_dolar: '',
+        active: true
+      });
+      setShowAddModal(false);
+      fetchData();
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    fetchData(); // إعادة تحميل البيانات لاستعادة القيم الأصلية
+  };
+
+  const handleInputChange = (id: number, field: string, value: string | number | boolean) => {
+    setData(prevData => 
+      prevData.map(item => 
+        item.id === id ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
+  const handleNewItemChange = (field: string, value: string | number | boolean) => {
+    setNewItem(prev => ({ ...prev, [field]: value }));
+  };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="mt-4 text-lg font-medium text-gray-700">جاري التحميل...</p>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
+        <p className="font-bold">خطأ</p>
+        <p>{error}</p>
+        <button 
+          onClick={() => setError('')}
+          className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+            المحاولة مرة أخرى
+          </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col relative z-10 overflow-hidden">
+    <div className="flex justify-between items-center p-4 border-b bg-blue-50 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-amber-800 flex items-center">
+                إرسال إشعار لمشتركين: {selectedAshtrakName}
+              </h3>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="text-amber-500 hover:bg-amber-100 p-1 rounded-full transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
-            if (verifiedData.length > 0) {
-              return { success: true, message: 'تم رفع الأسئلة بنجاح' };
-            }
-          }
-          throw new Error('الخادم لم يعيد تأكيد الحفظ');
-        }
-
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          console.error('JSON parse error:', e);
-          throw new Error('استجابة غير متوقعة من الخادم');
-        }
-
-        if (!result.success) {
-          throw new Error(result.message || 'فشل في الحفظ');
-        }
-
-        return result;
-      } catch (error) {
-        console.error('Upload failed:', error);
-        throw new Error(typeof error === 'string' ? error : 
-                  error instanceof Error ? error.message : 
-                  'فشل في رفع الأسئلة');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center justify-center mb-6">
-          <h1 className="text-2xl font-bold text-center">أداة استخراج الأسئلة</h1>
-          
-          <div className="relative ml-2 group">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <div className="absolute hidden group-hover:block z-10 w-100 p-2 text-sm text-white bg-gray-800 rounded shadow-lg right-0">
-              <div className="bg-gray-800 p-4 rounded-lg text-right font-arabic my-4 whitespace-pre-line border border-gray-300">
-                <p className="">{HELP_TEXT.example}</p>
-                <p className="mb-2 text-gray-300">{HELP_TEXT.explanation}</p>
-                <ul className="list-disc pr-5 space-y-1">
-                  <li>أ- علي الطنطاوي.</li>
-                  <li className="text-green-600">ب- محمد قدري باشا.*</li>
-                  <li>ج- محمد القرضاوي.</li>
-                  <li>د- ابن القيم الجوزي.</li>
-                </ul>
-
-                <p>************************************</p>
-                {HELP_TEXT.points.map((point, index) => (
-                  <p key={index}>{point}</p>
-                ))}
+            <div className="p-4 space-y-4">
+              <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm mb-4">
+                سيتم إرسال الإشعار لجميع المشتركين النشطين في مواد الدورة: <span className="font-bold">{selectedAshtrakName}</span>
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  value={notificationTitle}
+                  onChange={(e) => setNotificationTitle(e.target.value)}
+                  placeholder="أدخل عنوان الإشعار"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">نص الإشعار</label>
+                <textarea
+                  value={notificationBody}
+                  onChange={(e) => setNotificationBody(e.target.value)}
+                  placeholder="اكتب المحتوى هنا..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                ></textarea>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleSendNotification}
+                disabled={isSendingNotification}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+              >
+                {isSendingNotification ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                    </svg>
+                    إرسال الإشعار
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* نظام الفلترة المحدث */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+{/* Add Modal */}
+{showAddModal && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
+      <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a]">
+        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك جديد</h3>
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="text-gray-500 hover:bg-gray-100 p-1 rounded-xl transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
+      <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-lg font-medium mb-2">
-              اختر الفئة:
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              <option value="all">جميع الفئات</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.category_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium mb-2">
-              اختر السنة:
-            </label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-            >
-              <option value="1">السنة الأولى</option>
-              <option value="2">السنة الثانية</option>
-              <option value="3">السنة الثالثة</option>
-              <option value="4">السنة الرابعة</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-lg font-medium mb-2">
-              اختر المادة:
-            </label>
-            {isLoadingMaterials ? (
-              <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 animate-pulse">
-                جاري تحميل المواد...
-              </div>
-            ) : (
-              <select
-                value={selectedMaterial}
-                onChange={(e) => setSelectedMaterial(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                disabled={filteredMaterials.length === 0}
-              >
-                <option value="">-- اختر المادة --</option>
-                {filteredMaterials.map((material) => (
-                  <option key={material.id} value={material.id}>
-                    {material.material_name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-          
-          <div>
-            <label className="block text-lg font-medium mb-2">
-              المؤقت (بالثواني):
-            </label>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">التسلسل</label>
             <input
               type="number"
-              value={timer}
-              onChange={(e) => setTimer(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="أدخل الزمن بالثانية"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.priority_order}
+              onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
+              placeholder="ترتيب"
             />
           </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم الفئة</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.category_name}
+              onChange={(e) => handleNewItemChange('category_name', e.target.value)}
+              placeholder="اسم الفئة"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.mokarar_price}
+              onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.mokarar_dolar}
+              onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.quiz_price}
+              onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.quiz_dolar}
+              onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.voice_price}
+              onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.voice_dolar}
+              onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مفعل</label>
+            <select
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.active ? '1' : '0'}
+              onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
+            >
+              <option value="1">نعم</option>
+              <option value="0">لا</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+        >
+          إلغاء
+        </button>
+        <button
+          onClick={() => { handleAdd(); setShowAddModal(false); }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          إضافة اشتراك
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-lg font-medium mb-2">
-            أدخل نصوص الأسئلة (يمكن إدخال عدة أسئلة):
-          </label>
-          <textarea
-            ref={textareaRef}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg"
-            rows={10}
-            placeholder="الصق نصوص الأسئلة هنا، كل سؤال في سطر أو أكثر..."
-          />
-        </div>
-        
-        <div className="flex gap-4 mb-8">
-          <button
-            onClick={extractAllQuestions}
-            disabled={!inputText.trim() || isLoading}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-white ${
-              !inputText.trim() || isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isLoading ? 'جاري معالجة الأسئلة...' : 'استخراج الأسئلة'}
-          </button>
-
-          <button
-            onClick={extractAndUploadQuestions}
-            disabled={questions.length === 0 || isLoading || !selectedMaterial || !timer || hasInvalidQuestions()}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium text-white ${
-              questions.length === 0 || isLoading || !selectedMaterial || !timer || hasInvalidQuestions()
-                ? 'bg-gray-400' 
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            {isLoading ? 'جاري رفع الأسئلة...' : 'رفع الأسئلة'}
-          </button>
-        </div>
-
-        {questions.length > 0 && (
-          <div className="overflow-x-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">النتائج</h2>
-              
-              {/* زر فلترة الجدول */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    filterType === 'all' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  عرض الكل ({questions.length})
-                </button>
-                <button
-                  onClick={() => setFilterType('valid')}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    filterType === 'valid' 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  الأسئلة الصالحة ({questions.filter(q => !q.error).length})
-                </button>
-                <button
-                  onClick={() => setFilterType('invalid')}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    filterType === 'invalid' 
-                      ? 'bg-red-600 text-white' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  الأسئلة المعطوبة ({questions.filter(q => q.error).length})
-                </button>
-              </div>
-            </div>
-            
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border-b">رقم السؤال</th>
-                  <th className="py-2 px-4 border-b">نص السؤال</th>
-                  <th className="py-2 px-4 border-b">الوحدة</th>
-                  <th className="py-2 px-4 border-b">الصفحة</th>
-                  <th className="py-2 px-4 border-b">الأهمية</th>
-                  <th className="py-2 px-4 border-b">الإجابة الصحيحة</th>
-                  <th className="py-2 px-4 border-b">الحالة</th>
-                  <th className="py-2 px-4 border-b">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredQuestions.map((q, index) => (
-                  <tr 
-                    key={index} 
-                    className={q.error ? 'bg-red-50' : index % 2 === 0 ? 'bg-gray-50' : ''}
+        {/* Data Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-800">
+              <tr>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">تسلسل</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اسم الفئة</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مقرار ل.س</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مقرار دولار</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اختبار ل.س</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">اختبار دولار</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">صوتي ل.س</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">صوتي دولار</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">مفعل</th>
+                
+                <th className="px-3 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {/* Add new row */}
+              <tr className="bg-blue-50">
+                <td className="px-3 py-4">
+                  <input
+                    type="number"
+                    className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.priority_order}
+                    onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
+                    placeholder="ترتيب"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.category_name}
+                    onChange={(e) => handleNewItemChange('category_name', e.target.value)}
+                    placeholder="اسم الفئة"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.mokarar_price}
+                    onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
+                    placeholder="ل.س"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.mokarar_dolar}
+                    onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
+                    placeholder="دولار"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.quiz_price}
+                    onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+                    placeholder="ل.س"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.quiz_dolar}
+                    onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
+                    placeholder="دولار"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.voice_price}
+                    onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+                    placeholder="ل.س"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <input
+                    type="text"
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.voice_dolar}
+                    onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
+                    placeholder="دولار"
+                  />
+                </td>
+                <td className="px-3 py-4">
+                  <select
+                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={newItem.active ? '1' : '0'}
+                    onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
                   >
-                    <td className="py-2 px-4 border-b">{q.questionNumber}</td>
-                    <td className="py-2 px-4 border-b max-w-xs truncate">{q.questionText}</td>
-                    <td className="py-2 px-4 border-b">{q.unit}</td>
-                    <td className="py-2 px-4 border-b">{q.page}</td>
-                    <td className="py-2 px-4 border-b">{q.importance}</td>
-                    <td className="py-2 px-4 border-b">{q.correctAnswer}</td>
-                    <td className="py-2 px-4 border-b">
-                      {q.error ? (
-                        <span className="text-red-600">✗ {q.error}</span>
+                    <option value="1">نعم</option>
+                    <option value="0">لا</option>
+                  </select>
+                </td>
+                
+                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={handleAdd}
+                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition flex items-center text-xs"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    إضافة
+                  </button>
+                </td>
+              </tr>
+
+              {/* Data rows */}
+              {data.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50 transition">
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="number"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.priority_order}
+                        onChange={(e) => handleInputChange(item.id!, 'priority_order', parseInt(e.target.value) || 0)}
+                      />
+                    ) : (
+                      <div className="text-sm font-medium text-gray-900">{item.priority_order}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.category_name}
+                        onChange={(e) => handleInputChange(item.id!, 'category_name', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm font-medium text-gray-900">{item.category_name}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.mokarar_price}
+                        onChange={(e) => handleInputChange(item.id!, 'mokarar_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.mokarar_price}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.mokarar_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'mokarar_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.mokarar_dolar}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.quiz_price}
+                        onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.quiz_price}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.quiz_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'quiz_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.quiz_dolar}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.voice_price}
+                        onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.voice_price}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <input
+                        type="text"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.voice_dolar}
+                        onChange={(e) => handleInputChange(item.id!, 'voice_dolar', e.target.value)}
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.voice_dolar}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-4">
+                    {editingId === item.id ? (
+                      <select
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={item.active ? '1' : '0'}
+                        onChange={(e) => handleInputChange(item.id!, 'active', e.target.value === '1')}
+                      >
+                        <option value="1">نعم</option>
+                        <option value="0">لا</option>
+                      </select>
+                    ) : (
+                      <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
+                    )}
+                  </td>
+                  
+                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex flex-wrap gap-2">
+                      {editingId === item.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSave(item)}
+                            className="bg-blue-50 text-blue-600 p-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100"
+                            title="حفظ"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="bg-gray-50 text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                            title="إلغاء"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </>
                       ) : (
-                        <span className="text-green-600">✓ صالح</span>
+                        <>
+                          <button
+                            onClick={() => handleUpdateMaterials(item.id!)}
+                            className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
+                            title="تعميم الأسعار على المواد"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item.id!)}
+                            className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
+                            title="تعديل"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id!)}
+                            className="bg-red-100 text-red-700 p-2 rounded-lg hover:bg-red-200 transition-colors"
+                            title="حذف"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleOpenNotificationModal(item)}
+                            className="bg-amber-50 text-amber-600 p-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100"
+                            title="إرسال إشعار للمشتركين"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                          </button>
+                        </>
                       )}
-                    </td>
-                    <td className="py-2 px-4 border-b">
-                      {q.error && (
-                        <button
-                          onClick={() => scrollToInvalidQuestion(q)}
-                          className="bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm"
-                        >
-                          التمرير للتحرير
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-            {hasInvalidQuestions() && (
-              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                <p className="font-semibold">تحذير: هناك أسئلة غير صالحة</p>
-                <p>يجب تصحيح جميع الأسئلة غير الصالحة قبل إمكانية رفع الأسئلة.</p>
-                <p>يمكنك استخدام زر التمرير للتحرير للانتقال مباشرة إلى السؤال غير الصالح في مربع النص.</p>
-              </div>
-            )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {data.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">لا توجد بيانات</h3>
+            <p className="mt-1 text-sm text-gray-500">ابدأ بإضافة عنصر جديد من الصف الأول في الجدول</p>
           </div>
         )}
       </div>
-    );
-  }
+    </div>
+  );
+}
+
