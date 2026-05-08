@@ -34,7 +34,8 @@ export default function AshtrakManagement() {
     active: true
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+const [error, setError] = useState('');
+const [showAddModal, setShowAddModal] = useState(false);
 
   // Notification Modal State
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -225,6 +226,7 @@ export default function AshtrakManagement() {
         voice_dolar: '',
         active: true
       });
+      setShowAddModal(false);
       fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
@@ -278,8 +280,8 @@ export default function AshtrakManagement() {
       {showNotificationModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
   <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col relative z-10 overflow-hidden">
-    <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a] rounded-t-2xl">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+    <div className="flex justify-between items-center p-4 border-b bg-blue-50 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-amber-800 flex items-center">
                 إرسال إشعار لمشتركين: {selectedAshtrakName}
               </h3>
               <button
@@ -298,7 +300,7 @@ export default function AshtrakManagement() {
               </div>
               
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">عنوان الإشعار</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
                 <input
                   type="text"
                   value={notificationTitle}
@@ -308,7 +310,7 @@ export default function AshtrakManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">نص الإشعار</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">نص الإشعار</label>
                 <textarea
                   value={notificationBody}
                   onChange={(e) => setNotificationBody(e.target.value)}
@@ -322,7 +324,7 @@ export default function AshtrakManagement() {
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
               <button
                 onClick={() => setShowNotificationModal(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition"
               >
                 إلغاء
               </button>
@@ -353,126 +355,164 @@ export default function AshtrakManagement() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3 bg-blue-100 text-blue-900 p-4 rounded-xl shadow-sm border border-blue-200">
-    <h1 className="text-2xl font-bold">إدارة الإشتراكات</h1>
+{/* Add Modal */}
+{showAddModal && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
+      <div className="flex justify-between items-center p-4 border-b border-[#c8b800] bg-[#f5e97a]">
+        <h3 className="text-lg font-bold text-gray-800">إضافة اشتراك جديد</h3>
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="text-gray-500 hover:bg-gray-100 p-1 rounded-xl transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="p-4 overflow-y-auto max-h-[70vh]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">التسلسل</label>
+            <input
+              type="number"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.priority_order}
+              onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
+              placeholder="ترتيب"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم الفئة</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.category_name}
+              onChange={(e) => handleNewItemChange('category_name', e.target.value)}
+              placeholder="اسم الفئة"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.mokarar_price}
+              onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.mokarar_dolar}
+              onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.quiz_price}
+              onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.quiz_dolar}
+              onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي ل.س</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.voice_price}
+              onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+              placeholder="ل.س"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي دولار</label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.voice_dolar}
+              onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
+              placeholder="دولار"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1.5">مفعل</label>
+            <select
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+              value={newItem.active ? '1' : '0'}
+              onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
+            >
+              <option value="1">نعم</option>
+              <option value="0">لا</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+        <button
+          onClick={() => setShowAddModal(false)}
+          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+        >
+          إلغاء
+        </button>
+        <button
+          onClick={() => { handleAdd(); setShowAddModal(false); }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          إضافة
+        </button>
+      </div>
+    </div>
   </div>
+)}
+
+
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">إدارة الإشتراكات</h1>
+        </div>
 
         {/* Data Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6 hidden md:block">
-  <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-  <tr>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">تسلسل</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفئة</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">مقرار ل.س</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">مقرار دولار</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">اختبار ل.س</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">اختبار دولار</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">صوتي ل.س</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">صوتي دولار</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-20">مفعل</th>
-    <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-36">الإجراءات</th>
-  </tr>
-</thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {/* Add new row */}
-              <tr className="bg-blue-50/40 hover:bg-blue-50/60 transition">
-                <td className="px-3 py-4">
-                  <input
-                    type="number"
-                    className="w-16 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.priority_order}
-                    onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)}
-                    placeholder="ترتيب"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.category_name}
-                    onChange={(e) => handleNewItemChange('category_name', e.target.value)}
-                    placeholder="اسم الفئة"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.mokarar_price}
-                    onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.mokarar_dolar}
-                    onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.quiz_price}
-                    onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.quiz_dolar}
-                    onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.voice_price}
-                    onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                    placeholder="ل.س"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <input
-                    type="text"
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.voice_dolar}
-                    onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)}
-                    placeholder="دولار"
-                  />
-                </td>
-                <td className="px-3 py-4">
-                  <select
-                    className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
-                    value={newItem.active ? '1' : '0'}
-                    onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
-                  >
-                    <option value="1">نعم</option>
-                    <option value="0">لا</option>
-                  </select>
-                </td>
-                
-                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={handleAdd}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    إضافة
-                  </button>
-                </td>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-800">
+              <tr>
+                <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-8">تسلسل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">اسم الفئة</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">مقرار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">مقرار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">اختبار ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">اختبار $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">صوتي ل.س</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">صوتي $</th>
+<th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-12">مفعل</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-40">الإجراءات</th>
               </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
 
               {/* Data rows */}
               {data.map((item) => (
@@ -481,7 +521,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="number"
-                        className="w-16 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.priority_order}
                         onChange={(e) => handleInputChange(item.id!, 'priority_order', parseInt(e.target.value) || 0)}
                       />
@@ -493,7 +533,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.category_name}
                         onChange={(e) => handleInputChange(item.id!, 'category_name', e.target.value)}
                       />
@@ -505,7 +545,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.mokarar_price}
                         onChange={(e) => handleInputChange(item.id!, 'mokarar_price', e.target.value)}
                       />
@@ -517,7 +557,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.mokarar_dolar}
                         onChange={(e) => handleInputChange(item.id!, 'mokarar_dolar', e.target.value)}
                       />
@@ -529,7 +569,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.quiz_price}
                         onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
                       />
@@ -541,7 +581,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.quiz_dolar}
                         onChange={(e) => handleInputChange(item.id!, 'quiz_dolar', e.target.value)}
                       />
@@ -553,7 +593,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.voice_price}
                         onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
                       />
@@ -565,7 +605,7 @@ export default function AshtrakManagement() {
                     {editingId === item.id ? (
                       <input
                         type="text"
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.voice_dolar}
                         onChange={(e) => handleInputChange(item.id!, 'voice_dolar', e.target.value)}
                       />
@@ -576,7 +616,7 @@ export default function AshtrakManagement() {
                   <td className="px-3 py-4">
                     {editingId === item.id ? (
                       <select
-                        className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                         value={item.active ? '1' : '0'}
                         onChange={(e) => handleInputChange(item.id!, 'active', e.target.value === '1')}
                       >
@@ -594,7 +634,7 @@ export default function AshtrakManagement() {
                         <>
                           <button
                             onClick={() => handleSave(item)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl shadow-sm transition"
+                            className="bg-blue-50 text-blue-600 p-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100"
                             title="حفظ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -603,7 +643,7 @@ export default function AshtrakManagement() {
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 p-2 rounded-xl shadow-sm transition"
+                            className="bg-gray-50 text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
                             title="إلغاء"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -615,7 +655,7 @@ export default function AshtrakManagement() {
                         <>
                           <button
                             onClick={() => handleUpdateMaterials(item.id!)}
-                            className="bg-amber-50 text-amber-600 p-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-200"
+                            className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
                             title="تعميم الأسعار على المواد"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -624,7 +664,7 @@ export default function AshtrakManagement() {
                           </button>
                           <button
                             onClick={() => handleEdit(item.id!)}
-                            className="bg-blue-100 text-blue-700 p-2 rounded-xl hover:bg-blue-200 transition-colors"
+                            className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
                             title="تعديل"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -633,7 +673,7 @@ export default function AshtrakManagement() {
                           </button>
                           <button
                             onClick={() => handleDelete(item.id!)}
-                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl shadow-sm transition"
+                            className="bg-red-100 text-red-700 p-2 rounded-lg hover:bg-red-200 transition-colors"
                             title="حذف"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -658,114 +698,6 @@ export default function AshtrakManagement() {
             </tbody>
           </table>
         </div>
-
-{/* Mobile Cards */}
-<div className="md:hidden space-y-3 mb-6">
-  {/* Add new card */}
-  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden bg-blue-50/40">
-    <p className="text-xs font-bold text-blue-700 mb-3">➕ إضافة فئة جديدة</p>
-    <div className="grid grid-cols-2 gap-2">
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">التسلسل</label>
-        <input type="number" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.priority_order} onChange={(e) => handleNewItemChange('priority_order', parseInt(e.target.value) || 0)} placeholder="ترتيب" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم الفئة</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.category_name} onChange={(e) => handleNewItemChange('category_name', e.target.value)} placeholder="اسم الفئة" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار ل.س</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.mokarar_price} onChange={(e) => handleNewItemChange('mokarar_price', e.target.value)} placeholder="ل.س" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">مقرار دولار</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.mokarar_dolar} onChange={(e) => handleNewItemChange('mokarar_dolar', e.target.value)} placeholder="دولار" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار ل.س</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.quiz_price} onChange={(e) => handleNewItemChange('quiz_price', e.target.value)} placeholder="ل.س" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">اختبار دولار</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.quiz_dolar} onChange={(e) => handleNewItemChange('quiz_dolar', e.target.value)} placeholder="دولار" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي ل.س</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.voice_price} onChange={(e) => handleNewItemChange('voice_price', e.target.value)} placeholder="ل.س" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">صوتي دولار</label>
-        <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.voice_dolar} onChange={(e) => handleNewItemChange('voice_dolar', e.target.value)} placeholder="دولار" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1.5">مفعل</label>
-        <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={newItem.active ? '1' : '0'} onChange={(e) => handleNewItemChange('active', e.target.value === '1')}>
-          <option value="1">نعم</option>
-          <option value="0">لا</option>
-        </select>
-      </div>
-    </div>
-    <button onClick={handleAdd} className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center justify-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" /></svg>
-      إضافة
-    </button>
-  </div>
-
-  {/* Data cards */}
-  {data.map((item) => (
-    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <p className="font-bold text-gray-800 truncate max-w-[180px]">{item.category_name}</p>
-          <p className="text-xs text-gray-400">تسلسل: {item.priority_order}</p>
-        </div>
-        <span className={`text-xs px-2 py-1 rounded-xl font-bold ${item.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-          {item.active ? 'مفعل' : 'غير مفعل'}
-        </span>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-xs mb-3">
-        <div className="bg-[#f5e97a]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">مقرار ل.س</p>
-          <p className="font-bold text-gray-800">{item.mokarar_price || '—'}</p>
-        </div>
-        <div className="bg-[#f0e060]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">مقرار $</p>
-          <p className="font-bold text-gray-800">{item.mokarar_dolar || '—'}</p>
-        </div>
-        <div className="bg-[#f5e97a]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">اختبار ل.س</p>
-          <p className="font-bold text-gray-800">{item.quiz_price || '—'}</p>
-        </div>
-        <div className="bg-[#f0e060]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">اختبار $</p>
-          <p className="font-bold text-gray-800">{item.quiz_dolar || '—'}</p>
-        </div>
-        <div className="bg-[#f5e97a]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">صوتي ل.س</p>
-          <p className="font-bold text-gray-800">{item.voice_price || '—'}</p>
-        </div>
-        <div className="bg-[#f0e060]/40 p-2 rounded-xl text-center">
-          <p className="text-gray-500 mb-0.5">صوتي $</p>
-          <p className="font-bold text-gray-800">{item.voice_dolar || '—'}</p>
-        </div>
-      </div>
-      <div className="flex gap-2 justify-end flex-wrap">
-        <button onClick={() => handleUpdateMaterials(item.id!)} className="bg-amber-50 text-amber-600 p-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-200" title="تعميم الأسعار">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-        </button>
-        <button onClick={() => handleEdit(item.id!)} className="bg-blue-100 text-blue-700 p-2 rounded-xl hover:bg-blue-200 transition-colors" title="تعديل">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-        </button>
-        <button onClick={() => handleDelete(item.id!)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl shadow-sm transition" title="حذف">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-        </button>
-        <button onClick={() => handleOpenNotificationModal(item)} className="bg-amber-50 text-amber-600 p-2 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100" title="إرسال إشعار">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
 
         {data.length === 0 && !isLoading && (
           <div className="text-center py-12">
