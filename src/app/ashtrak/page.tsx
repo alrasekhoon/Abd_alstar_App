@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -241,19 +242,6 @@ const [showAddModal, setShowAddModal] = useState(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
     }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    fetchData(); // إعادة تحميل البيانات لاستعادة القيم الأصلية
-  };
-
-  const handleInputChange = (id: number, field: string, value: string | number | boolean) => {
-    setData(prevData => 
-      prevData.map(item => 
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
   };
 
   const handleNewItemChange = (field: string, value: string | number | boolean) => {
@@ -545,74 +533,30 @@ const [showAddModal, setShowAddModal] = useState(false);
                   <td className="px-3 py-4">
                     <div className="text-sm text-gray-900">{item.mokarar_price}</div>
                   </td>
-                  <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.mokarar_dolar}
-                        onChange={(e) => handleInputChange(item.id!, 'mokarar_dolar', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.mokarar_dolar}</div>
-                    )}
+                  <td className="px-3 py-4 text-right">
+                    <div className="text-sm text-gray-900">{item.mokarar_dolar}</div>
                   </td>
-                  <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.quiz_price}
-                        onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.quiz_price}</div>
-                    )}
+                  <td className="px-3 py-4 text-right">
+                    <div className="text-sm text-gray-900">{item.quiz_price}</div>
                   </td>
-                  <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.quiz_dolar}
-                        onChange={(e) => handleInputChange(item.id!, 'quiz_dolar', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.quiz_dolar}</div>
-                    )}
+                  <td className="px-3 py-4 text-right">
+                    <div className="text-sm text-gray-900">{item.quiz_dolar}</div>
                   </td>
-                  <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.voice_price}
-                        onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.voice_price}</div>
-                    )}
+                  <td className="px-3 py-4 text-right">
+                    <div className="text-sm text-gray-900">{item.voice_price}</div>
                   </td>
-                  <td className="px-3 py-4">
-                    {editingId === item.id ? (
-                      <input
-                        type="text"
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.voice_dolar}
-                        onChange={(e) => handleInputChange(item.id!, 'voice_dolar', e.target.value)}
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{item.voice_dolar}</div>
-                    )}
+                  <td className="px-3 py-4 text-right">
+                    <div className="text-sm text-gray-900">{item.voice_dolar}</div>
                   </td>
                   <td className="px-3 py-4">
                     <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
                   </td>
                   
-                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex flex-wrap gap-2">
-                        <>
-                          <button
+                  </>
+                      )}
+                    </div>
+                  </td>
+
                             onClick={() => handleUpdateMaterials(item.id!)}
                             className="bg-red-50 text-red-500 p-2 rounded-xl hover:bg-red-100 transition-colors border border-red-100"
                             title="تعميم الأسعار على المواد"
