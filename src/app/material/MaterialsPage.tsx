@@ -684,7 +684,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                   type="button"
                   onClick={() => handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                    (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'
+                    (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
                   }`}
                 >
                   <span
@@ -1051,7 +1051,7 @@ const [showAddModal, setShowAddModal] = useState(false);
     { label: 'كويز', field: 'quiz_active' },
     { label: 'صوت', field: 'voice_active' },
   ].map(({ label, field }) => (
-    <div key={field} className="flex items-center justify-between gap-2">
+    <div key={field} className="flex items-center gap-2">
       <span className="text-xs text-gray-600">{label}:</span>
       <button
         type="button"
@@ -1071,7 +1071,7 @@ const [showAddModal, setShowAddModal] = useState(false);
           }
         }}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-          (item as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'
+          (item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
         }`}
       >
         <span
@@ -1109,7 +1109,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                                   console.error('Toggle save error:', err);
                                 }
                               }}
-                             className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-gray-300'}`}
+                             className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'}`}
                             >
                               <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
