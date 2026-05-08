@@ -235,15 +235,18 @@ export default function UniLinksPage() {
 </td>
                   <td className="px-3 py-4 text-right">
   
-    href={link.url}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
-    title={link.url}
-  >
-    {link.url}
-  </a>
-  <td className="px-3 py-4 whitespace-nowrap text-right">
+    <td className="px-3 py-4 text-right">
+                    
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm truncate block max-w-xs"
+                      title={link.url}
+                    >
+                      {link.url}
+                    </a>
+                  </td>
+                  <td className="px-3 py-4 whitespace-nowrap text-right">
   <button
     onClick={() => toggleShow(link.id, link.show1)}
     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${link.show1 === 1
@@ -413,5 +416,7 @@ export default function UniLinksPage() {
     </div>
   );
 }
+
+
 
 
