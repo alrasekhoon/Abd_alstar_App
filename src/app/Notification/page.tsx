@@ -456,14 +456,7 @@ value={selectedTypeFilter}
                     {safeSubstring(item.note1, 30)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2 justify-end">
-                      <button
-  onClick={() => openEditForm(item)}
-  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
->
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" ...
-  تعديل
-</button>
+                    <div className="flex space-x-2">
                       <button
   onClick={() => openEditForm(item)}
   className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
@@ -473,6 +466,15 @@ value={selectedTypeFilter}
   </svg>
   تعديل
 </button>
+                      <button
+                        onClick={() => item.id && handleDeleteItem(item.id)}
+                        className="text-red-600 hover:text-red-900 flex items-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        حذف
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -480,57 +482,6 @@ value={selectedTypeFilter}
             </tbody>
           </table>
         </div>
-
-{/* بطاقات الموبايل */}
-<div className="md:hidden space-y-3 mt-4">
-  {filteredItems.map((item, index) => (
-    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-      <div className="flex justify-between items-start mb-2 gap-2">
-        <span className="text-xs text-gray-400">#{index + 1}</span>
-        <span className={`px-2 py-1 rounded-xl text-xs font-bold ${
-          item.user_type === 'vip' ? 'bg-purple-100 text-purple-800' :
-          item.user_type === 'موثوق' ? 'bg-green-100 text-green-800' :
-          'bg-yellow-100 text-yellow-800'
-        }`}>
-          {item.user_type || 'غير محدد'}
-        </span>
-      </div>
-      <p className="text-sm font-bold text-gray-800 mb-1 truncate">{item.title || 'بدون عنوان'}</p>
-      <p className="text-xs text-gray-500 mb-2 line-clamp-2">{safeSubstring(item.body, 80)}</p>
-      <div className="text-xs text-gray-500 mb-1">
-        <span className="font-bold">الاشتراك: </span>{getSubscriptionName(item.ashtrak)}
-      </div>
-      {item.url1 && (
-        <div className="text-xs mb-2 truncate max-w-xs">
-          <a href={item.url1} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-900">
-            {safeSubstring(item.url1, 30)}
-          </a>
-        </div>
-      )}
-      <div className="flex gap-2 mt-3 justify-end">
-        <button
-          onClick={() => openEditForm(item)}
-          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-          </svg>
-          تعديل
-        </button>
-        <button
-          onClick={() => item.id && handleDeleteItem(item.id)}
-          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          حذف
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
-
 
         {filteredItems.length === 0 && notificationItems.length > 0 && (
           <div className="text-center py-12">
