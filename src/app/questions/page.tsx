@@ -44,7 +44,6 @@ type CategoryItem = {
 };
 
 interface QuizzesPageProps {
-  onNavigate: (page: 'materials' | 'units') => void;
   initialMaterialId?: number;
   initialUnitNum?: number;
 }
@@ -1244,3 +1243,5 @@ export default function QuizzesPage({ initialMaterialId, initialUnitNum }: Quizz
     </div>
   );
 }
+
+
