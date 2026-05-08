@@ -504,9 +504,9 @@ const [showAddModal, setShowAddModal] = useState(false);
   </button>
 </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
-          <table className="min-w-full divide-y divide-gray-200">
+       {/* Data Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6 shadow-sm">
+          <table className="w-full divide-y divide-gray-200 min-w-max whitespace-nowrap">
             <thead className="bg-gray-800">
               <tr>
                 <th className="px-2 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-[50px] min-w-[50px]">تسلسل</th>
@@ -530,7 +530,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                     {editingId === item.id ? (
                       <input
                         type="number"
-                        className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        className="w-full border border-gray-300 rounded-xl px-2 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 text-sm"
                         value={item.priority_order}
                         onChange={(e) => handleInputChange(item.id!, 'priority_order', parseInt(e.target.value) || 0)}
                       />
@@ -643,7 +643,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                         <>
                           <button
                             onClick={() => handleSave(item)}
-                            className="bg-blue-50 text-blue-600 p-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100"
+                            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl transition shadow-sm flex items-center justify-center"
                             title="حفظ"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -652,7 +652,7 @@ const [showAddModal, setShowAddModal] = useState(false);
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="bg-gray-50 text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl transition shadow-sm flex items-center justify-center"
                             title="إلغاء"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
