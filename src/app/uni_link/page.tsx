@@ -243,8 +243,7 @@ export default function UniLinksPage() {
   >
     {link.url}
   </a>
-</td>
-                  <td className="px-3 py-4 whitespace-nowrap text-right">
+  <td className="px-3 py-4 whitespace-nowrap text-right">
   <button
     onClick={() => toggleShow(link.id, link.show1)}
     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${link.show1 === 1
