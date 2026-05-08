@@ -233,7 +233,6 @@ export default function UniLinksPage() {
 <td className="px-3 py-4 text-right">
   <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">{link.url_name}</div>
 </td>
-                  <td className="px-3 py-4 text-right">
   
     <td className="px-3 py-4 text-right">
             <a        
