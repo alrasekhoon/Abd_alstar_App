@@ -462,11 +462,11 @@ export default function AdvManagement() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الصورة</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">العنوان</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">الوصف</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">ملاحظات</th>
-                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">الإجراءات</th>
+                <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-20">الصورة</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-28">العنوان</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-64">الوصف</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-48">ملاحظات</th>
+<th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-36">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -492,11 +492,11 @@ export default function AdvManagement() {
                   <td className="px-6 py-4 max-w-md">
                     <div className="text-sm text-gray-500 line-clamp-2">{item.description}</div>
                   </td>
-                  <td className="px-3 py-4 max-w-[150px]">
-  <div className="text-sm text-gray-500 truncate">{item.note}</div>
+                  <td className="px-3 py-4 w-48">
+  <div className="text-sm text-gray-500 truncate max-w-[180px]">{item.note}</div>
 </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-right">
-  <div className="flex gap-2 justify-start">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-left">
+  <div className="flex gap-2 justify-end">
                       <button
                         onClick={() => openEditForm(item)}
                         className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
