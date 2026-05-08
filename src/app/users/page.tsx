@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -333,7 +335,7 @@ next: { revalidate: 0 },
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">إدارة المستخدمين</h1>
           <div className="text-sm text-gray-600">
@@ -375,7 +377,7 @@ next: { revalidate: 0 },
             
             <input
               type="text"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pr-10 p-2.5"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
               placeholder="ابحث بالاسم، الهاتف، البريد أو الرقم الجامعي..."
               onChange={(e) => handleSearch(e.target.value)}
               defaultValue={searchTerm}
@@ -390,7 +392,7 @@ next: { revalidate: 0 },
                 setUserTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
             >
               <option value="الكل">الكل</option>
               <option value="غير موثوق">غير موثوق</option>
@@ -470,7 +472,7 @@ next: { revalidate: 0 },
                     <td className="px-6 py-4 whitespace-nowrap flex gap-2">
                       <button
                         onClick={() => showUserDetailsModal(user)}
-                        className="p-1 rounded-full hover:bg-gray-200 transition"
+                        className="p-2 rounded-xl hover:bg-gray-100 transition border border-gray-200 text-gray-600"
                         aria-label="عرض التفاصيل"
                         title="التفاصيل"
                       >
@@ -482,7 +484,7 @@ next: { revalidate: 0 },
                       
                       <button
                         onClick={() => setEditingUserType(user.id)}
-                        className="p-1 rounded-full hover:bg-gray-200 transition"
+                        className="p-2 rounded-xl hover:bg-gray-100 transition border border-gray-200 text-gray-600"
                         aria-label="تعديل نوع المستخدم"
                         title="تعديل النوع"
                       >
@@ -918,5 +920,4 @@ next: { revalidate: 0 },
     </div>
   );
 }
-
 
