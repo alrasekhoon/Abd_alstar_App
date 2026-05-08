@@ -284,7 +284,7 @@ export default function UniMaterialPage() {
                       {material.sumary === 1 ? 'فصل 1' : 'فصل 2'}
                     </span>
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
   <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
                       {material.pro}
                     </span>
@@ -365,7 +365,7 @@ export default function UniMaterialPage() {
       {/* Modal للإضافة والتعديل */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
-  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto">
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden max-h-[90vh] overflow-y-auto mx-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">
                 {editingMaterial ? 'تعديل المادة' : 'إضافة مادة جديدة'}
@@ -390,7 +390,7 @@ export default function UniMaterialPage() {
                     value={formData.material_name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                     placeholder="أدخل اسم المادة"
                   />
                 </div>
@@ -403,7 +403,7 @@ export default function UniMaterialPage() {
                     value={formData.c_code}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                     placeholder="أدخل كود المادة"
                   />
                 </div>
@@ -417,7 +417,7 @@ export default function UniMaterialPage() {
                     value={formData.sumary}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   >
                     {sumaryOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -434,7 +434,7 @@ export default function UniMaterialPage() {
                     onChange={handleInputChange}
                     required
                     min="1"
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                     placeholder="أدخل رقم الأفضلية"
                   />
                 </div>
@@ -446,7 +446,7 @@ export default function UniMaterialPage() {
                     value={formData.year1}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   >
                     {yearOptions.map(year => (
                       <option key={year.value} value={year.value}>{year.label}</option>
@@ -462,7 +462,7 @@ export default function UniMaterialPage() {
                   name="url1"
                   value={formData.url1}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   placeholder="https://example.com/material"
                 />
               </div>
@@ -474,7 +474,7 @@ export default function UniMaterialPage() {
                   value={formData.note}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
                   placeholder="أدخل أي ملاحظات إضافية..."
                 />
               </div>
