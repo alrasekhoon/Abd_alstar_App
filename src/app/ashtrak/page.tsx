@@ -450,15 +450,16 @@ export default function AshtrakManagement() {
                   />
                 </td>
                 <td className="px-3 py-4">
-                  <select
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                    value={newItem.active ? '1' : '0'}
-                    onChange={(e) => handleNewItemChange('active', e.target.value === '1')}
-                  >
-                    <option value="1">نعم</option>
-                    <option value="0">لا</option>
-                  </select>
-                </td>
+  <button
+    type="button"
+    onClick={() => handleNewItemChange('active', !newItem.active)}
+    className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${newItem.active ? 'bg-green-500' : 'bg-gray-300'}`}
+  >
+    <span
+      className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${newItem.active ? '-translate-x-1' : 'translate-x-6'}`}
+    />
+  </button>
+</td>
                 
                 <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
                   <button
@@ -574,14 +575,15 @@ export default function AshtrakManagement() {
                   </td>
                   <td className="px-3 py-4">
                     {editingId === item.id ? (
-                      <select
-                        className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        value={item.active ? '1' : '0'}
-                        onChange={(e) => handleInputChange(item.id!, 'active', e.target.value === '1')}
-                      >
-                        <option value="1">نعم</option>
-                        <option value="0">لا</option>
-                      </select>
+                      <button
+  type="button"
+  onClick={() => handleInputChange(item.id!, 'active', !item.active)}
+  className={`relative inline-flex items-center w-12 h-6 rounded-full transition-all duration-300 focus:outline-none ${item.active ? 'bg-green-500' : 'bg-gray-300'}`}
+>
+  <span
+    className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${item.active ? '-translate-x-1' : 'translate-x-6'}`}
+  />
+</button>
                     ) : (
                       <div className="text-sm text-gray-900">{item.active ? 'نعم' : 'لا'}</div>
                     )}
@@ -671,3 +673,5 @@ export default function AshtrakManagement() {
     </div>
   );
 }
+
+
