@@ -1115,6 +1115,7 @@ const handleSaveBulkRows = async () => {
             )}
           </div>
         </div>
+        )}
         {selectedMaterial !== 'all' && selectedMaterial !== null && filteredUnits.length === 0 && (
           <div className="text-center py-12">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
