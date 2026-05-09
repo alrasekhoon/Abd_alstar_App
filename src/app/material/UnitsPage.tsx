@@ -94,17 +94,15 @@ const [editingUnit, setEditingUnit] = useState<UnitItem | null>(null);
 const [bulkRows, setBulkRows] = useState<Partial<UnitItem>[]>([]);
 
 // Unit name generator
-const [addUnitType, setAddUnitType] = useState<'فصل' | 'وحدة'>('وحدة');
-const [editUnitType, setEditUnitType] = useState<'فصل' | 'وحدة'>('وحدة');
-
+const [addUnitType, setAddUnitType] = useState<'الفصل' | 'الوحدة'>('الوحدة');
+const [editUnitType, setEditUnitType] = useState<'الفصل' | 'الوحدة'>('الوحدة');
 const arabicOrdinals: Record<number, string> = {
   1: 'الأول', 2: 'الثاني', 3: 'الثالث', 4: 'الرابع',
   5: 'الخامس', 6: 'السادس', 7: 'السابع', 8: 'الثامن',
   9: 'التاسع', 10: 'العاشر', 11: 'الحادي عشر', 12: 'الثاني عشر',
   13: 'الثالث عشر', 14: 'الرابع عشر', 15: 'الخامس عشر', 16: 'السادس عشر'
 };
-
-const generateUnitName = (type: 'فصل' | 'وحدة', num: number): string => {
+const generateUnitName = (type: 'الفصل' | 'الوحدة', num: number): string => {
   if (num >= 1 && num <= 16) return `${type} ${arabicOrdinals[num]}`;
   return '';
 };
