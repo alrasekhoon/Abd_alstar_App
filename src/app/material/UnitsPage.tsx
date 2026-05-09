@@ -1112,7 +1112,8 @@ const handleSaveBulkRows = async () => {
                 </svg>
                 حفظ الكل ({bulkRows.length})
               </button>
-            </div>
+            )}
+          </div>
         </div>
         {selectedMaterial !== 'all' && selectedMaterial !== null && filteredUnits.length === 0 && (
           <div className="text-center py-12">
@@ -1137,11 +1138,7 @@ const handleSaveBulkRows = async () => {
             </p>
           </div>
         ) : null}
-      </div>
-    </div>
-  );
-}
-
+      
 {/* Add Unit Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-gray-800 bg-opacity-60 flex items-center justify-center z-50">
@@ -1394,4 +1391,6 @@ const handleSaveBulkRows = async () => {
             </div>
           </div>
         )}
+
+
 
