@@ -80,6 +80,9 @@ export default function UnitsPage({ onNavigate, initialMaterialId }: UnitsPagePr
   // حالة للرسائل (بديل عن alert)
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+const [showConfirm, setShowConfirm] = useState(false);
+const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+
 
   // حالة لمربع التأكيد (بديل عن confirm)
   // Modal states
@@ -1391,5 +1394,7 @@ const handleSaveBulkRows = async () => {
     </div>
   );
 }
+
+
 
 
