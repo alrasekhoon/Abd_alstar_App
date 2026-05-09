@@ -1383,10 +1383,13 @@ const handleSaveBulkRows = async () => {
                 >
                   حفظ التعديل
                 </button>
-              </div>
+          </div>
             </div>
           </div>
         )}
-
+      </div>
+    </div>
+  );
+}
 
 
