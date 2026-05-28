@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import React, { useState, useEffect, Fragment } from 'react';
@@ -87,7 +89,7 @@ export default function BillManagement() {
     note: ''
   });
 
-  // حالات الإشعارات
+// حالات الإشعارات
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [notifData, setNotifData] = useState({
     user_id: 0,
@@ -98,8 +100,130 @@ export default function BillManagement() {
   });
   const [selectedUserName, setSelectedUserName] = useState('');
 
-  const API_URL = '/api/proxy/cp_bills.php';
+  // بيانات التحويل البنكي (قابلة للتعديل)
+  const [bankAccounts, setBankAccounts] = useState('1- \n2- ');
+  const [isBankSettingsOpen, setIsBankSettingsOpen] = useState(false);
+
+  // رقم المندوب
+  const [deliveryAgentPhone, setDeliveryAgentPhone] = useState('09999999');
+
+  // مودال تأكيد الإشعار عند تغيير الحالة
+  const [statusChangeModal, setStatusChangeModal] = useState<{
+    open: boolean;
+    bill: BillItem | null;
+    newStatus: string;
+    notifTitle: string;
+    notifBody: string;
+    trackingNumber: string;
+    deliveryDate: string;
+    deliveryTime: string;
+    notifVariant: 'delivery' | 'shipping';
+  }>({
+    open: false,
+    bill: null,
+    newStatus: '',
+    notifTitle: '',
+    notifBody: '',
+    trackingNumber: '',
+    deliveryDate: '',
+    deliveryTime: '11:00',
+    notifVariant: 'delivery'
+  });
+
+
+const API_URL = '/api/proxy/cp_bills.php';
   const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
+
+  // دالة تحديد الخطاب حسب الجنس واستخراج الاسم الأول
+  const getGreeting = (bill: BillItem) => {
+    const firstName = (bill.name || bill.rec_name || '').split(' ')[0];
+    // تحديد الجنس: إذا كان الاسم ينتهي بـ "ة" فالأرجح أنثى
+    const isFemale = firstName.endsWith('ة') || firstName.endsWith('ى') || firstName.endsWith('اء');
+    return `${isFemale ? 'العزيزة' : 'العزيز'} ${firstName}`;
+  };
+
+  // قاموس الحالات: الاسم العربي، اللون، الأيقونة
+  const STATUS_MAP: Record<string, { label: string; color: string; rowBg: string; icon: string }> = {
+    pending:          { label: 'بانتظار السداد',       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',   rowBg: 'bg-yellow-50/40',   icon: '⏳' },
+    paid:             { label: 'تم السداد',            color: 'bg-emerald-100 text-emerald-800 border-emerald-300', rowBg: 'bg-emerald-50/40',  icon: '💳' },
+    printing:         { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-50/40',     icon: '🖨️' },
+    packing:          { label: 'قيد التجهيز للإرسال',  color: 'bg-purple-100 text-purple-800 border-purple-300',   rowBg: 'bg-purple-50/40',   icon: '📦' },
+    waiting_pickup:   { label: 'بانتظار الاستلام',     color: 'bg-orange-100 text-orange-800 border-orange-300',   rowBg: 'bg-orange-50/40',   icon: '🚚' },
+    completed:        { label: 'مكتمل',                color: 'bg-green-100 text-green-800 border-green-300',       rowBg: 'bg-green-50/40',    icon: '✅' },
+    cancelled:        { label: 'ملغي',                 color: 'bg-red-100 text-red-800 border-red-300',             rowBg: 'bg-red-50/40',      icon: '❌' },
+    processing:       { label: 'قيد المعالجة',         color: 'bg-indigo-100 text-indigo-800 border-indigo-300',   rowBg: 'bg-indigo-50/40',   icon: '⚙️' },
+  };
+
+  // دالة توليد نص الإشعار حسب الحالة
+  const generateNotifForStatus = (
+    bill: BillItem,
+    newStatus: string,
+    variant: 'delivery' | 'shipping' = 'delivery',
+    extra: { trackingNumber?: string; deliveryDate?: string; deliveryTime?: string } = {}
+  ): { title: string; body: string } => {
+    const greeting = getGreeting(bill);
+    const tomorrow = (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    })();
+    const tomorrowDay = new Date(); tomorrowDay.setDate(tomorrowDay.getDate() + 1);
+    const dayName = tomorrowDay.toLocaleDateString('ar-SA', { weekday: 'long' });
+    const dateStr = tomorrowDay.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    switch (newStatus) {
+      case 'paid':
+        return {
+          title: 'تأكيد استلام الدفعة 💳',
+          body: `${greeting}، تم استلام الدفعة المالية بنجاح.\nلقد تمت جدولة طلبكم وإدراجه ضمن خطة الطباعة وفقاً للترتيب المعتمد، سنقوم بإشعاركم فور البدء الفعلي بالتنفيذ، علماً الوقت المتوقع للتنفيذ من يوم عمل إلى أربعة أيام.`
+        };
+      case 'printing':
+        return {
+          title: 'طلبك قيد الطباعة الآن!',
+          body: `${greeting}، نود إعلامك بأن مطبوعاتك قيد التنفيذ والطباعة حالياً.\nسيصلك إشعار جديد بمجرد الانتهاء من التجهيز والتغليف النهائي، علماً بأن الوقت المتوقع للانتهاء من الطباعة يتراوح من ثلاث ساعات عمل إلى يوم عمل.`
+        };
+      case 'packing':
+        if (variant === 'shipping') {
+          return {
+            title: 'اكتمال الطباعة',
+            body: `${greeting}، اكتملت عملية الطباعة بنجاح.\nيجري الآن تغليف الطلب وتجهيزه ليتم جدولته وتسليمه لشركة الشحن المختصة، علماً بأن الوقت المتوقع للتجهيز والتسليم لشركة الشحن يتراوح من 6 ساعات عمل إلى يوم عمل.`
+          };
+        }
+        return {
+          title: 'اكتمال الطباعة',
+          body: `${greeting}، اكتملت عملية الطباعة بنجاح.\nيجري الآن تغليف الطلب وتجهيزه ليتم جدولته وتسليمه إلى الجهة المعنية بالتوصيل، علماً بأن الوقت المتوقع للتجهيز والتسليم للمندوب يتراوح من 6 ساعات عمل إلى يوم عمل.`
+        };
+      case 'waiting_pickup':
+        return {
+          title: 'المندوب بانتظارك!',
+          body: `${greeting}، تم تجهيز وتغليف مطبوعاتك بنجاح.\nنرجو التواجد شخصياً أو من ينوب عنك في الاستلام في [${bill.address || 'العنوان'}]، وذلك يوم ${extra.deliveryDate ? extra.deliveryDate : dayName} الموافق ${extra.deliveryDate ? extra.deliveryDate : dateStr} في تمام الساعة ${extra.deliveryTime || '11:00'} صباحاً لاستلام الطلب من مندوب التوصيل.\nللتواصل مع المندوب ${deliveryAgentPhone} لتجنب أي تأخير.`
+        };
+      case 'completed':
+        if (variant === 'shipping') {
+          return {
+            title: 'طلبك في طريقه إليك!',
+            body: `${greeting}، نود إعلامك بأنه قد تم تسليم طرد المطبوعات الخاص بك بنجاح إلى شركة الشحن.\nيمكنك تتبع الشحنة باستخدام رقم الشحن: ${extra.trackingNumber || '[رقم التتبع]'}، علماً بأن الوقت المتوقع لوصول الشحنة إليك يتراوح من يومي عمل إلى خمسة أيام.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`
+          };
+        }
+        return {
+          title: 'تم تسليم طلبك بنجاح!',
+          body: `${greeting}، تم تسليم طلب المطبوعات الخاص بك بنجاح.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`
+        };
+      case 'cancelled':
+        return {
+          title: 'إلغاء الطلب',
+          body: `نعتذر لإبلاغكم بأنه قد تم إلغاء الطلب الخاص بكم.\nفي حال وجود أي استفسار، يرجى مراجعة فريق الدعم الفني.\nنأمل أن تتاح لنا فرصة خدمتكم مستقبلاً.`
+        };
+      case 'pending':
+        return {
+          title: 'استلام طلب المطبوعات',
+          body: `تم استلام طلب مطبوعاتك بنجاح، يُرجى إتمام عملية السداد على أحد الحسابات التالية لنتمكن من البدء في تجهيز طلبك فوراً:\n${bankAccounts}`
+        };
+      default:
+        return { title: 'تحديث بخصوص طلب الطباعة', body: `فاتورتك رقم ${bill.id} قيد التحضير...` };
+    }
+  };
+
 
   useEffect(() => {
     fetchData();
@@ -276,7 +400,7 @@ export default function BillManagement() {
     }
   };
 
-  const updateBillStatus = async (billId: number, newStatus: string) => {
+const updateBillStatus = async (billId: number, newStatus: string) => {
     try {
       const billToUpdate = bills.find(bill => bill.id === billId);
       if (!billToUpdate) return;
@@ -297,6 +421,64 @@ export default function BillManagement() {
           ...billToUpdate,
           status: newStatus
         }),
+      });
+
+      if (!response.ok) throw new Error('فشل في تحديث حالة الفاتورة');
+
+      fetchData();
+
+      // بعد الحفظ: فتح مودال تأكيد الإشعار (إن وجد نص إشعار للحالة)
+      const statusesWithNotif = ['paid','printing','packing','waiting_pickup','completed','cancelled'];
+      if (statusesWithNotif.includes(newStatus)) {
+        const isShipping = billToUpdate.delv_type === 'shipping' || billToUpdate.delv_type === 'express';
+        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+        const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
+        const dateStr = tomorrow.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const notif = generateNotifForStatus(billToUpdate, newStatus, variant);
+        setStatusChangeModal({
+          open: true,
+          bill: billToUpdate,
+          newStatus,
+          notifTitle: notif.title,
+          notifBody: notif.body,
+          trackingNumber: '',
+          deliveryDate: `${dayName} ${dateStr}`,
+          deliveryTime: '11:00',
+          notifVariant: variant
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحديث الحالة');
+    }
+  };
+
+  // إرسال الإشعار من مودال تأكيد الحالة
+  const handleStatusNotifSend = async () => {
+    if (!statusChangeModal.bill) return;
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: statusChangeModal.bill.user_id,
+          title: statusChangeModal.notifTitle,
+          body: statusChangeModal.notifBody,
+          url1: '',
+          note1: ''
+        })
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      alert('تم إرسال الإشعار بنجاح!');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ');
+    } finally {
+      setIsLoading(false);
+      setStatusChangeModal(prev => ({ ...prev, open: false }));
+    }
+  };
       });
 
       if (!response.ok) throw new Error('فشل في تحديث حالة الفاتورة');
@@ -533,19 +715,23 @@ export default function BillManagement() {
     }
   };
 
-  // دوال الإشعارات
+// دوال الإشعارات
   const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
+    const isShipping = bill.delv_type === 'shipping' || bill.delv_type === 'express';
+    const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+    const notif = generateNotifForStatus(bill, bill.status, variant);
     setNotifData({
       user_id: bill.user_id,
-      title: 'تحديث بخصوص طلب الطباعة',
-      body: `فاتورتك رقم ${bill.id} قيد التحضير والتوصيل ...`,
+      title: notif.title,
+      body: notif.body,
       url1: '',
       note1: ''
     });
     setSelectedUserName(bill.name || bill.rec_name);
     setIsNotifModalOpen(true);
   };
+
 
   const closeNotifModal = () => setIsNotifModalOpen(false);
 
@@ -591,9 +777,13 @@ export default function BillManagement() {
   );
 
   // --- Summary Calculations ---
-  const billsStats = {
+const billsStats = {
     total: bills.length,
     pending: bills.filter(b => b.status === 'pending').length,
+    paid: bills.filter(b => b.status === 'paid').length,
+    printing: bills.filter(b => b.status === 'printing').length,
+    packing: bills.filter(b => b.status === 'packing').length,
+    waiting_pickup: bills.filter(b => b.status === 'waiting_pickup').length,
     processing: bills.filter(b => b.status === 'processing').length,
     completed: bills.filter(b => b.status === 'completed').length,
     cancelled: bills.filter(b => b.status === 'cancelled').length,
@@ -626,26 +816,46 @@ export default function BillManagement() {
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-700 mb-4">ملخص الإحصائيات</h2>
           
-          {/* Status Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-center shadow-sm">
-              <div className="text-blue-500 text-sm font-semibold mb-1">إجمالي الفواتير</div>
+{/* Status Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">📋</div>
+              <div className="text-blue-500 text-xs font-bold mb-1">الإجمالي</div>
               <div className="text-2xl font-bold text-blue-800">{billsStats.total}</div>
             </div>
-            <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 text-center shadow-sm">
-              <div className="text-yellow-600 text-sm font-semibold mb-1">قيد الانتظار</div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">⏳</div>
+              <div className="text-yellow-700 text-xs font-bold mb-1">بانتظار السداد</div>
               <div className="text-2xl font-bold text-yellow-800">{billsStats.pending}</div>
             </div>
-            <div className="bg-purple-50 border border-purple-100 rounded-lg p-4 text-center shadow-sm">
-              <div className="text-purple-600 text-sm font-semibold mb-1">قيد المعالجة</div>
-              <div className="text-2xl font-bold text-purple-800">{billsStats.processing}</div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">💳</div>
+              <div className="text-emerald-700 text-xs font-bold mb-1">تم السداد</div>
+              <div className="text-2xl font-bold text-emerald-800">{billsStats.paid}</div>
             </div>
-            <div className="bg-green-50 border border-green-100 rounded-lg p-4 text-center shadow-sm">
-              <div className="text-green-600 text-sm font-semibold mb-1">مكتملة</div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">🖨️</div>
+              <div className="text-blue-700 text-xs font-bold mb-1">قيد الطباعة</div>
+              <div className="text-2xl font-bold text-blue-800">{billsStats.printing}</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">📦</div>
+              <div className="text-purple-700 text-xs font-bold mb-1">قيد التجهيز</div>
+              <div className="text-2xl font-bold text-purple-800">{billsStats.packing}</div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">🚚</div>
+              <div className="text-orange-700 text-xs font-bold mb-1">بانتظار الاستلام</div>
+              <div className="text-2xl font-bold text-orange-800">{billsStats.waiting_pickup}</div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">✅</div>
+              <div className="text-green-700 text-xs font-bold mb-1">مكتملة</div>
               <div className="text-2xl font-bold text-green-800">{billsStats.completed}</div>
             </div>
-            <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-center shadow-sm">
-              <div className="text-red-500 text-sm font-semibold mb-1">ملغاة</div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">❌</div>
+              <div className="text-red-600 text-xs font-bold mb-1">ملغاة</div>
               <div className="text-2xl font-bold text-red-800">{billsStats.cancelled}</div>
             </div>
           </div>
@@ -692,23 +902,66 @@ export default function BillManagement() {
           </div>
         </div>
 
+{/* إعدادات التحويل البنكي ورقم المندوب */}
+        <div className="mb-4">
+          <button
+            onClick={() => setIsBankSettingsOpen(prev => !prev)}
+            className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl border border-gray-200 transition mb-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            إعدادات بيانات التحويل ورقم المندوب
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isBankSettingsOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+          {isBankSettingsOpen && (
+            <div className="bg-amber-50 border border-[#c4a900]/30 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">بيانات حسابات التحويل البنكي</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={bankAccounts}
+                  onChange={(e) => setBankAccounts(e.target.value)}
+                  placeholder="1- اسم البنك / رقم الحساب&#10;2- اسم البنك / رقم الحساب"
+                />
+                <p className="text-xs text-gray-500 mt-1">تُرسل هذه البيانات تلقائياً في إشعار طلب السداد</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">رقم هاتف مندوب التوصيل</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={deliveryAgentPhone}
+                  onChange={(e) => setDeliveryAgentPhone(e.target.value)}
+                  placeholder="مثال: 0999999999"
+                />
+                <p className="text-xs text-gray-500 mt-1">يُدرج تلقائياً في إشعار بانتظار الاستلام</p>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Filter Section */}
-        <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium text-gray-700">فلترة حسب الحالة:</span>
+        <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-bold text-gray-700">فلترة حسب الحالة:</span>
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              className="px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">الكل</option>
-              <option value="pending">قيد الانتظار</option>
-              <option value="processing">قيد المعالجة</option>
-              <option value="completed">مكتملة</option>
-              <option value="cancelled">ملغاة</option>
+              <option value="pending">⏳ بانتظار السداد</option>
+              <option value="paid">💳 تم السداد</option>
+              <option value="printing">🖨️ قيد الطباعة</option>
+              <option value="packing">📦 قيد التجهيز للإرسال</option>
+              <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+              <option value="processing">⚙️ قيد المعالجة</option>
+              <option value="completed">✅ مكتمل</option>
+              <option value="cancelled">❌ ملغي</option>
             </select>
           </div>
         </div>
+
 
         {/* Modal for Edit */}
         {editingBill && (
@@ -743,17 +996,20 @@ export default function BillManagement() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">حالة الفاتورة</label>
                     <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all"
                       value={editingBill.status}
                       onChange={(e) => setEditingBill({ ...editingBill, status: e.target.value })}
                       required
                     >
-                      <option value="pending">قيد الانتظار</option>
-                      <option value="processing">قيد المعالجة</option>
-                      <option value="completed">مكتملة</option>
-                      <option value="cancelled">ملغاة</option>
+                      <option value="pending">⏳ بانتظار السداد</option>
+                      <option value="paid">💳 تم السداد</option>
+                      <option value="printing">🖨️ قيد الطباعة</option>
+                      <option value="packing">📦 قيد التجهيز للإرسال</option>
+                      <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+                      <option value="processing">⚙️ قيد المعالجة</option>
+                      <option value="completed">✅ مكتمل</option>
+                      <option value="cancelled">❌ ملغي</option>
                     </select>
-                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">معرف المستخدم</label>
@@ -959,7 +1215,7 @@ export default function BillManagement() {
               {filteredBills.map((bill) => (
                 <Fragment key={bill.id}>
                   <tr
-                    className="hover:bg-gray-50 transition cursor-pointer"
+                    className={`transition cursor-pointer ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'} hover:brightness-95`}
                     onClick={() => bill.id && toggleRow(bill.id)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -991,23 +1247,24 @@ export default function BillManagement() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{bill.total}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+<td className="px-6 py-4 whitespace-nowrap">
                       <select
-                        className={`px-2 py-1 text-xs leading-5 font-semibold rounded-full 
-      ${bill.status === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' :
-                            bill.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
-                              bill.status === 'processing' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                                'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}
+                        className={`px-2 py-1 text-xs font-bold rounded-xl border ${STATUS_MAP[bill.status]?.color || 'bg-gray-100 text-gray-700 border-gray-300'}`}
                         value={bill.status}
                         onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <option value="pending">قيد الانتظار</option>
-                        <option value="processing">قيد المعالجة</option>
-                        <option value="completed">مكتملة</option>
-                        <option value="cancelled">ملغاة</option>
+                        <option value="pending">⏳ بانتظار السداد</option>
+                        <option value="paid">💳 تم السداد</option>
+                        <option value="printing">🖨️ قيد الطباعة</option>
+                        <option value="packing">📦 قيد التجهيز للإرسال</option>
+                        <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+                        <option value="processing">⚙️ قيد المعالجة</option>
+                        <option value="completed">✅ مكتمل</option>
+                        <option value="cancelled">❌ ملغي</option>
                       </select>
                     </td>
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
 
@@ -1333,6 +1590,133 @@ export default function BillManagement() {
         </div>
       )}
 
+{/* Modal تأكيد إرسال الإشعار عند تغيير الحالة */}
+      {statusChangeModal.open && statusChangeModal.bill && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
+            <div className="bg-blue-100 text-blue-900 px-6 py-4 flex items-center justify-between border-b border-blue-200">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                <span className="font-extrabold text-base">هل تريد إرسال إشعار للطالب؟</span>
+              </div>
+              <button onClick={() => setStatusChangeModal(prev => ({ ...prev, open: false }))} className="text-blue-700 hover:text-blue-900">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* اختيار نوع الإشعار لحالتي packing و completed */}
+              {(statusChangeModal.newStatus === 'packing' || statusChangeModal.newStatus === 'completed') && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-700">نوع التوصيل:</span>
+                  <button
+                    onClick={() => {
+                      const notif = generateNotifForStatus(statusChangeModal.bill!, statusChangeModal.newStatus, 'delivery');
+                      setStatusChangeModal(prev => ({ ...prev, notifVariant: 'delivery', notifTitle: notif.title, notifBody: notif.body }));
+                    }}
+                    className={`px-4 py-2 rounded-xl font-bold text-sm border transition ${statusChangeModal.notifVariant === 'delivery' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}`}
+                  >🚚 توصيل</button>
+                  <button
+                    onClick={() => {
+                      const notif = generateNotifForStatus(statusChangeModal.bill!, statusChangeModal.newStatus, 'shipping');
+                      setStatusChangeModal(prev => ({ ...prev, notifVariant: 'shipping', notifTitle: notif.title, notifBody: notif.body }));
+                    }}
+                    className={`px-4 py-2 rounded-xl font-bold text-sm border transition ${statusChangeModal.notifVariant === 'shipping' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}`}
+                  >📦 شحن</button>
+                </div>
+              )}
+              {/* رقم التتبع لحالة completed شحن */}
+              {statusChangeModal.newStatus === 'completed' && statusChangeModal.notifVariant === 'shipping' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">رقم التتبع</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    value={statusChangeModal.trackingNumber}
+                    onChange={(e) => {
+                      const tn = e.target.value;
+                      setStatusChangeModal(prev => {
+                        const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { trackingNumber: tn });
+                        return { ...prev, trackingNumber: tn, notifBody: notif.body };
+                      });
+                    }}
+                    placeholder="أدخل رقم تتبع الشحنة"
+                  />
+                </div>
+              )}
+              {/* تعديل تاريخ ووقت التسليم لحالة waiting_pickup */}
+              {statusChangeModal.newStatus === 'waiting_pickup' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">اليوم والتاريخ</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                      value={statusChangeModal.deliveryDate}
+                      onChange={(e) => {
+                        const dd = e.target.value;
+                        setStatusChangeModal(prev => {
+                          const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { deliveryDate: dd, deliveryTime: prev.deliveryTime });
+                          return { ...prev, deliveryDate: dd, notifBody: notif.body };
+                        });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">الساعة</label>
+                    <input
+                      type="time"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                      value={statusChangeModal.deliveryTime}
+                      onChange={(e) => {
+                        const dt = e.target.value;
+                        setStatusChangeModal(prev => {
+                          const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { deliveryDate: prev.deliveryDate, deliveryTime: dt });
+                          return { ...prev, deliveryTime: dt, notifBody: notif.body };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={statusChangeModal.notifTitle}
+                  onChange={(e) => setStatusChangeModal(prev => ({ ...prev, notifTitle: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">نص الإشعار (قابل للتعديل)</label>
+                <textarea
+                  rows={6}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={statusChangeModal.notifBody}
+                  onChange={(e) => setStatusChangeModal(prev => ({ ...prev, notifBody: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setStatusChangeModal(prev => ({ ...prev, open: false }))}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                >
+                  تخطي
+                </button>
+                <button
+                  onClick={handleStatusNotifSend}
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal إرسال الإشعار */}
       {isNotifModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1413,3 +1797,4 @@ export default function BillManagement() {
     </div>
   );
 }
+
