@@ -479,17 +479,7 @@ const updateBillStatus = async (billId: number, newStatus: string) => {
       setStatusChangeModal(prev => ({ ...prev, open: false }));
     }
   };
-      });
-
-      if (!response.ok) throw new Error('فشل في تحديث حالة الفاتورة');
-
-      fetchData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحديث الحالة');
-    }
-  };
-
-  const addDetail = () => {
+const addDetail = () => {
     if (!editingBill || !newDetail.m_id || newDetail.m_price <= 0) return;
 
     const material = materials.find(m => m.id === newDetail.m_id);
