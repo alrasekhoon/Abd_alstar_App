@@ -146,12 +146,11 @@ const API_URL = '/api/proxy/cp_bills.php';
   const STATUS_MAP: Record<string, { label: string; color: string; rowBg: string; icon: string }> = {
     pending:          { label: 'بانتظار السداد',       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',   rowBg: 'bg-yellow-50/40',   icon: '⏳' },
     paid:             { label: 'تم السداد',            color: 'bg-emerald-100 text-emerald-800 border-emerald-300', rowBg: 'bg-emerald-50/40',  icon: '💳' },
-    printing:         { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-50/40',     icon: '🖨️' },
+processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-50/40',     icon: '🖨️' },
     packing:          { label: 'قيد التجهيز للإرسال',  color: 'bg-purple-100 text-purple-800 border-purple-300',   rowBg: 'bg-purple-50/40',   icon: '📦' },
     waiting_pickup:   { label: 'بانتظار الاستلام',     color: 'bg-orange-100 text-orange-800 border-orange-300',   rowBg: 'bg-orange-50/40',   icon: '🚚' },
     completed:        { label: 'مكتمل',                color: 'bg-green-100 text-green-800 border-green-300',       rowBg: 'bg-green-50/40',    icon: '✅' },
     cancelled:        { label: 'ملغي',                 color: 'bg-red-100 text-red-800 border-red-300',             rowBg: 'bg-red-50/40',      icon: '❌' },
-    processing:       { label: 'قيد المعالجة',         color: 'bg-indigo-100 text-indigo-800 border-indigo-300',   rowBg: 'bg-indigo-50/40',   icon: '⚙️' },
   };
 
   // دالة توليد نص الإشعار حسب الحالة
@@ -177,7 +176,7 @@ const API_URL = '/api/proxy/cp_bills.php';
           title: 'تأكيد استلام الدفعة 💳',
           body: `${greeting}، تم استلام الدفعة المالية بنجاح.\nلقد تمت جدولة طلبكم وإدراجه ضمن خطة الطباعة وفقاً للترتيب المعتمد، سنقوم بإشعاركم فور البدء الفعلي بالتنفيذ، علماً الوقت المتوقع للتنفيذ من يوم عمل إلى أربعة أيام.`
         };
-      case 'printing':
+      case 'processing':
         return {
           title: 'طلبك قيد الطباعة الآن!',
           body: `${greeting}، نود إعلامك بأن مطبوعاتك قيد التنفيذ والطباعة حالياً.\nسيصلك إشعار جديد بمجرد الانتهاء من التجهيز والتغليف النهائي، علماً بأن الوقت المتوقع للانتهاء من الطباعة يتراوح من ثلاث ساعات عمل إلى يوم عمل.`
@@ -428,7 +427,7 @@ const updateBillStatus = async (billId: number, newStatus: string) => {
       fetchData();
 
       // بعد الحفظ: فتح مودال تأكيد الإشعار (إن وجد نص إشعار للحالة)
-      const statusesWithNotif = ['paid','printing','packing','waiting_pickup','completed','cancelled'];
+      const statusesWithNotif = ['paid','processing','packing','waiting_pickup','completed','cancelled'];
       if (statusesWithNotif.includes(newStatus)) {
         const isShipping = billToUpdate.delv_type === 'shipping' || billToUpdate.delv_type === 'express';
         const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
@@ -706,22 +705,26 @@ const addDetail = () => {
   };
 
 // دوال الإشعارات
-  const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
+const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
     const isShipping = bill.delv_type === 'shipping' || bill.delv_type === 'express';
     const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
+    const dateStr = tomorrow.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
     const notif = generateNotifForStatus(bill, bill.status, variant);
-    setNotifData({
-      user_id: bill.user_id,
-      title: notif.title,
-      body: notif.body,
-      url1: '',
-      note1: ''
+    setStatusChangeModal({
+      open: true,
+      bill: bill,
+      newStatus: bill.status,
+      notifTitle: notif.title,
+      notifBody: notif.body,
+      trackingNumber: '',
+      deliveryDate: `${dayName} ${dateStr}`,
+      deliveryTime: '11:00',
+      notifVariant: variant
     });
-    setSelectedUserName(bill.name || bill.rec_name);
-    setIsNotifModalOpen(true);
   };
-
 
   const closeNotifModal = () => setIsNotifModalOpen(false);
 
@@ -771,7 +774,7 @@ const billsStats = {
     total: bills.length,
     pending: bills.filter(b => b.status === 'pending').length,
     paid: bills.filter(b => b.status === 'paid').length,
-    printing: bills.filter(b => b.status === 'printing').length,
+processing: bills.filter(b => b.status === 'processing').length,
     packing: bills.filter(b => b.status === 'packing').length,
     waiting_pickup: bills.filter(b => b.status === 'waiting_pickup').length,
     processing: bills.filter(b => b.status === 'processing').length,
@@ -826,7 +829,7 @@ const billsStats = {
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center shadow-sm">
               <div className="text-lg mb-1">🖨️</div>
               <div className="text-blue-700 text-xs font-bold mb-1">قيد الطباعة</div>
-              <div className="text-2xl font-bold text-blue-800">{billsStats.printing}</div>
+              <div className="text-2xl font-bold text-blue-800">{billsStats.processing}</div>
             </div>
             <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center shadow-sm">
               <div className="text-lg mb-1">📦</div>
@@ -942,10 +945,9 @@ const billsStats = {
               <option value="all">الكل</option>
               <option value="pending">⏳ بانتظار السداد</option>
               <option value="paid">💳 تم السداد</option>
-              <option value="printing">🖨️ قيد الطباعة</option>
+<option value="processing">🖨️ قيد الطباعة</option>
               <option value="packing">📦 قيد التجهيز للإرسال</option>
               <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
-              <option value="processing">⚙️ قيد المعالجة</option>
               <option value="completed">✅ مكتمل</option>
               <option value="cancelled">❌ ملغي</option>
             </select>
@@ -993,10 +995,9 @@ const billsStats = {
                     >
                       <option value="pending">⏳ بانتظار السداد</option>
                       <option value="paid">💳 تم السداد</option>
-                      <option value="printing">🖨️ قيد الطباعة</option>
+<option value="processing">🖨️ قيد الطباعة</option>
                       <option value="packing">📦 قيد التجهيز للإرسال</option>
                       <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
-                      <option value="processing">⚙️ قيد المعالجة</option>
                       <option value="completed">✅ مكتمل</option>
                       <option value="cancelled">❌ ملغي</option>
                     </select>
@@ -1247,35 +1248,33 @@ const billsStats = {
                       >
                         <option value="pending">⏳ بانتظار السداد</option>
                         <option value="paid">💳 تم السداد</option>
-                        <option value="printing">🖨️ قيد الطباعة</option>
+<option value="processing">🖨️ قيد الطباعة</option>
                         <option value="packing">📦 قيد التجهيز للإرسال</option>
                         <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
-                        <option value="processing">⚙️ قيد المعالجة</option>
                         <option value="completed">✅ مكتمل</option>
                         <option value="cancelled">❌ ملغي</option>
                       </select>
                     </td>
 
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-
+                     <div className="flex gap-2 justify-end">
                         <button
                           onClick={(e) => openPaymentModal(bill, e)}
-                          className="text-green-600 hover:text-green-900 flex items-center bg-green-50 hover:bg-green-100 px-2 py-1 rounded"
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
                           title="إضافة دفعة مالية"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           دفعة
                         </button>
-                        
+
                         <button
                           onClick={(e) => openNotifModal(bill, e)}
-                          className="text-blue-600 hover:text-blue-900 flex items-center bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded"
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
                           title="إرسال إشعار"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                           </svg>
                           إشعار
@@ -1284,20 +1283,17 @@ const billsStats = {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-
-                            if (bill.id) {
-                              handleDelete(bill.id);
-                            }
-
+                            if (bill.id) handleDelete(bill.id);
                           }}
-                          className="text-red-600 hover:text-red-900 flex items-center px-1"
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                           </svg>
                           حذف
                         </button>
                       </div>
+
                     </td>
                   </tr>
                   {expandedRows[bill.id!] && (
