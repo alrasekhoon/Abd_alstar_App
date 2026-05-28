@@ -1000,6 +1000,7 @@ const billsStats = {
                       <option value="completed">✅ مكتمل</option>
                       <option value="cancelled">❌ ملغي</option>
                     </select>
+                  </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">معرف المستخدم</label>
