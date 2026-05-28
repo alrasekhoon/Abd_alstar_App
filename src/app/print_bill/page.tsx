@@ -725,8 +725,16 @@ const addDetail = () => {
   };
 
   // دوال الدفعة المالية
+// دوال الدفعة المالية
   const openPaymentModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // التحقق مما إذا كانت الفاتورة قد تم سدادها مسبقاً (أي أن حالتها ليست "بانتظار السداد")
+    if (bill.status !== 'pending') {
+      alert('تنبيه: لقد تم سداد هذه الفاتورة مسبقاً أو أنه تم إلغاؤها، لا يمكنك إضافة دفعة مالية جديدة لها.');
+      return; // إيقاف العملية وعدم فتح النافذة
+    }
+
     setPaymentData({
       bill_id: bill.id || 0,
       user_id: bill.user_id,
@@ -1595,10 +1603,10 @@ onClick={() => bill.id && toggleRow(bill.id)}
         </div>
       )}
 
-      {/* Modal إضافة الدفعة المالية */}
+{/* Modal إضافة الدفعة المالية */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md relative z-10">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">إضافة دفعة مالية</h2>
               <button
