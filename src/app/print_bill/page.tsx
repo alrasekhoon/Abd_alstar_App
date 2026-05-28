@@ -65,6 +65,7 @@ export default function BillManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const knownBillIds = React.useRef<Set<number>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>('all');
   // حالة modal الاشتراكات المجانية
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
@@ -256,13 +257,40 @@ processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100
 
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
-      setBills(result);
+setBills(result);
+
+      // كشف الطلبات الجديدة وإرسال إشعار تلقائي
+      if (knownBillIds.current.size > 0 && Array.isArray(result)) {
+        const newBills: BillItem[] = result.filter(
+          (b: BillItem) => b.id && !knownBillIds.current.has(b.id)
+        );
+        for (const newBill of newBills) {
+          const notif = generateNotifForStatus(newBill, 'pending');
+          try {
+            await fetch('/api/proxy/cp_notifications.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: newBill.user_id,
+                title: notif.title,
+                body: notif.body,
+                url1: '',
+                note1: ''
+              })
+            });
+          } catch (_) {}
+        }
+      }
+      if (Array.isArray(result)) {
+        result.forEach((b: BillItem) => { if (b.id) knownBillIds.current.add(b.id); });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const fetchBillDetails = async (billId: string) => {
     try {
@@ -429,7 +457,7 @@ const updateBillStatus = async (billId: number, newStatus: string) => {
       // بعد الحفظ: فتح مودال تأكيد الإشعار (إن وجد نص إشعار للحالة)
       const statusesWithNotif = ['paid','processing','packing','waiting_pickup','completed','cancelled'];
       if (statusesWithNotif.includes(newStatus)) {
-        const isShipping = billToUpdate.delv_type === 'shipping' || billToUpdate.delv_type === 'express';
+        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
         const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
         const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
         const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
@@ -666,7 +694,7 @@ const addDetail = () => {
     e.stopPropagation();
     setPaymentData({
       user_id: bill.user_id,
-      mony: '',
+      mony: bill.total || '',
       type: 'deposit',
       dolar: 'no',
       note: `دفعة بخصوص الفاتورة رقم ${bill.id}`
@@ -686,7 +714,7 @@ const addDetail = () => {
       setIsLoading(true);
       const payload = {
         ...paymentData,
-        admin_user: 1 
+        admin_user: 1
       };
       const response = await fetch('/api/proxy/cp_money.php', {
         method: 'POST',
@@ -695,7 +723,99 @@ const addDetail = () => {
       });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
-      alert('تمت إضافة الدفعة بنجاح!');
+
+      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد"
+      const billToUpdate = bills.find(b => b.user_id === paymentData.user_id);
+      if (billToUpdate && billToUpdate.id) {
+        const timestamp = Date.now();
+        await fetch(`${API_URL}?id=${billToUpdate.id}&refresh=${timestamp}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ ...billToUpdate, status: 'paid' })
+        });
+        fetchData();
+
+        // فتح مودال تأكيد الإشعار
+        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
+        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+        const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
+        setStatusChangeModal({
+          open: true,
+          bill: billToUpdate,
+          newStatus: 'paid',
+          notifTitle: notif.title,
+          notifBody: notif.body,
+          trackingNumber: '',
+          deliveryDate: '',
+          deliveryTime: '11:00',
+          notifVariant: variant
+        });
+      }
+
+      closePaymentModal();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+const handlePaymentSubmit = async () => {
+    if (!paymentData.mony || parseFloat(paymentData.mony) <= 0) {
+      alert('الرجاء إدخال مبلغ صحيح');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const payload = {
+        ...paymentData,
+        admin_user: 1
+      };
+      const response = await fetch('/api/proxy/cp_money.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
+
+      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد"
+      const billToUpdate = bills.find(b => b.user_id === paymentData.user_id);
+      if (billToUpdate && billToUpdate.id) {
+        const timestamp = Date.now();
+        await fetch(`${API_URL}?id=${billToUpdate.id}&refresh=${timestamp}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ ...billToUpdate, status: 'paid' })
+        });
+        fetchData();
+
+        // فتح مودال تأكيد الإشعار
+        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
+        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+        const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
+        setStatusChangeModal({
+          open: true,
+          bill: billToUpdate,
+          newStatus: 'paid',
+          notifTitle: notif.title,
+          notifBody: notif.body,
+          trackingNumber: '',
+          deliveryDate: '',
+          deliveryTime: '11:00',
+          notifVariant: variant
+        });
+      }
+
       closePaymentModal();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
@@ -704,10 +824,11 @@ const addDetail = () => {
     }
   };
 
+
 // دوال الإشعارات
 const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isShipping = bill.delv_type === 'shipping' || bill.delv_type === 'express';
+    const isShipping = ['shipping', 'express', 'شحن'].includes(bill.delv_type || '');
     const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
@@ -1206,41 +1327,41 @@ processing: bills.filter(b => b.status === 'processing').length,
               {filteredBills.map((bill) => (
                 <Fragment key={bill.id}>
                   <tr
-                    className={`transition cursor-pointer ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'} hover:brightness-95`}
-                    onClick={() => bill.id && toggleRow(bill.id)}
+                    className={`transition cursor-pointer hover:brightness-95`}
+onClick={() => bill.id && toggleRow(bill.id)}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className={`h-5 w-5 transform transition-transform ${expandedRows[bill.id!] ? 'rotate-180' : ''}`}
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={`h-5 w-5 transform transition-transform ${expandedRows[bill.id!] ? 'rotate-180' : ''}`}
                         viewBox="0 0 20 20"
                         fill="currentColor"
                       >
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{bill.id}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{bill.name}</div>
-                      <div className="text-sm text-gray-500">{bill.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{bill.rec_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{bill.rec_phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{bill.delv_price}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{bill.total}</div>
-                    </td>
-<td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        className={`px-2 py-1 text-xs font-bold rounded-xl border ${STATUS_MAP[bill.status]?.color || 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm font-medium text-gray-900">{bill.id}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.name}</div>
+  <div className="text-sm text-gray-500">{bill.phone}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.rec_name}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.rec_phone}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.delv_price}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm font-medium text-gray-900">{bill.total}</div>
+</td>
+<td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <select
+    className={`px-2 py-1 text-xs font-bold rounded-xl border ${STATUS_MAP[bill.status]?.color || 'bg-gray-100 text-gray-700 border-gray-300'}`}
                         value={bill.status}
                         onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -1255,7 +1376,7 @@ processing: bills.filter(b => b.status === 'processing').length,
                       </select>
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
                      <div className="flex gap-2 justify-end">
                         <button
                           onClick={(e) => openPaymentModal(bill, e)}
@@ -1783,3 +1904,4 @@ processing: bills.filter(b => b.status === 'processing').length,
     </div>
   );
 }
+
