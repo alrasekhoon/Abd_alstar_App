@@ -203,9 +203,28 @@ const API_URL = '/api/proxy/cp_bills.php';
         };
       case 'completed':
         if (variant === 'shipping') {
+          // استخراج تفاصيل الشحن إذا كانت مفصولة بـ "-" (مثال: شحن - حلب - القدموس - الفرقان)
+          let shippingCompany = '';
+          let shippingCity = '';
+          let shippingBranch = '';
+          
+          if (bill.delv_type && bill.delv_type.includes('-')) {
+             const parts = bill.delv_type.split('-').map(p => p.trim());
+             if (parts.length >= 3) {
+                 shippingCity = parts[1] || '';
+                 shippingCompany = parts[2] || '';
+                 shippingBranch = parts[3] ? ` فرع ${parts[3]}` : '';
+             }
+          }
+
+          let bodyText = `${greeting}، نود إعلامك بأنه قد تم تسليم طرد المطبوعات الخاص بك بنجاح إلى شركة الشحن`;
+          if (shippingCompany) bodyText += ` (${shippingCompany})`;
+          if (shippingCity) bodyText += ` متوجهاً إلى مدينة ${shippingCity}${shippingBranch}`;
+          bodyText += `.\nيمكنك تتبع الشحنة باستخدام رقم الشحن: ${extra.trackingNumber || '[رقم التتبع]'}، علماً بأن الوقت المتوقع لوصول الشحنة إليك يتراوح من يومي عمل إلى خمسة أيام.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`;
+
           return {
             title: 'طلبك في طريقه إليك!',
-            body: `${greeting}، نود إعلامك بأنه قد تم تسليم طرد المطبوعات الخاص بك بنجاح إلى شركة الشحن.\nيمكنك تتبع الشحنة باستخدام رقم الشحن: ${extra.trackingNumber || '[رقم التتبع]'}، علماً بأن الوقت المتوقع لوصول الشحنة إليك يتراوح من يومي عمل إلى خمسة أيام.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`
+            body: bodyText
           };
         }
         return {
@@ -1080,9 +1099,11 @@ processing: bills.filter(b => b.status === 'processing').length,
                     >
                       <option value="pending">⏳ بانتظار السداد</option>
                       <option value="paid">💳 تم السداد</option>
-<option value="processing">🖨️ قيد الطباعة</option>
+                      <option value="processing">🖨️ قيد الطباعة</option>
                       <option value="packing">📦 قيد التجهيز للإرسال</option>
-                      <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+                      {!(String(editingBill.delv_type || '').toLowerCase().includes('شحن') || String(editingBill.delv_type || '').toLowerCase().includes('shipping')) && (
+                        <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+                      )}
                       <option value="completed">✅ مكتمل</option>
                       <option value="cancelled">❌ ملغي</option>
                     </select>
@@ -1332,12 +1353,14 @@ onClick={() => bill.id && toggleRow(bill.id)}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <option value="pending">⏳ بانتظار السداد</option>
-                        <option value="paid">💳 تم السداد</option>
-<option value="processing">🖨️ قيد الطباعة</option>
-                        <option value="packing">📦 قيد التجهيز للإرسال</option>
-                        <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
-                        <option value="completed">✅ مكتمل</option>
-                        <option value="cancelled">❌ ملغي</option>
+    <option value="paid">💳 تم السداد</option>
+    <option value="processing">🖨️ قيد الطباعة</option>
+    <option value="packing">📦 قيد التجهيز للإرسال</option>
+    {!(String(bill.delv_type || '').toLowerCase().includes('شحن') || String(bill.delv_type || '').toLowerCase().includes('shipping')) && (
+      <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+    )}
+    <option value="completed">✅ مكتمل</option>
+    <option value="cancelled">❌ ملغي</option>
                       </select>
                     </td>
 
@@ -1869,4 +1892,3 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
-
