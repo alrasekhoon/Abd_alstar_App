@@ -143,16 +143,17 @@ const API_URL = '/api/proxy/cp_bills.php';
     return `${isFemale ? 'العزيزة' : 'العزيز'} ${firstName}`;
   };
 
-  // قاموس الحالات: الاسم العربي، اللون، الأيقونة
+// قاموس الحالات: الاسم العربي، اللون، الأيقونة
   const STATUS_MAP: Record<string, { label: string; color: string; rowBg: string; icon: string }> = {
-    pending:          { label: 'بانتظار السداد',       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',   rowBg: 'bg-yellow-50/40',   icon: '⏳' },
-    paid:             { label: 'تم السداد',            color: 'bg-emerald-100 text-emerald-800 border-emerald-300', rowBg: 'bg-emerald-50/40',  icon: '💳' },
-processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-50/40',     icon: '🖨️' },
-    packing:          { label: 'قيد التجهيز للإرسال',  color: 'bg-purple-100 text-purple-800 border-purple-300',   rowBg: 'bg-purple-50/40',   icon: '📦' },
-    waiting_pickup:   { label: 'بانتظار الاستلام',     color: 'bg-orange-100 text-orange-800 border-orange-300',   rowBg: 'bg-orange-50/40',   icon: '🚚' },
-    completed:        { label: 'مكتمل',                color: 'bg-green-100 text-green-800 border-green-300',       rowBg: 'bg-green-50/40',    icon: '✅' },
-    cancelled:        { label: 'ملغي',                 color: 'bg-red-100 text-red-800 border-red-300',             rowBg: 'bg-red-50/40',      icon: '❌' },
+    pending:          { label: 'بانتظار السداد',       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',   rowBg: 'bg-yellow-100',   icon: '⏳' },
+    paid:             { label: 'تم السداد',            color: 'bg-emerald-100 text-emerald-800 border-emerald-300', rowBg: 'bg-emerald-100',  icon: '💳' },
+    processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-100',     icon: '🖨️' },
+    packing:          { label: 'قيد التجهيز للإرسال',  color: 'bg-purple-100 text-purple-800 border-purple-300',   rowBg: 'bg-purple-100',   icon: '📦' },
+    waiting_pickup:   { label: 'بانتظار الاستلام',     color: 'bg-orange-100 text-orange-800 border-orange-300',   rowBg: 'bg-orange-100',   icon: '🚚' },
+    completed:        { label: 'مكتمل',                color: 'bg-green-100 text-green-800 border-green-300',       rowBg: 'bg-green-100',    icon: '✅' },
+    cancelled:        { label: 'ملغي',                 color: 'bg-red-100 text-red-800 border-red-300',             rowBg: 'bg-red-100',      icon: '❌' },
   };
+
 
   // دالة توليد نص الإشعار حسب الحالة
   const generateNotifForStatus = (
@@ -1855,3 +1856,4 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
+
