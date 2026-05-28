@@ -1787,4 +1787,3 @@ const billsStats = {
     </div>
   );
 }
-
