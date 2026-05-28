@@ -262,7 +262,7 @@ setBills(result);
       // كشف الطلبات الجديدة وإرسال إشعار تلقائي
       if (knownBillIds.current.size > 0 && Array.isArray(result)) {
         const newBills: BillItem[] = result.filter(
-          (b: BillItem) => b.id && !knownBillIds.current.has(b.id)
+          (b: BillItem) => b.id && !knownBillIds.current.has(b.id) && b.status === 'pending'
         );
         for (const newBill of newBills) {
           const notif = generateNotifForStatus(newBill, 'pending');
@@ -705,65 +705,6 @@ const addDetail = () => {
 
   const closePaymentModal = () => setIsPaymentModalOpen(false);
 
-  const handlePaymentSubmit = async () => {
-    if (!paymentData.mony || parseFloat(paymentData.mony) <= 0) {
-      alert('الرجاء إدخال مبلغ صحيح');
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const payload = {
-        ...paymentData,
-        admin_user: 1
-      };
-      const response = await fetch('/api/proxy/cp_money.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
-
-      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد"
-      const billToUpdate = bills.find(b => b.user_id === paymentData.user_id);
-      if (billToUpdate && billToUpdate.id) {
-        const timestamp = Date.now();
-        await fetch(`${API_URL}?id=${billToUpdate.id}&refresh=${timestamp}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          },
-          body: JSON.stringify({ ...billToUpdate, status: 'paid' })
-        });
-        fetchData();
-
-        // فتح مودال تأكيد الإشعار
-        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
-        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
-        const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
-        setStatusChangeModal({
-          open: true,
-          bill: billToUpdate,
-          newStatus: 'paid',
-          notifTitle: notif.title,
-          notifBody: notif.body,
-          trackingNumber: '',
-          deliveryDate: '',
-          deliveryTime: '11:00',
-          notifVariant: variant
-        });
-      }
-
-      closePaymentModal();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 const handlePaymentSubmit = async () => {
     if (!paymentData.mony || parseFloat(paymentData.mony) <= 0) {
       alert('الرجاء إدخال مبلغ صحيح');
