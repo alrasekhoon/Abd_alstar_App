@@ -229,6 +229,13 @@ processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100
     fetchData();
     fetchMaterials();
     fetchRealMaterials(); // جلب مواد Tmaterial
+
+    // تحديث تلقائي كل 15 ثانية لاكتشاف الفواتير الجديدة وإرسال الإشعار التلقائي
+    const interval = setInterval(() => {
+      fetchData();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -455,9 +462,10 @@ const updateBillStatus = async (billId: number, newStatus: string) => {
       fetchData();
 
       // بعد الحفظ: فتح مودال تأكيد الإشعار (إن وجد نص إشعار للحالة)
-      const statusesWithNotif = ['paid','processing','packing','waiting_pickup','completed','cancelled'];
+      const statusesWithNotif = ['pending', 'paid', 'processing', 'packing', 'waiting_pickup', 'completed', 'cancelled'];
       if (statusesWithNotif.includes(newStatus)) {
-        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
+        const typeStr = String(billToUpdate.delv_type || '').toLowerCase();
+const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
         const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
         const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
         const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
@@ -741,7 +749,8 @@ const handlePaymentSubmit = async () => {
         fetchData();
 
         // فتح مودال تأكيد الإشعار
-        const isShipping = ['shipping', 'express', 'شحن'].includes(billToUpdate.delv_type || '');
+        const typeStr = String(billToUpdate.delv_type || '').toLowerCase();
+const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
         const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
         const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
         setStatusChangeModal({
@@ -769,7 +778,8 @@ const handlePaymentSubmit = async () => {
 // دوال الإشعارات
 const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isShipping = ['shipping', 'express', 'شحن'].includes(bill.delv_type || '');
+    const typeStr = String(bill.delv_type || '').toLowerCase();
+const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
     const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
@@ -1845,4 +1855,3 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
-
