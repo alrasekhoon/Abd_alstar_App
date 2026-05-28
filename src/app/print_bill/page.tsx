@@ -243,15 +243,6 @@ const API_URL = '/api/proxy/cp_bills.php';
     return () => clearInterval(interval);
   }, []);
 
-
-    // تحديث تلقائي كل 15 ثانية لاكتشاف الفواتير الجديدة وإرسال الإشعار التلقائي
-    const interval = setInterval(() => {
-      fetchData();
-    }, 300000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     if (statusFilter === 'all') {
       setFilteredBills(bills);
@@ -1878,3 +1869,4 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
+
