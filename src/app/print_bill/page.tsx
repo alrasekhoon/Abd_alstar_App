@@ -82,13 +82,15 @@ export default function BillManagement() {
 
   // حالات الدفعات المالية
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentData, setPaymentData] = useState({
+const [paymentData, setPaymentData] = useState({
+    bill_id: 0,
     user_id: 0,
     mony: '',
     type: 'deposit',
     dolar: 'no',
     note: ''
   });
+
 
 // حالات الإشعارات
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
@@ -227,14 +229,25 @@ const API_URL = '/api/proxy/cp_bills.php';
 
 
   useEffect(() => {
+    // 1. جلب البيانات لأول مرة عند فتح الصفحة (مع إظهار شاشة التحميل)
     fetchData();
     fetchMaterials();
     fetchRealMaterials(); // جلب مواد Tmaterial
 
+    // 2. إعداد مؤقت (Timer) يعمل في الخلفية كل 5 دقائق (300,000 ميلي ثانية)
+    const interval = setInterval(() => {
+      fetchData(false); // تم تمرير false لجلب الفواتير الجديدة بصمت دون شاشة تحميل
+    }, 300000);
+
+    // 3. تنظيف المؤقت عند إغلاق الصفحة لمنع استهلاك الذاكرة
+    return () => clearInterval(interval);
+  }, []);
+
+
     // تحديث تلقائي كل 15 ثانية لاكتشاف الفواتير الجديدة وإرسال الإشعار التلقائي
     const interval = setInterval(() => {
       fetchData();
-    }, 15000);
+    }, 300000);
 
     return () => clearInterval(interval);
   }, []);
@@ -247,9 +260,11 @@ const API_URL = '/api/proxy/cp_bills.php';
     }
   }, [bills, statusFilter]);
 
-  const fetchData = async () => {
+  const fetchData = async (showLoader = true) => {
     try {
-      setIsLoading(true);
+      // إظهار شاشة التحميل فقط إذا كان showLoader يساوي true
+      if (showLoader) setIsLoading(true);
+      
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
 
@@ -265,7 +280,7 @@ const API_URL = '/api/proxy/cp_bills.php';
 
       if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
-setBills(result);
+      setBills(result);
 
       // كشف الطلبات الجديدة وإرسال إشعار تلقائي
       if (knownBillIds.current.size > 0 && Array.isArray(result)) {
@@ -295,7 +310,8 @@ setBills(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
-      setIsLoading(false);
+      // إخفاء شاشة التحميل فقط إذا قمنا بإظهارها مسبقاً
+      if (showLoader) setIsLoading(false);
     }
   };
 
@@ -702,8 +718,9 @@ const addDetail = () => {
   const openPaymentModal = (bill: BillItem, e: React.MouseEvent) => {
     e.stopPropagation();
     setPaymentData({
+      bill_id: bill.id || 0,
       user_id: bill.user_id,
-      mony: bill.total || '',
+      mony: String(bill.total || ''),
       type: 'deposit',
       dolar: 'no',
       note: `دفعة بخصوص الفاتورة رقم ${bill.id}`
@@ -721,10 +738,13 @@ const handlePaymentSubmit = async () => {
     }
     try {
       setIsLoading(true);
+      // فصل bill_id لكي لا يتم إرسالها لملف جلب الأموال إذا كان لا يحتاجها
+      const { bill_id, ...payloadData } = paymentData;
       const payload = {
-        ...paymentData,
+        ...payloadData,
         admin_user: 1
       };
+      
       const response = await fetch('/api/proxy/cp_money.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -733,8 +753,8 @@ const handlePaymentSubmit = async () => {
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
 
-      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد"
-      const billToUpdate = bills.find(b => b.user_id === paymentData.user_id);
+      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد" بناءً على (رقم الفاتورة) الدقيق
+      const billToUpdate = bills.find(b => b.id === paymentData.bill_id);
       if (billToUpdate && billToUpdate.id) {
         const timestamp = Date.now();
         await fetch(`${API_URL}?id=${billToUpdate.id}&refresh=${timestamp}`, {
@@ -747,13 +767,16 @@ const handlePaymentSubmit = async () => {
           },
           body: JSON.stringify({ ...billToUpdate, status: 'paid' })
         });
+        
+        // تحديث البيانات في الجدول فوراً
         fetchData();
 
-        // فتح مودال تأكيد الإشعار
+        // فتح مودال تأكيد الإشعار لتنبيه الطالب بأنه تم السداد
         const typeStr = String(billToUpdate.delv_type || '').toLowerCase();
-const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
+        const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
         const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
         const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
+        
         setStatusChangeModal({
           open: true,
           bill: billToUpdate,
@@ -774,7 +797,6 @@ const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') ||
       setIsLoading(false);
     }
   };
-
 
 // دوال الإشعارات
 const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
@@ -1856,4 +1878,3 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
-
