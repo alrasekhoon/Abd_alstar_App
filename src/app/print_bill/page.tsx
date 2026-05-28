@@ -777,7 +777,6 @@ const billsStats = {
 processing: bills.filter(b => b.status === 'processing').length,
     packing: bills.filter(b => b.status === 'packing').length,
     waiting_pickup: bills.filter(b => b.status === 'waiting_pickup').length,
-    processing: bills.filter(b => b.status === 'processing').length,
     completed: bills.filter(b => b.status === 'completed').length,
     cancelled: bills.filter(b => b.status === 'cancelled').length,
   };
