@@ -85,21 +85,22 @@ const [showAddModal, setShowAddModal] = useState(false);
   const [notificationBody, setNotificationBody] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
 
-const defaultSubscription = (name = ''): SubscriptionItem => ({
-    subscription_name: name,
-    page_count: 0,
-    elec_seq: 0,
-    price_course: '',
-    active_course: 1,
-    price_quest: '',
-    active_quest: 1,
-    price_voice: '',
-    active_voice: 1,
-    display_status: 'visible',
-    price_print: '',
-    active_print: 0,
-    print_link: '',
-  });
+const defaultSubscription = (name = '', id = 0): SubscriptionItem => ({
+  subscription_id: id,
+  subscription_name: name,
+  page_count: 0,
+  elec_seq: 0,
+  price_course: '',
+  active_course: 1,
+  price_quest: '',
+  active_quest: 1,
+  price_voice: '',
+  active_voice: 1,
+  display_status: 'visible',
+  price_print: '',
+  active_print: 0,
+  print_link: '',
+});
 
   const [newItem, setNewItem] = useState<Partial<MaterialItem>>({
     material_code: '',
@@ -114,7 +115,7 @@ const defaultSubscription = (name = ''): SubscriptionItem => ({
     video_price: '',
     video_seq: 0,
     video_active: 0,
-    subscriptions: [defaultSubscription('ذهبي'), defaultSubscription('فضي'), defaultSubscription('برونزي')],
+    subscriptions: [],
   });
 
   const API_URL = '/api/proxy/cp_material.php';
@@ -314,7 +315,7 @@ setNewItem({
         video_price: '',
         video_seq: 0,
         video_active: 0,
-        subscriptions: [defaultSubscription('ذهبي'), defaultSubscription('فضي'), defaultSubscription('برونزي')],
+        subscriptions: [],
       });
 
       fetchData();
@@ -638,93 +639,88 @@ const handleNewItemChange = (field: string, value: string | number) => {
           </div>
         </div>
 
-        {/* جدول الاشتراكات */}
+       {/* جدول الاشتراكات */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <h4 className="text-sm font-bold text-gray-700 px-5 py-3 border-b border-gray-200 bg-gray-50">جدول الاشتراكات</h4>
+          <h4 className="text-sm font-bold text-gray-700 px-5 py-3 border-b border-gray-200 bg-gray-50">الاشتراكات المتاحة للمادة</h4>
           <div className="overflow-x-auto">
             <table className="min-w-full text-right text-sm">
               <thead>
                 <tr>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">الاشتراك</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-20">الصفحات</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">التسلسل</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-28">سعر المقرر</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">تفعيل</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-28">سعر الأسئلة</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">تفعيل</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-28">سعر الصوت</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">تفعيل</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-28" title="واجهة وهمية - قيد التطوير">سعر الطباعة 🔧</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-16">تفعيل</th>
-                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">الظهور</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-10">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">الاشتراك</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-20">الصفحات</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">التسلسل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر المقرر</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر الأسئلة</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر الصوت</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">الظهور</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {(newItem.subscriptions || []).map((sub, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50 transition">
-                    <td className="px-3 py-2">
-                      <input type="text" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.subscription_name} onChange={(e) => handleNewSubscriptionChange(idx, 'subscription_name', e.target.value)} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input type="number" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.page_count} onChange={(e) => handleNewSubscriptionChange(idx, 'page_count', parseInt(e.target.value) || 0)} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input type="number" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.elec_seq} onChange={(e) => handleNewSubscriptionChange(idx, 'elec_seq', parseInt(e.target.value) || 0)} />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input type="text" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.price_course} onChange={(e) => handleNewSubscriptionChange(idx, 'price_course', e.target.value)} placeholder="0" />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <button type="button" onClick={() => handleNewSubscriptionChange(idx, 'active_course', sub.active_course === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${sub.active_course === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub.active_course === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
-                      </button>
-                    </td>
-                    <td className="px-3 py-2">
-                      <input type="text" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.price_quest} onChange={(e) => handleNewSubscriptionChange(idx, 'price_quest', e.target.value)} placeholder="0" />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <button type="button" onClick={() => handleNewSubscriptionChange(idx, 'active_quest', sub.active_quest === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${sub.active_quest === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub.active_quest === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
-                      </button>
-                    </td>
-                    <td className="px-3 py-2">
-                      <input type="text" className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.price_voice} onChange={(e) => handleNewSubscriptionChange(idx, 'price_voice', e.target.value)} placeholder="0" />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <button type="button" onClick={() => handleNewSubscriptionChange(idx, 'active_voice', sub.active_voice === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${sub.active_voice === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub.active_voice === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
-                      </button>
-                    </td>
-                    {/* حقول الطباعة - واجهة وهمية */}
-                    <td className="px-3 py-2">
-                      <input type="text" className="w-full px-2 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400" value={sub.price_print} onChange={(e) => handleNewSubscriptionChange(idx, 'price_print', e.target.value)} placeholder="0" />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <button type="button" onClick={() => handleNewSubscriptionChange(idx, 'active_print', sub.active_print === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${sub.active_print === 1 ? 'bg-green-500' : 'bg-gray-300'}`}>
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub.active_print === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
-                      </button>
-                    </td>
-                    <td className="px-3 py-2">
-                      <select className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={sub.display_status} onChange={(e) => handleNewSubscriptionChange(idx, 'display_status', e.target.value as SubscriptionItem['display_status'])}>
-                        <option value="visible">ظاهر</option>
-                        <option value="hidden">مخفي</option>
-                        <option value="restricted">مقيد</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {categories.map((cat) => {
+                  const existingIdx = (newItem.subscriptions || []).findIndex(s => s.subscription_id === cat.id);
+                  const isSelected = existingIdx !== -1;
+                  const sub = isSelected ? (newItem.subscriptions || [])[existingIdx] : null;
+                  return (
+                    <tr key={cat.id} className={`transition ${isSelected ? 'bg-green-50' : 'bg-gray-50 opacity-60'}`}>
+                      <td className="px-3 py-2 text-center">
+                        <input type="checkbox" checked={isSelected} onChange={() => {
+                          if (isSelected) {
+                            setNewItem(prev => ({ ...prev, subscriptions: (prev.subscriptions || []).filter(s => s.subscription_id !== cat.id) }));
+                          } else {
+                            setNewItem(prev => ({ ...prev, subscriptions: [...(prev.subscriptions || []), defaultSubscription(cat.category_name, cat.id)] }));
+                          }
+                        }} className="w-4 h-4 accent-green-600 cursor-pointer" />
+                      </td>
+                      <td className="px-3 py-2 font-bold text-gray-700 text-xs">{cat.category_name}</td>
+                      <td className="px-3 py-2">
+                        <input type="number" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.page_count ?? 0} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'page_count', parseInt(e.target.value) || 0)} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="number" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.elec_seq ?? 0} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'elec_seq', parseInt(e.target.value) || 0)} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_course ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_course', e.target.value)} placeholder="0" />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_course', sub?.active_course === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_course === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_course === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_quest ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_quest', e.target.value)} placeholder="0" />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_quest', sub?.active_quest === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_quest === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_quest === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_voice ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_voice', e.target.value)} placeholder="0" />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_voice', sub?.active_voice === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_voice === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_voice === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.display_status ?? 'visible'} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'display_status', e.target.value as SubscriptionItem['display_status'])}>
+                          <option value="visible">ظاهر</option>
+                          <option value="hidden">مخفي</option>
+                          <option value="restricted">مقيد</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-          <div className="px-5 py-3 border-t border-gray-100 flex justify-end">
-            <button type="button" onClick={() => setNewItem(prev => ({ ...prev, subscriptions: [...(prev.subscriptions || []), defaultSubscription()] }))} className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-xs">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              إضافة اشتراك
-            </button>
-          </div>
         </div>
+
 
         {/* قسم الفيديوهات */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
