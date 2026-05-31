@@ -424,7 +424,7 @@ const handleNewItemChange = (field: string, value: string | number) => {
 
   const handleOpenNotificationModal = (item: MaterialItem) => {
     setSelectedMaterialId(item.id!);
-    setSelectedMaterialName(item.material_name);
+    setSelectedMaterialName(item.material_name_elec);
     setNotificationTitle('');
     setNotificationBody('');
     setShowNotificationModal(true);
