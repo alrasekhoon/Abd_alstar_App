@@ -1,199 +1,413 @@
+
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 
-// أنواع البيانات
-type MaterialItem = { 
+type BillItem = {
   id?: number;
-  category_id: number;
-  material_name: string;
-  material_code: string;
-  description: string;
-  created_at?: string;
-  updated_at?: string;
-  year1: number;
-  unit_price: string;
-  quizall_price: string;
-  quiz_price: string;
-  voice_price: string;
-  category_name?: string;
-  // الحقول الجديدة
-  page_count: number;
-  active: number;
-  mokarar_active: number;
-  quiz_active: number;
-  voice_active: number;
+  billId: string;
+  user_id: number;
+  delv_type: string;
+  delv_price: string;
+  rec_name: string;
+  rec_phone: string;
+  note: string;
+  total: string;
+  status: string;
+  name: string;
+  phone: string;
+  details?: BillDetailItem[];
+  address: string;
 };
 
-type CategoryItem = {
+type BillDetailItem = {
+  id?: number;
+  billId: string;
+  m_id: number;
+  m_price: number;
+  status: string;
+  m_name?: string;
+};
+
+type MaterialItem = {
   id: number;
-  category_name: string;
-  // الحقول الجديدة للأسعار الافتراضية
-  mokarar_price: string;
-  quiz_price: string;
-  voice_price: string;
+  m_name: string;
+  m_code: string;
+  mokarar_free: string;
+  quiz_free: string;
+  voice_free: string;
 };
 
-// تعريف نوع محدد لمعاملات onNavigate
-type NavigateParams = {
-  materialId: number;
+type SubscriptionData = {
+  userid: number;
+  materialid: number;
+  materialName: string;
+  subscriptionTypes: {
+    mokarar: boolean;
+    quiz: boolean;
+    voice: boolean;
+  };
 };
 
-interface MaterialsPageProps {
-  onNavigate: (page: 'units' | 'quizzes', params?: NavigateParams) => void;
-}
-
-export default function MaterialsPage({ onNavigate }: MaterialsPageProps) {
-  const [data, setData] = useState<MaterialItem[]>([]);
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [filteredData, setFilteredData] = useState<MaterialItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
+export default function BillManagement() {
+  const [bills, setBills] = useState<BillItem[]>([]);
+  const [filteredBills, setFilteredBills] = useState<BillItem[]>([]);
+  const [materials, setMaterials] = useState<MaterialItem[]>([]);
+  const [realMaterials, setRealMaterials] = useState<any[]>([]); // مواد Tmaterial من cp_material.php
+  const [editingBill, setEditingBill] = useState<BillItem | null>(null);
+  const [newDetail, setNewDetail] = useState<BillDetailItem>({
+    billId: '',
+    m_id: 0,
+    m_price: 0,
+    status: 'active'
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // Subscribers Modal State
-  const [showSubscribersModal, setShowSubscribersModal] = useState(false);
-const [showAddModal, setShowAddModal] = useState(false);
-  const [subscribers, setSubscribers] = useState<any[]>([]);
-  const [isSubscribersLoading, setIsSubscribersLoading] = useState(false);
-  const [selectedMaterialName, setSelectedMaterialName] = useState('');
-  const [selectedMaterialId, setSelectedMaterialId] = useState<number | null>(null);
-  const [searchSubscribersQuery, setSearchSubscribersQuery] = useState('');
-
-  // Notification Modal State
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [notificationTitle, setNotificationTitle] = useState('');
-  const [notificationBody, setNotificationBody] = useState('');
-  const [isSendingNotification, setIsSendingNotification] = useState(false);
-
-  const [newItem, setNewItem] = useState<Partial<MaterialItem>>({
-    category_id: 0,
-    material_name: '',
-    material_code: '',
-    description: '',
-    year1: 1,
-    unit_price: '',
-    quizall_price: '',
-    quiz_price: '',
-    voice_price: '',
-    // القيم الافتراضية للحقول الجديدة
-    page_count: 0,
-    active: 1,
-    mokarar_active: 1,
-    quiz_active: 1,
-    voice_active: 1
+  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const knownBillIds = React.useRef<Set<number>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // حالة modal الاشتراكات المجانية
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
+    userid: 0,
+    materialid: 0,
+    materialName: '',
+    subscriptionTypes: {
+      mokarar: false,
+      quiz: false,
+      voice: false
+    }
   });
 
-  const API_URL = '/api/proxy/cp_material.php';
-  const CATEGORY_API_URL = '/api/proxy/cp_ashtrak.php';
+  // حالات الدفعات المالية
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+const [paymentData, setPaymentData] = useState({
+    bill_id: 0,
+    user_id: 0,
+    mony: '',
+    type: 'deposit',
+    dolar: 'no',
+    note: ''
+  });
+
+
+// حالات الإشعارات
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [notifData, setNotifData] = useState({
+    user_id: 0,
+    title: '',
+    body: '',
+    url1: '',
+    note1: ''
+  });
+  const [selectedUserName, setSelectedUserName] = useState('');
+
+  // بيانات التحويل البنكي (قابلة للتعديل)
+  const [bankAccounts, setBankAccounts] = useState('1- \n2- ');
+  const [isBankSettingsOpen, setIsBankSettingsOpen] = useState(false);
+
+  // رقم المندوب
+  const [deliveryAgentPhone, setDeliveryAgentPhone] = useState('09999999');
+
+  // مودال تأكيد الإشعار عند تغيير الحالة
+  const [statusChangeModal, setStatusChangeModal] = useState<{
+    open: boolean;
+    bill: BillItem | null;
+    newStatus: string;
+    notifTitle: string;
+    notifBody: string;
+    trackingNumber: string;
+    deliveryDate: string;
+    deliveryTime: string;
+    notifVariant: 'delivery' | 'shipping';
+  }>({
+    open: false,
+    bill: null,
+    newStatus: '',
+    notifTitle: '',
+    notifBody: '',
+    trackingNumber: '',
+    deliveryDate: '',
+    deliveryTime: '11:00',
+    notifVariant: 'delivery'
+  });
+
+
+const API_URL = '/api/proxy/cp_bills.php';
+  const MATERIALS_API_URL = '/api/proxy/cp_bill_material.php';
+
+  // دالة تحديد الخطاب حسب الجنس واستخراج الاسم الأول
+  const getGreeting = (bill: BillItem) => {
+    const firstName = (bill.name || bill.rec_name || '').split(' ')[0];
+    // تحديد الجنس: إذا كان الاسم ينتهي بـ "ة" فالأرجح أنثى
+    const isFemale = firstName.endsWith('ة') || firstName.endsWith('ى') || firstName.endsWith('اء');
+    return `${isFemale ? 'العزيزة' : 'العزيز'} ${firstName}`;
+  };
+
+// قاموس الحالات: الاسم العربي، اللون، الأيقونة
+  const STATUS_MAP: Record<string, { label: string; color: string; rowBg: string; icon: string }> = {
+    pending:          { label: 'بانتظار السداد',       color: 'bg-yellow-100 text-yellow-800 border-yellow-300',   rowBg: 'bg-yellow-100',   icon: '⏳' },
+    paid:             { label: 'تم السداد',            color: 'bg-emerald-100 text-emerald-800 border-emerald-300', rowBg: 'bg-emerald-100',  icon: '💳' },
+    processing:       { label: 'قيد الطباعة',          color: 'bg-blue-100 text-blue-800 border-blue-300',         rowBg: 'bg-blue-100',     icon: '🖨️' },
+    packing:          { label: 'قيد التجهيز للإرسال',  color: 'bg-purple-100 text-purple-800 border-purple-300',   rowBg: 'bg-purple-100',   icon: '📦' },
+    waiting_pickup:   { label: 'بانتظار الاستلام',     color: 'bg-orange-100 text-orange-800 border-orange-300',   rowBg: 'bg-orange-100',   icon: '🚚' },
+    completed:        { label: 'مكتمل',                color: 'bg-green-100 text-green-800 border-green-300',       rowBg: 'bg-green-100',    icon: '✅' },
+    cancelled:        { label: 'ملغي',                 color: 'bg-red-100 text-red-800 border-red-300',             rowBg: 'bg-red-100',      icon: '❌' },
+  };
+
+
+  // دالة توليد نص الإشعار حسب الحالة
+  const generateNotifForStatus = (
+    bill: BillItem,
+    newStatus: string,
+    variant: 'delivery' | 'shipping' = 'delivery',
+    extra: { trackingNumber?: string; deliveryDate?: string; deliveryTime?: string } = {}
+  ): { title: string; body: string } => {
+    const greeting = getGreeting(bill);
+    const tomorrow = (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    })();
+    const tomorrowDay = new Date(); tomorrowDay.setDate(tomorrowDay.getDate() + 1);
+    const dayName = tomorrowDay.toLocaleDateString('ar-SA', { weekday: 'long' });
+    const dateStr = tomorrowDay.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    switch (newStatus) {
+      case 'paid':
+        return {
+          title: 'تأكيد استلام الدفعة 💳',
+          body: `${greeting}، تم استلام الدفعة المالية بنجاح.\nلقد تمت جدولة طلبكم وإدراجه ضمن خطة الطباعة وفقاً للترتيب المعتمد، سنقوم بإشعاركم فور البدء الفعلي بالتنفيذ، علماً الوقت المتوقع للتنفيذ من يوم عمل إلى أربعة أيام.`
+        };
+      case 'processing':
+        return {
+          title: 'طلبك قيد الطباعة الآن!',
+          body: `${greeting}، نود إعلامك بأن مطبوعاتك قيد التنفيذ والطباعة حالياً.\nسيصلك إشعار جديد بمجرد الانتهاء من التجهيز والتغليف النهائي، علماً بأن الوقت المتوقع للانتهاء من الطباعة يتراوح من ثلاث ساعات عمل إلى يوم عمل.`
+        };
+      case 'packing':
+        if (variant === 'shipping') {
+          return {
+            title: 'اكتمال الطباعة',
+            body: `${greeting}، اكتملت عملية الطباعة بنجاح.\nيجري الآن تغليف الطلب وتجهيزه ليتم جدولته وتسليمه لشركة الشحن المختصة، علماً بأن الوقت المتوقع للتجهيز والتسليم لشركة الشحن يتراوح من 6 ساعات عمل إلى يوم عمل.`
+          };
+        }
+        return {
+          title: 'اكتمال الطباعة',
+          body: `${greeting}، اكتملت عملية الطباعة بنجاح.\nيجري الآن تغليف الطلب وتجهيزه ليتم جدولته وتسليمه إلى الجهة المعنية بالتوصيل، علماً بأن الوقت المتوقع للتجهيز والتسليم للمندوب يتراوح من 6 ساعات عمل إلى يوم عمل.`
+        };
+      case 'waiting_pickup':
+        return {
+          title: 'المندوب بانتظارك!',
+          body: `${greeting}، تم تجهيز وتغليف مطبوعاتك بنجاح.\nنرجو التواجد شخصياً أو من ينوب عنك في الاستلام في [${bill.address || 'العنوان'}]، وذلك يوم ${extra.deliveryDate ? extra.deliveryDate : dayName} الموافق ${extra.deliveryDate ? extra.deliveryDate : dateStr} في تمام الساعة ${extra.deliveryTime || '11:00'} صباحاً لاستلام الطلب من مندوب التوصيل.\nللتواصل مع المندوب ${deliveryAgentPhone} لتجنب أي تأخير.`
+        };
+      case 'completed':
+        if (variant === 'shipping') {
+          // استخراج تفاصيل الشحن إذا كانت مفصولة بـ "-" (مثال: شحن - حلب - القدموس - الفرقان)
+          let shippingCompany = '';
+          let shippingCity = '';
+          let shippingBranch = '';
+          
+          if (bill.delv_type && bill.delv_type.includes('-')) {
+             const parts = bill.delv_type.split('-').map(p => p.trim());
+             if (parts.length >= 3) {
+                 shippingCity = parts[1] || '';
+                 shippingCompany = parts[2] || '';
+                 shippingBranch = parts[3] ? ` فرع ${parts[3]}` : '';
+             }
+          }
+
+          let bodyText = `${greeting}، نود إعلامك بأنه قد تم تسليم طرد المطبوعات الخاص بك بنجاح إلى شركة الشحن`;
+          if (shippingCompany) bodyText += ` (${shippingCompany})`;
+          if (shippingCity) bodyText += ` متوجهاً إلى مدينة ${shippingCity}${shippingBranch}`;
+          bodyText += `.\nيمكنك تتبع الشحنة باستخدام رقم الشحن: ${extra.trackingNumber || '[رقم التتبع]'}، علماً بأن الوقت المتوقع لوصول الشحنة إليك يتراوح من يومي عمل إلى خمسة أيام.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`;
+
+          return {
+            title: 'طلبك في طريقه إليك!',
+            body: bodyText
+          };
+        }
+        return {
+          title: 'تم تسليم طلبك بنجاح!',
+          body: `${greeting}، تم تسليم طلب المطبوعات الخاص بك بنجاح.\nشكراً لثقتك بنا، نتمنى أن نكون قد وُفقنا في خدمتك، ونسأل الله لك التوفيق والنجاح الدائم في مسيرتك الدراسية.`
+        };
+      case 'cancelled':
+        return {
+          title: 'إلغاء الطلب',
+          body: `نعتذر لإبلاغكم بأنه قد تم إلغاء الطلب الخاص بكم.\nفي حال وجود أي استفسار، يرجى مراجعة فريق الدعم الفني.\nنأمل أن تتاح لنا فرصة خدمتكم مستقبلاً.`
+        };
+      case 'pending':
+        return {
+          title: 'استلام طلب المطبوعات',
+          body: `تم استلام طلب مطبوعاتك بنجاح، يُرجى إتمام عملية السداد على أحد الحسابات التالية لنتمكن من البدء في تجهيز طلبك فوراً:\n${bankAccounts}`
+        };
+      default:
+        return { title: 'تحديث بخصوص طلب الطباعة', body: `فاتورتك رقم ${bill.id} قيد التحضير...` };
+    }
+  };
+
 
   useEffect(() => {
+    // 1. جلب البيانات لأول مرة عند فتح الصفحة (مع إظهار شاشة التحميل)
     fetchData();
-    fetchCategories();
+    fetchMaterials();
+    fetchRealMaterials(); // جلب مواد Tmaterial
+
+    // 2. إعداد مؤقت (Timer) يعمل في الخلفية كل 5 دقائق (300,000 ميلي ثانية)
+    const interval = setInterval(() => {
+      fetchData(false); // تم تمرير false لجلب الفواتير الجديدة بصمت دون شاشة تحميل
+    }, 300000);
+
+    // 3. تنظيف المؤقت عند إغلاق الصفحة لمنع استهلاك الذاكرة
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    let result = data;
-
-    if (selectedCategory !== 'all') {
-      result = result.filter(item => item.category_id === selectedCategory);
+    if (statusFilter === 'all') {
+      setFilteredBills(bills);
+    } else {
+      setFilteredBills(bills.filter(bill => bill.status === statusFilter));
     }
+  }, [bills, statusFilter]);
 
-    if (selectedYear !== 'all') {
-      result = result.filter(item => item.year1 === selectedYear);
-    }
-
-    setFilteredData(result);
-  }, [selectedCategory, selectedYear, data]);
-
-  // دالة للحصول على الأسعار الافتراضية من الفئة المحددة
-  const getDefaultPricesFromCategory = (categoryId: number) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    if (category) {
-      return {
-        quizall_price: category.mokarar_price || '',
-        quiz_price: category.quiz_price || '',
-        voice_price: category.voice_price || ''
-      };
-    }
-    return {
-      quizall_price: '',
-      quiz_price: '',
-      voice_price: ''
-    };
-  };
-
-  const fetchData = async () => {
+  const fetchData = async (showLoader = true) => {
     try {
-      setIsLoading(true);
-
+      // إظهار شاشة التحميل فقط إذا كان showLoader يساوي true
+      if (showLoader) setIsLoading(true);
+      
       const timestamp = Date.now();
       const url = `${API_URL}?refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method: 'GET',
-        cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+        cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
-        },
-        next: {
-          tags: ['materials'] // إذا كنت ستستخدم revalidateTag لاحقاً
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error('فشل في جلب البيانات');
       const result = await response.json();
+      setBills(result);
 
-      if (!Array.isArray(result.data)) {
-        throw new Error('تنسيق البيانات غير صحيح: لم يتم استلام مصفوفة');
+      // كشف الطلبات الجديدة وإرسال إشعار تلقائي
+      if (knownBillIds.current.size > 0 && Array.isArray(result)) {
+        const newBills: BillItem[] = result.filter(
+          (b: BillItem) => b.id && !knownBillIds.current.has(b.id) && b.status === 'pending'
+        );
+        for (const newBill of newBills) {
+          const notif = generateNotifForStatus(newBill, 'pending');
+          try {
+            await fetch('/api/proxy/cp_notifications.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: newBill.user_id,
+                title: notif.title,
+                body: notif.body,
+                url1: '',
+                note1: ''
+              })
+            });
+          } catch (_) {}
+        }
       }
-
-      setData(result.data);
+      if (Array.isArray(result)) {
+        result.forEach((b: BillItem) => { if (b.id) knownBillIds.current.add(b.id); });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-      console.error('Error fetching data:', err);
-      setData([]);
     } finally {
-      setIsLoading(false);
+      // إخفاء شاشة التحميل فقط إذا قمنا بإظهارها مسبقاً
+      if (showLoader) setIsLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
+
+  const fetchBillDetails = async (billId: string) => {
     try {
       const timestamp = Date.now();
-      const url = `${CATEGORY_API_URL}?refresh=${timestamp}`;
+      const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method: 'GET',
-        cache: 'no-store', // ⚠️ الحل السحري لـ Vercel
+        cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
-        },
-        next: {
-          tags: ['categories'] // إذا كنت ستستخدم revalidateTag لاحقاً
         }
       });
 
-      if (!response.ok) throw new Error('فشل في جلب الفئات');
+      if (!response.ok) throw new Error('فشل في جلب تفاصيل الفاتورة');
       const result = await response.json();
-      setCategories(result);
+      return result.details || [];
     } catch (err) {
-      console.error('Error fetching categories:', err);
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب الفئات');
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب التفاصيل');
+      return [];
+    }
+  };
+
+  const fetchMaterials = async () => {
+    try {
+      const timestamp = Date.now();
+      const url = `${MATERIALS_API_URL}?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب المواد');
+      const result = await response.json();
+      setMaterials(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب المواد');
+    }
+  };
+
+  const fetchRealMaterials = async () => {
+    try {
+      const timestamp = Date.now();
+      const url = `/api/proxy/cp_material.php?refresh=${timestamp}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (!response.ok) throw new Error('فشل في جلب مواد Tmaterial');
+      const result = await response.json();
+
+      // التأكد من أن النتيجة array - البيانات في result.data
+      if (result.data && Array.isArray(result.data)) {
+        setRealMaterials(result.data);
+        console.log('Loaded real materials:', result.data.length);
+      } else {
+        console.error('cp_material.php did not return data array:', result);
+        setRealMaterials([]);
+      }
+    } catch (err) {
+      console.error('Error fetching real materials:', err);
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب مواد Tmaterial');
+      setRealMaterials([]);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذه المادة؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) return;
 
     try {
       const timestamp = Date.now();
@@ -209,25 +423,22 @@ const [showAddModal, setShowAddModal] = useState(false);
         }
       });
 
-      if (!response.ok) throw new Error('فشل في حذف المادة');
+      if (!response.ok) throw new Error('فشل في حذف الفاتورة');
 
       fetchData();
-      alert('تم حذف المادة بنجاح');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحذف');
-      alert('حدث خطأ أثناء حذف المادة');
     }
   };
 
-  const handleEdit = (id: number) => {
-    setEditingId(id);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBill) return;
 
-  const handleSave = async (item: MaterialItem) => {
     try {
-      const method = 'PUT';
+      const method = editingBill.id ? 'PUT' : 'POST';
       const timestamp = Date.now();
-      const url = `${API_URL}?id=${item.id}&refresh=${timestamp}`;
+      const url = editingBill.id ? `${API_URL}?id=${editingBill.id}&refresh=${timestamp}` : `${API_URL}?refresh=${timestamp}`;
 
       const response = await fetch(url, {
         method,
@@ -238,32 +449,28 @@ const [showAddModal, setShowAddModal] = useState(false);
           'Pragma': 'no-cache',
           'Expires': '0'
         },
-        body: JSON.stringify(item),
+        body: JSON.stringify(editingBill),
       });
 
       if (!response.ok) throw new Error('فشل في حفظ البيانات');
 
-      setEditingId(null);
+      setEditingBill(null);
       fetchData();
-      alert('تم حفظ البيانات بنجاح');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الحفظ');
-      alert('حدث خطأ أثناء حفظ البيانات');
     }
   };
 
-  const handleAdd = async () => {
-    if (!newItem.material_name || !newItem.material_code) {
-      alert('يرجى إدخال اسم المادة وكود المادة');
-      return;
-    }
-
+const updateBillStatus = async (billId: number, newStatus: string) => {
     try {
+      const billToUpdate = bills.find(bill => bill.id === billId);
+      if (!billToUpdate) return;
+
       const timestamp = Date.now();
-      const url = `${API_URL}?refresh=${timestamp}`;
+      const url = `${API_URL}?id=${billId}&refresh=${timestamp}`;
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'PUT',
         cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
@@ -271,162 +478,389 @@ const [showAddModal, setShowAddModal] = useState(false);
           'Pragma': 'no-cache',
           'Expires': '0'
         },
-        body: JSON.stringify(newItem),
+        body: JSON.stringify({
+          ...billToUpdate,
+          status: newStatus
+        }),
       });
 
-      if (!response.ok) throw new Error('فشل في إضافة المادة');
+      if (!response.ok) throw new Error('فشل في تحديث حالة الفاتورة');
 
-      setNewItem({
-        category_id: 0,
-        material_name: '',
-        material_code: '',
-        description: '',
-        year1: 1,
-        unit_price: '',
-        quizall_price: '',
-        quiz_price: '',
-        voice_price: '',
-        page_count: 0,
-        active: 1,
-        mokarar_active: 1,
-        quiz_active: 1,
-        voice_active: 1
-      });
       fetchData();
-      setShowAddModal(false);
-      alert('تم إضافة المادة بنجاح');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء الإضافة');
-      alert('حدث خطأ أثناء إضافة المادة');
-    }
-  };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    fetchData();
-  };
-
-  const handleInputChange = (id: number, field: string, value: string | number) => {
-    setData(prevData =>
-      prevData.map(item =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
-  };
-
-  const handleNewItemChange = (field: string, value: string | number) => {
-    setNewItem(prev => {
-      const updatedItem = { ...prev, [field]: value };
-
-      // إذا تم تغيير الفئة، قم بتحديث الأسعار الافتراضية تلقائياً
-      if (field === 'category_id' && value !== 0) {
-        const defaultPrices = getDefaultPricesFromCategory(Number(value));
-        return {
-          ...updatedItem,
-          quizall_price: defaultPrices.quizall_price,
-          quiz_price: defaultPrices.quiz_price,
-          voice_price: defaultPrices.voice_price
-        };
+      // بعد الحفظ: فتح مودال تأكيد الإشعار (إن وجد نص إشعار للحالة)
+      const statusesWithNotif = ['pending', 'paid', 'processing', 'packing', 'waiting_pickup', 'completed', 'cancelled'];
+      if (statusesWithNotif.includes(newStatus)) {
+        const typeStr = String(billToUpdate.delv_type || '').toLowerCase();
+const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
+        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+        const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
+        const dateStr = tomorrow.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const notif = generateNotifForStatus(billToUpdate, newStatus, variant);
+        setStatusChangeModal({
+          open: true,
+          bill: billToUpdate,
+          newStatus,
+          notifTitle: notif.title,
+          notifBody: notif.body,
+          trackingNumber: '',
+          deliveryDate: `${dayName} ${dateStr}`,
+          deliveryTime: '11:00',
+          notifVariant: variant
+        });
       }
-
-      return updatedItem;
-    });
-  };
-
-  const handleViewSubscribers = async (item: MaterialItem) => {
-    setSelectedMaterialName(item.material_name);
-    setSelectedMaterialId(item.id!);
-    setSearchSubscribersQuery('');
-    setShowSubscribersModal(true);
-    setIsSubscribersLoading(true);
-    try {
-      const response = await fetch(`/api/proxy/cp_material_subscribers.php?material_id=${item.id}&refresh=${Date.now()}`);
-      if (!response.ok) throw new Error('فشل في جلب البيانات من الخادم');
-      const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'فشل في جلب المشتركين');
-      setSubscribers(data.subscribers || []);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    } finally {
-      setIsSubscribersLoading(false);
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تحديث الحالة');
     }
   };
 
-  const handleDeleteAllSubscribers = async () => {
-    if (!selectedMaterialId) return;
-    if (!window.confirm('تحذير نهائي: سيتم حذف جميع المشتركين بهذه المادة نهائياً ولا يمكن التراجع! هل أنت متأكد من الاستمرار؟')) return;
-
+  // إرسال الإشعار من مودال تأكيد الحالة
+  const handleStatusNotifSend = async () => {
+    if (!statusChangeModal.bill) return;
     try {
-      const response = await fetch(`/api/proxy/cp_material_subscribers.php?action=delete_all&material_id=${selectedMaterialId}`, {
-        method: 'DELETE',
-        cache: 'no-store'
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'فشل في حذف المشتركين');
-      
-      alert(data.message || 'تم حذف جميع المشتركين بنجاح');
-      setSubscribers([]);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    }
-  };
-
-  const handleDeleteSubscriber = async (subId: number) => {
-    if (!window.confirm('هل أنت متأكد من حذف اشتراك هذا المستخدم؟')) return;
-
-    try {
-      const response = await fetch(`/api/proxy/cp_material_subscribers.php?action=delete_single&sub_id=${subId}`, {
-        method: 'DELETE',
-        cache: 'no-store'
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'فشل الحذف');
-      
-      setSubscribers(prev => prev.filter(s => s.sub_id !== subId));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
-    }
-  };
-
-  const filteredSubscribers = subscribers.filter(sub => 
-    (sub.name && sub.name.toLowerCase().includes(searchSubscribersQuery.toLowerCase())) ||
-    (sub.phone && sub.phone.includes(searchSubscribersQuery))
-  );
-
-  const handleOpenNotificationModal = (item: MaterialItem) => {
-    setSelectedMaterialId(item.id!);
-    setSelectedMaterialName(item.material_name);
-    setNotificationTitle('');
-    setNotificationBody('');
-    setShowNotificationModal(true);
-  };
-
-  const handleSendNotification = async () => {
-    if (!notificationTitle.trim() || !notificationBody.trim()) {
-      alert('الرجاء إدخال عنوان ونص الإشعار');
-      return;
-    }
-    
-    setIsSendingNotification(true);
-    try {
-      const response = await fetch('/api/proxy/cp_material_subscribers.php?action=send_notification', {
+      setIsLoading(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          material_id: selectedMaterialId,
-          title: notificationTitle,
-          body: notificationBody
+          user_id: statusChangeModal.bill.user_id,
+          title: statusChangeModal.notifTitle,
+          body: statusChangeModal.notifBody,
+          url1: '',
+          note1: ''
         })
       });
       const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      if (!data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      alert('تم إرسال الإشعار بنجاح!');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ');
+    } finally {
+      setIsLoading(false);
+      setStatusChangeModal(prev => ({ ...prev, open: false }));
+    }
+  };
+const addDetail = () => {
+    if (!editingBill || !newDetail.m_id || newDetail.m_price <= 0) return;
+
+    const material = materials.find(m => m.id === newDetail.m_id);
+    const detailToAdd = {
+      ...newDetail,
+      billId: editingBill.billId,
+      m_name: material?.m_name || ''
+    };
+
+    setEditingBill(prev => ({
+      ...prev!,
+      details: [...(prev?.details || []), detailToAdd]
+    }));
+
+    // Update total
+    const newTotal = parseFloat(editingBill.total || '0') + newDetail.m_price;
+    setEditingBill(prev => ({
+      ...prev!,
+      total: newTotal.toString()
+    }));
+
+    // Reset new detail form
+    setNewDetail({
+      billId: editingBill.billId,
+      m_id: 0,
+      m_price: 0,
+      status: 'active'
+    });
+  };
+
+  const removeDetail = (index: number) => {
+    if (!editingBill || !editingBill.details) return;
+
+    const detailToRemove = editingBill.details[index];
+    const newDetails = [...editingBill.details];
+    newDetails.splice(index, 1);
+
+    setEditingBill(prev => ({
+      ...prev!,
+      details: newDetails,
+      total: (parseFloat(prev?.total || '0') - detailToRemove.m_price).toString()
+    }));
+  };
+
+  const toggleRow = async (billId: number) => {
+    // If the row is already expanded, just toggle it
+    if (expandedRows[billId]) {
+      setExpandedRows(prev => ({ ...prev, [billId]: !prev[billId] }));
+      return;
+    }
+
+    // If the row is not expanded, fetch details first
+    try {
+      setIsLoading(true);
+      const bill = bills.find(b => b.id === billId);
+      if (!bill) return;
+
+      // If details are already loaded, just toggle the row
+      if (bill.details) {
+        setExpandedRows(prev => ({ ...prev, [billId]: !prev[billId] }));
+        return;
+      }
+
+      // Fetch details from API
+      const details = await fetchBillDetails(bill.billId);
+
+      // Update the bill with details
+      setBills(prev => prev.map(b =>
+        b.id === billId ? { ...b, details } : b
+      ));
+
+      // Expand the row
+      setExpandedRows(prev => ({ ...prev, [billId]: true }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب التفاصيل');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // دوال معالجة الاشتراكات المجانية
+  const openSubscriptionModal = (materialid: number, materialName: string, userId: number) => {
+    setSubscriptionData({
+      userid: userId,
+      materialid: materialid,
+      materialName: materialName,
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+    setIsSubscriptionModalOpen(true);
+  };
+
+  const closeSubscriptionModal = () => {
+    setIsSubscriptionModalOpen(false);
+    setSubscriptionData({
+      userid: 0,
+      materialid: 0,
+      materialName: '',
+      subscriptionTypes: {
+        mokarar: false,
+        quiz: false,
+        voice: false
+      }
+    });
+  };
+
+  const handleSubscriptionSubmit = async () => {
+    // التحقق من البيانات
+    if (!subscriptionData.userid || subscriptionData.userid <= 0) {
+      alert('معرف المستخدم غير صحيح');
+      return;
+    }
+
+    const { mokarar, quiz, voice } = subscriptionData.subscriptionTypes;
+    if (!mokarar && !quiz && !voice) {
+      alert('يرجى اختيار نوع واحد على الأقل من الاشتراكات');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // التحقق من أن realMaterials هو array
+      if (!Array.isArray(realMaterials) || realMaterials.length === 0) {
+        alert('لم يتم تحميل بيانات المواد بعد. يرجى المحاولة مرة أخرى');
+        setIsLoading(false);
+        return;
+      }
+
+      // البحث عن معرف المادة من Tmaterial باستخدام اسم المادة
+      const realMaterial = realMaterials.find(m => m.material_name === subscriptionData.materialName);
+      if (!realMaterial || !realMaterial.id) {
+        alert('لم يتم العثور على المادة في Tmaterial');
+        return;
+      }
+
+      // إنشاء قائمة بأنواع الاشتراكات المحددة
+      const types: string[] = [];
+      if (mokarar) types.push('مقرر');
+      if (quiz) types.push('اسئلة');
+      if (voice) types.push('صوت');
+
+      // إرسال طلب لكل نوع اشتراك
+      for (const type of types) {
+        const timestamp = Date.now();
+        const response = await fetch(`/api/proxy/add_subscribe.php?refresh=${timestamp}`, {
+          method: 'POST',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({
+            userid: subscriptionData.userid,
+            materialid: realMaterial.id,
+            type: type,
+            price: 0
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `فشل في إضافة اشتراك ${type}`);
+        }
+      }
+
+      alert(`تم إضافة ${types.length} اشتراك مجاني بنجاح للمستخدم ${subscriptionData.userid}`);
+      closeSubscriptionModal();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'حدث خطأ أثناء إضافة الاشتراك';
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // دوال الدفعة المالية
+// دوال الدفعة المالية
+  const openPaymentModal = (bill: BillItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // التحقق مما إذا كانت الفاتورة قد تم سدادها مسبقاً (أي أن حالتها ليست "بانتظار السداد")
+    if (bill.status !== 'pending') {
+      alert('تنبيه: لقد تم سداد هذه الفاتورة مسبقاً أو أنه تم إلغاؤها، لا يمكنك إضافة دفعة مالية جديدة لها.');
+      return; // إيقاف العملية وعدم فتح النافذة
+    }
+
+    setPaymentData({
+      bill_id: bill.id || 0,
+      user_id: bill.user_id,
+      mony: String(bill.total || ''),
+      type: 'deposit',
+      dolar: 'no',
+      note: `دفعة بخصوص الفاتورة رقم ${bill.id}`
+    });
+    setSelectedUserName(bill.name || bill.rec_name);
+    setIsPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => setIsPaymentModalOpen(false);
+
+const handlePaymentSubmit = async () => {
+    if (!paymentData.mony || parseFloat(paymentData.mony) <= 0) {
+      alert('الرجاء إدخال مبلغ صحيح');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      // فصل bill_id لكي لا يتم إرسالها لملف جلب الأموال إذا كان لا يحتاجها
+      const { bill_id, ...payloadData } = paymentData;
+      const payload = {
+        ...payloadData,
+        admin_user: 1
+      };
       
-      alert(`نجاح: ${data.message}`);
-      setShowNotificationModal(false);
+      const response = await fetch('/api/proxy/cp_money.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إضافة الدفعة');
+
+      // تحويل حالة الفاتورة تلقائياً إلى "تم السداد" بناءً على (رقم الفاتورة) الدقيق
+      const billToUpdate = bills.find(b => b.id === paymentData.bill_id);
+      if (billToUpdate && billToUpdate.id) {
+        const timestamp = Date.now();
+        await fetch(`${API_URL}?id=${billToUpdate.id}&refresh=${timestamp}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ ...billToUpdate, status: 'paid' })
+        });
+        
+        // تحديث البيانات في الجدول فوراً
+        fetchData();
+
+        // فتح مودال تأكيد الإشعار لتنبيه الطالب بأنه تم السداد
+        const typeStr = String(billToUpdate.delv_type || '').toLowerCase();
+        const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
+        const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+        const notif = generateNotifForStatus(billToUpdate, 'paid', variant);
+        
+        setStatusChangeModal({
+          open: true,
+          bill: billToUpdate,
+          newStatus: 'paid',
+          notifTitle: notif.title,
+          notifBody: notif.body,
+          trackingNumber: '',
+          deliveryDate: '',
+          deliveryTime: '11:00',
+          notifVariant: variant
+        });
+      }
+
+      closePaymentModal();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
-      setIsSendingNotification(false);
+      setIsLoading(false);
+    }
+  };
+
+// دوال الإشعارات
+const openNotifModal = (bill: BillItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const typeStr = String(bill.delv_type || '').toLowerCase();
+const isShipping = typeStr.includes('شحن') || typeStr.includes('shipping') || typeStr.includes('express');
+    const variant: 'delivery' | 'shipping' = isShipping ? 'shipping' : 'delivery';
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+    const dayName = tomorrow.toLocaleDateString('ar-SA', { weekday: 'long' });
+    const dateStr = tomorrow.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+    const notif = generateNotifForStatus(bill, bill.status, variant);
+    setStatusChangeModal({
+      open: true,
+      bill: bill,
+      newStatus: bill.status,
+      notifTitle: notif.title,
+      notifBody: notif.body,
+      trackingNumber: '',
+      deliveryDate: `${dayName} ${dateStr}`,
+      deliveryTime: '11:00',
+      notifVariant: variant
+    });
+  };
+
+  const closeNotifModal = () => setIsNotifModalOpen(false);
+
+  const handleNotifSubmit = async () => {
+    if (!notifData.title || !notifData.body) {
+      alert('الرجاء تعبئة العنوان والمحتوى');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/proxy/cp_notifications.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifData)
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'فشل إرسال الإشعار');
+      alert('تم إرسال الإشعار بنجاح!');
+      closeNotifModal();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -444,768 +878,1026 @@ const [showAddModal, setShowAddModal] = useState(false);
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md mx-auto" role="alert">
         <p className="font-bold">خطأ</p>
         <p>{error}</p>
-        <button
-          onClick={() => setError('')}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          المحاولة مرة أخرى
-        </button>
       </div>
     </div>
   );
 
+  // --- Summary Calculations ---
+const billsStats = {
+    total: bills.length,
+    pending: bills.filter(b => b.status === 'pending').length,
+    paid: bills.filter(b => b.status === 'paid').length,
+processing: bills.filter(b => b.status === 'processing').length,
+    packing: bills.filter(b => b.status === 'packing').length,
+    waiting_pickup: bills.filter(b => b.status === 'waiting_pickup').length,
+    completed: bills.filter(b => b.status === 'completed').length,
+    cancelled: bills.filter(b => b.status === 'cancelled').length,
+  };
+
+  const materialsToPrint: Record<string, number> = {};
+  bills.filter(b => b.status === 'processing').forEach(bill => {
+    if (bill.details) {
+      bill.details.forEach(detail => {
+        if (detail.m_name) {
+          materialsToPrint[detail.m_name] = (materialsToPrint[detail.m_name] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  const materialsToPrintArray = Object.entries(materialsToPrint).map(([name, count]) => ({
+    name, count
+  })).sort((a, b) => b.count - a.count);
+  // ----------------------------
+
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b bg-amber-50">
-              <h3 className="text-lg font-bold text-amber-800 flex items-center">
-                إرسال إشعار لمشتركي المادة
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-gray-800">إدارة الفواتير</h1>
+        </div>
+
+        {/* Dashboard Summary Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-700 mb-4">ملخص الإحصائيات</h2>
+          
+{/* Status Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3 mb-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">📋</div>
+              <div className="text-blue-500 text-xs font-bold mb-1">الإجمالي</div>
+              <div className="text-2xl font-bold text-blue-800">{billsStats.total}</div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">⏳</div>
+              <div className="text-yellow-700 text-xs font-bold mb-1">بانتظار السداد</div>
+              <div className="text-2xl font-bold text-yellow-800">{billsStats.pending}</div>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">💳</div>
+              <div className="text-emerald-700 text-xs font-bold mb-1">تم السداد</div>
+              <div className="text-2xl font-bold text-emerald-800">{billsStats.paid}</div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">🖨️</div>
+              <div className="text-blue-700 text-xs font-bold mb-1">قيد الطباعة</div>
+              <div className="text-2xl font-bold text-blue-800">{billsStats.processing}</div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">📦</div>
+              <div className="text-purple-700 text-xs font-bold mb-1">قيد التجهيز</div>
+              <div className="text-2xl font-bold text-purple-800">{billsStats.packing}</div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">🚚</div>
+              <div className="text-orange-700 text-xs font-bold mb-1">بانتظار الاستلام</div>
+              <div className="text-2xl font-bold text-orange-800">{billsStats.waiting_pickup}</div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">✅</div>
+              <div className="text-green-700 text-xs font-bold mb-1">مكتملة</div>
+              <div className="text-2xl font-bold text-green-800">{billsStats.completed}</div>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center shadow-sm">
+              <div className="text-lg mb-1">❌</div>
+              <div className="text-red-600 text-xs font-bold mb-1">ملغاة</div>
+              <div className="text-2xl font-bold text-red-800">{billsStats.cancelled}</div>
+            </div>
+          </div>
+
+          {/* Materials needed to print */}
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex items-center justify-between">
+              <h3 className="text-md font-semibold text-gray-800 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                المواد المطلوب طباعتها (للفواتير قيد المعالجة)
               </h3>
+              <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                {materialsToPrintArray.length} مواد مختلفة
+              </span>
+            </div>
+            <div className="p-0 overflow-x-auto max-h-60 overflow-y-auto">
+              {materialsToPrintArray.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-white sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسخ المطلوبة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {materialsToPrintArray.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition">
+                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                          <span className="font-bold text-gray-800">{item.count}</span> نسخة
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  لا توجد فواتير قيد المعالجة تتطلب طباعة في الوقت الحالي.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+{/* إعدادات التحويل البنكي ورقم المندوب */}
+        <div className="mb-4">
+          <button
+            onClick={() => setIsBankSettingsOpen(prev => !prev)}
+            className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl border border-gray-200 transition mb-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            إعدادات بيانات التحويل ورقم المندوب
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isBankSettingsOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+          {isBankSettingsOpen && (
+            <div className="bg-amber-50 border border-[#c4a900]/30 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">بيانات حسابات التحويل البنكي</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={bankAccounts}
+                  onChange={(e) => setBankAccounts(e.target.value)}
+                  placeholder="1- اسم البنك / رقم الحساب&#10;2- اسم البنك / رقم الحساب"
+                />
+                <p className="text-xs text-gray-500 mt-1">تُرسل هذه البيانات تلقائياً في إشعار طلب السداد</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">رقم هاتف مندوب التوصيل</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={deliveryAgentPhone}
+                  onChange={(e) => setDeliveryAgentPhone(e.target.value)}
+                  placeholder="مثال: 0999999999"
+                />
+                <p className="text-xs text-gray-500 mt-1">يُدرج تلقائياً في إشعار بانتظار الاستلام</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Filter Section */}
+        <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-bold text-gray-700">فلترة حسب الحالة:</span>
+            <select
+              className="px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">الكل</option>
+              <option value="pending">⏳ بانتظار السداد</option>
+              <option value="paid">💳 تم السداد</option>
+<option value="processing">🖨️ قيد الطباعة</option>
+              <option value="packing">📦 قيد التجهيز للإرسال</option>
+              <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+              <option value="completed">✅ مكتمل</option>
+              <option value="cancelled">❌ ملغي</option>
+            </select>
+          </div>
+        </div>
+
+
+        {/* Modal for Edit */}
+        {editingBill && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-4xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  تعديل الفاتورة
+                </h2>
+                <button
+                  onClick={() => setEditingBill(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">رقم الفاتورة</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.billId}
+                      readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">حالة الفاتورة</label>
+                    <select
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] transition-all"
+                      value={editingBill.status}
+                      onChange={(e) => setEditingBill({ ...editingBill, status: e.target.value })}
+                      required
+                    >
+                      <option value="pending">⏳ بانتظار السداد</option>
+                      <option value="paid">💳 تم السداد</option>
+                      <option value="processing">🖨️ قيد الطباعة</option>
+                      <option value="packing">📦 قيد التجهيز للإرسال</option>
+                      {!(String(editingBill.delv_type || '').toLowerCase().includes('شحن') || String(editingBill.delv_type || '').toLowerCase().includes('shipping')) && (
+                        <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+                      )}
+                      <option value="completed">✅ مكتمل</option>
+                      <option value="cancelled">❌ ملغي</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">معرف المستخدم</label>
+                    <input
+                      type="number"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.user_id}
+                      onChange={(e) => setEditingBill({ ...editingBill, user_id: parseInt(e.target.value) })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">نوع التوصيل</label>
+                    <select
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.delv_type}
+                      onChange={(e) => setEditingBill({ ...editingBill, delv_type: e.target.value })}
+                      required
+                    >
+                      <option value="">اختر نوع التوصيل</option>
+                      <option value="standard">توصيل عادي</option>
+                      <option value="express">توصيل سريع</option>
+                      <option value="pickup">استلام من المتجر</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.delv_price}
+                      onChange={(e) => setEditingBill({ ...editingBill, delv_price: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستلم</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.rec_name}
+                      onChange={(e) => setEditingBill({ ...editingBill, rec_name: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">هاتف المستلم</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.rec_phone}
+                      onChange={(e) => setEditingBill({ ...editingBill, rec_phone: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">المجموع</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={editingBill.total}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
+                  <textarea
+                    rows={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={editingBill.note}
+                    onChange={(e) => setEditingBill({ ...editingBill, note: e.target.value })}
+                  />
+                </div>
+
+                {/* Bill Details Section */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">تفاصيل الفاتورة</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">المادة</label>
+                      <select
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={newDetail.m_id}
+                        onChange={(e) => setNewDetail({ ...newDetail, m_id: parseInt(e.target.value) })}
+                      >
+                        <option value="0">اختر مادة</option>
+                        {materials.map(material => (
+                          <option key={material.id} value={material.id}>{material.m_name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">السعر</label>
+                      <input
+                        type="number"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                        value={newDetail.m_price}
+                        onChange={(e) => setNewDetail({ ...newDetail, m_price: parseFloat(e.target.value) })}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={addDetail}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+                      >
+                        إضافة مادة
+                      </button>
+                    </div>
+                  </div>
+
+                  {editingBill.details && editingBill.details.length > 0 && (
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراء</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {editingBill.details.map((detail, index) => (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">{detail.m_name}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">{detail.m_price}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm text-gray-900">{detail.status}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button
+                                  onClick={() => removeDetail(index)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  حذف
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingBill(null)}
+                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    حفظ التغييرات
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Data Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-500">
+              <tr>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider"></th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">رقم الفاتورة</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المستخدم</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المستلم</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">رقم المستلم</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">سعر التوصيل</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المجموع</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredBills.map((bill) => (
+                <Fragment key={bill.id}>
+                  <tr
+                    className={`transition cursor-pointer hover:brightness-95`}
+onClick={() => bill.id && toggleRow(bill.id)}
+                  >
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={`h-5 w-5 transform transition-transform ${expandedRows[bill.id!] ? 'rotate-180' : ''}`}
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm font-medium text-gray-900">{bill.id}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.name}</div>
+  <div className="text-sm text-gray-500">{bill.phone}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.rec_name}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.rec_phone}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm text-gray-900">{bill.delv_price}</div>
+</td>
+                    <td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <div className="text-sm font-medium text-gray-900">{bill.total}</div>
+</td>
+<td className={`px-6 py-4 whitespace-nowrap ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+  <select
+    className={`px-2 py-1 text-xs font-bold rounded-xl border ${STATUS_MAP[bill.status]?.color || 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                        value={bill.status}
+                        onChange={(e) => bill.id && updateBillStatus(bill.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <option value="pending">⏳ بانتظار السداد</option>
+    <option value="paid">💳 تم السداد</option>
+    <option value="processing">🖨️ قيد الطباعة</option>
+    <option value="packing">📦 قيد التجهيز للإرسال</option>
+    {!(String(bill.delv_type || '').toLowerCase().includes('شحن') || String(bill.delv_type || '').toLowerCase().includes('shipping')) && (
+      <option value="waiting_pickup">🚚 بانتظار الاستلام</option>
+    )}
+    <option value="completed">✅ مكتمل</option>
+    <option value="cancelled">❌ ملغي</option>
+                      </select>
+                    </td>
+
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${STATUS_MAP[bill.status]?.rowBg || 'bg-white'}`}>
+                     <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={(e) => openPaymentModal(bill, e)}
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                          title="إضافة دفعة مالية"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          دفعة
+                        </button>
+
+                        <button
+                          onClick={(e) => openNotifModal(bill, e)}
+                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                          title="إرسال إشعار"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                          </svg>
+                          إشعار
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (bill.id) handleDelete(bill.id);
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          حذف
+                        </button>
+                      </div>
+
+                    </td>
+                  </tr>
+                  {expandedRows[bill.id!] && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={9} className="px-6 py-4">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                            <div>
+                              <h4 className="font-medium text-red-500 mb-2">معلومات التوصيل</h4>
+                              <div className="space-y-2">
+                                <p className="text-sm"><span className="font-medium">نوع التوصيل:</span> {bill.delv_type}</p>
+                                <p className="text-sm"><span className="font-medium">العنوان:</span> {bill.address}</p>
+
+                                <p className="text-sm"><span className="font-medium">اسم المستلم:</span> {bill.rec_name}</p>
+                                <p className="text-sm"><span className="font-medium">رقم المستلم:</span> {bill.rec_phone}</p>
+                                <p className="text-sm"><span className="font-medium">ملاحظات:</span> {bill.note || 'لا توجد ملاحظات'}</p>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                              <h4 className="font-medium text-red-500 mb-2">تفاصيل الفاتورة</h4>
+                              {bill.details && bill.details.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                      {bill.details.map((detail, index) => (
+                                        <tr key={index}>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">{index + 1}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_name}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{detail.m_price}</td>
+                                          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (detail.m_id && bill.user_id) {
+                                                  openSubscriptionModal(detail.m_id, detail.m_name || '', bill.user_id);
+                                                }
+                                              }}
+                                              className="text-green-600 hover:text-green-900 flex items-center text-xs"
+                                              title="إضافة اشتراك مجاني للطالب"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                              </svg>
+                                              اشتراك مجاني
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <p className="text-gray-500">لا توجد تفاصيل متاحة</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredBills.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">لا توجد فواتير</h3>
+            <p className="mt-1 text-sm text-gray-500">لا توجد فواتير تطابق معايير الفلترة المحددة</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal الاشتراكات المجانية */}
+      {isSubscriptionModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إضافة اشتراك مجاني</h2>
               <button
-                onClick={() => setShowNotificationModal(false)}
-                className="text-amber-500 hover:bg-amber-100 p-1 rounded-full transition"
+                onClick={closeSubscriptionModal}
+                className="text-gray-500 hover:text-gray-700"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
-            <div className="p-4 space-y-4">
-              <div className="bg-blue-50 text-blue-800 p-3 rounded-md text-sm mb-4">
-                سيتم إرسال الإشعار لجميع المشتركين النشطين في مادة: <span className="font-bold">{selectedMaterialName}</span>
+
+            <div className="space-y-4">
+              {/* عرض معلومات الاشتراك */}
+              <div className="bg-blue-50 p-3 rounded-lg space-y-2">
+                <div>
+                  <p className="text-sm text-gray-600">اسم المادة:</p>
+                  <p className="text-lg font-bold text-blue-800">{subscriptionData.materialName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">معرف المستخدم:</p>
+                  <p className="text-lg font-bold text-blue-800">{subscriptionData.userid}</p>
+                </div>
               </div>
-              
+
+              {/* اختيار أنواع الاشتراكات */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار</label>
-                <input
-                  type="text"
-                  value={notificationTitle}
-                  onChange={(e) => setNotificationTitle(e.target.value)}
-                  placeholder="أدخل عنواناً جذاباً"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">أنواع الاشتراكات *</label>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.mokarar}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          mokarar: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">مقرر</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.quiz}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          quiz: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">اسئلة</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      checked={subscriptionData.subscriptionTypes.voice}
+                      onChange={(e) => setSubscriptionData({
+                        ...subscriptionData,
+                        subscriptionTypes: {
+                          ...subscriptionData.subscriptionTypes,
+                          voice: e.target.checked
+                        }
+                      })}
+                    />
+                    <span className="mr-2 text-sm text-gray-700">صوت</span>
+                  </label>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">نص الإشعار</label>
-                <textarea
-                  value={notificationBody}
-                  onChange={(e) => setNotificationBody(e.target.value)}
-                  placeholder="اكتب المحتوى الذي ترغب بإرساله للطلاب..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
-                ></textarea>
-              </div>
-            </div>
-            
-            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2 rounded-b-lg">
-              <button
-                onClick={() => setShowNotificationModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleSendNotification}
-                disabled={isSendingNotification}
-                className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition flex items-center"
-              >
-                {isSendingNotification ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    جاري الإرسال...
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                    </svg>
-                    إرسال الإشعار
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-{/* Add Material Modal */}
-{showAddModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col">
-      {/* Modal Header */}
-      <div className="flex justify-between items-center p-5 border-b bg-green-50 rounded-t-xl">
-        <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          إضافة مادة جديدة
-        </h3>
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>{/* End Modal Header */}
-
-      {/* Modal Body */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto max-h-[70vh]">
-        {/* كود المادة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">كود المادة <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.material_code || ''}
-            onChange={(e) => handleNewItemChange('material_code', e.target.value)}
-          />
-        </div>
-
-        {/* اسم المادة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">اسم المادة <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.material_name || ''}
-            onChange={(e) => handleNewItemChange('material_name', e.target.value)}
-          />
-        </div>
-
-        {/* الفئة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">الفئة</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.category_id || 0}
-            onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
-          >
-            <option value="0">اختر الفئة</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.category_name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* السنة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.year1 || 1}
-            onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
-          >
-            <option value="1">السنة 1</option>
-            <option value="2">السنة 2</option>
-            <option value="3">السنة 3</option>
-            <option value="4">السنة 4</option>
-          </select>
-        </div>
-
-        {/* عدد الصفحات */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">عدد الصفحات</label>
-          <input
-            type="number"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.page_count || 0}
-            onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
-          />
-        </div>
-
-        {/* سعر المقرر */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر المقرر</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.unit_price || ''}
-            onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر أسئلة تدريبية */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر أسئلة تدريبية</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.quizall_price || ''}
-            onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر ملغى */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر ملغى</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.quiz_price || ''}
-            onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر الصوت */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر الصوت</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.voice_price || ''}
-            onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-          />
-        </div>
-
-        {/* أزرار الحالة */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-3">الحالة</label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'نشط', field: 'active' },
-              { label: 'مقرر', field: 'mokarar_active' },
-              { label: 'كويز', field: 'quiz_active' },
-              { label: 'صوت', field: 'voice_active' },
-            ].map(({ label, field }) => (
-              <div key={field} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-                <span className="text-sm text-gray-700">{label}</span>
+              {/* أزرار الإجراءات */}
+              <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
-                  className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-          (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-        }`}
+                  onClick={closeSubscriptionModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
                 >
-                  <span
-  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-    (newItem as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
-                    }`}
-                  />
+                  إلغاء
                 </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>{/* End Modal Body */}
-
-      {/* Modal Footer */}
-      <div className="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition text-sm"
-        >
-          إلغاء
-        </button>
-        <button
-          onClick={() => { handleAdd(); setShowAddModal(false); }}
-          className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          إضافة المادة
-        </button>
-      </div>{/* End Modal Footer */}
-    </div>
-  </div>
-)}
-{/* End Add Material Modal */}
-
-
-      {/* Subscribers Modal */}
-      {showSubscribersModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                المشتركون في المادة: <span className="text-blue-600 mr-2">{selectedMaterialName}</span>
-                <span className="bg-gray-200 text-gray-700 text-sm py-1 px-2 rounded-full mr-3">
-                  {subscribers.length} مشترك
-                </span>
-              </h3>
-              <div className="flex items-center gap-3">
-                {subscribers.length > 0 && !isSubscribersLoading && (
-                  <button
-                    onClick={handleDeleteAllSubscribers}
-                    className="flex items-center bg-red-100 text-red-600 hover:bg-red-200 px-3 py-1.5 rounded transition text-sm font-medium"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    حذف جميع المشتركين
-                  </button>
-                )}
                 <button
-                  onClick={() => setShowSubscribersModal(false)}
-                  className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-200"
+                  type="button"
+                  onClick={handleSubscriptionSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                  disabled={isLoading}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
+                  {isLoading ? 'جاري الإضافة...' : 'إضافة اشتراك'}
                 </button>
               </div>
-            </div>
-            {/* Search Input */}
-            <div className="p-4 border-b bg-white border-gray-100 flex-shrink-0">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="ابحث عن مشترك بالاسم أو رقم الهاتف..."
-                  value={searchSubscribersQuery}
-                  onChange={(e) => setSearchSubscribersQuery(e.target.value)}
-                  className="w-full px-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-right"
-                  dir="rtl"
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 overflow-y-auto flex-1 text-right" dir="rtl">
-              {isSubscribersLoading ? (
-                <div className="flex justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : filteredSubscribers.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الهاتف</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدينة</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الاشتراك</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ المدفوع</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الاشتراك</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredSubscribers.map((sub) => (
-                        <tr key={sub.sub_id} className="hover:bg-gray-50 group">
-                          <td className="px-4 py-3 text-sm text-gray-900 font-medium">{sub.name}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600" dir="ltr">{sub.phone}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{sub.city || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs whitespace-nowrap">
-                              {sub.type1 == '1' ? 'مقرر' : sub.type1 == '2' ? 'أسئلة' : sub.type1 == '3' ? 'باقات' : sub.type1}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-green-600 font-bold whitespace-nowrap">{sub.price1}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap" dir="ltr">{new Date(sub.created_at).toLocaleDateString('ar-EG')}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <button
-                              onClick={() => handleDeleteSubscriber(sub.sub_id)}
-                              className="text-red-500 hover:text-white hover:bg-red-500 p-1.5 rounded transition opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center"
-                              title="حذف المشترك"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : subscribers.length > 0 ? (
-                <div className="text-center p-8 text-gray-500">لا يوجد متطابق في نتائج البحث</div>
-              ) : (
-                <div className="text-center p-8 text-gray-500">لا يوجد مشتركون في هذه المادة حالياً</div>
-              )}
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        {/* العنوان وقوائم التصفية في سطر واحد */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <h1 className="text-3xl font-bold text-gray-800">إدارة المواد</h1>
-<button
-  onClick={() => setShowAddModal(true)}
-  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-medium shadow"
->
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-  </svg>
-  إضافة مادة جديدة
-</button>
-
-            {/* قائمة تصفية الفئات */}
-            <div className="relative">
-              <select
-                className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+{/* Modal إضافة الدفعة المالية */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md relative z-10">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إضافة دفعة مالية</h2>
+              <button
+                onClick={closePaymentModal}
+                className="text-gray-500 hover:text-gray-700"
               >
-                <option value="all">جميع الفئات</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>{category.category_name}</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </div>
+              </button>
             </div>
 
-            {/* قائمة تصفية السنة */}
-            <div className="relative">
-              <select
-                className="appearance-none px-4 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-              >
-                <option value="all">جميع السنوات</option>
-                <option value="1">السنة الأولى</option>
-                <option value="2">السنة الثانية</option>
-                <option value="3">السنة الثالثة</option>
-                <option value="4">السنة الرابعة</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+            <div className="space-y-4">
+              <div className="bg-green-50 p-3 rounded-lg text-sm text-gray-700">
+                إضافة دفعة للعميل: <span className="font-bold">{selectedUserName}</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  value={paymentData.mony}
+                  onChange={(e) => setPaymentData({ ...paymentData, mony: e.target.value })}
+                  placeholder="أدخل المبلغ"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">نوع العملية</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    value={paymentData.type}
+                    onChange={(e) => setPaymentData({ ...paymentData, type: e.target.value })}
+                  >
+                    <option value="deposit">إيداع (دفعة مقدمة)</option>
+                    <option value="withdraw">سحب</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">العملة</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                    value={paymentData.dolar}
+                    onChange={(e) => setPaymentData({ ...paymentData, dolar: e.target.value })}
+                  >
+                    <option value="no">محلي (سوري)</option>
+                    <option value="yes">دولار أمريكي</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">الملاحظات / البيان</label>
+                <textarea
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  value={paymentData.note}
+                  onChange={(e) => setPaymentData({ ...paymentData, note: e.target.value })}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closePaymentModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePaymentSubmit}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري الحفظ...' : 'حفظ الدفعة'}
+                </button>
               </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Data Table */}
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-800">
-              <tr>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المادة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">التصنيف</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الأسعار</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-
-              {/* Data rows */}
-              {filteredData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
-                  {/* معلومات المادة */}
-                  <td className="px-4 py-4">
-                    {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.material_code}
-                          onChange={(e) => handleInputChange(item.id!, 'material_code', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.material_name}
-                          onChange={(e) => handleInputChange(item.id!, 'material_name', e.target.value)}
-                        />
-                        <textarea
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.description}
-                          onChange={(e) => handleInputChange(item.id!, 'description', e.target.value)}
-                          rows={2}
-                        />
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{item.material_code}</div>
-                        <div className="text-sm font-semibold text-gray-800">{item.material_name}</div>
-                        <div className="text-xs text-gray-500 mt-1 line-clamp-2">{item.description}</div>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* التصنيف والمعلومات الأساسية */}
-                  <td className="px-4 py-4">
-                    {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <select
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.category_id}
-                          onChange={(e) => handleInputChange(item.id!, 'category_id', parseInt(e.target.value))}
-                        >
-                          {categories.map(category => (
-                            <option key={category.id} value={category.id}>{category.category_name}</option>
-                          ))}
-                        </select>
-                        <select
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.year1}
-                          onChange={(e) => handleInputChange(item.id!, 'year1', parseInt(e.target.value))}
-                        >
-                          <option value="1">السنة 1</option>
-                          <option value="2">السنة 2</option>
-                          <option value="3">السنة 3</option>
-                          <option value="4">السنة 4</option>
-                        </select>
-                        <input
-                          type="number"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.page_count}
-                          onChange={(e) => handleInputChange(item.id!, 'page_count', parseInt(e.target.value) || 0)}
-                        />
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">الفئة:</span> {item.category_name}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">السنة:</span> {item.year1}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">الصفحات:</span> {item.page_count}
-                        </div>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* الأسعار */}
-                  <td className="px-4 py-4">
-                    {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">المقرر:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.unit_price}
-                            onChange={(e) => handleInputChange(item.id!, 'unit_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">اسئلة تدريبية:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.quizall_price}
-                            onChange={(e) => handleInputChange(item.id!, 'quizall_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">ملغى:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.quiz_price}
-                            onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">الصوت:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.voice_price}
-                            onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">المقرر:</span> {item.unit_price}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">الصوت:</span> {item.voice_price}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">ملغى:</span> {item.quiz_price}
-                        </div>
-                      </div>
-                    )}
-                  </td>
-
-                  {/* الحالة */}
-                  <td className="px-4 py-4">
-                    {editingId === item.id ? (
-                      <div className="space-y-3">
-  {[
-    { label: 'نشط', field: 'active' },
-    { label: 'مقرر', field: 'mokarar_active' },
-    { label: 'كويز', field: 'quiz_active' },
-    { label: 'صوت', field: 'voice_active' },
-  ].map(({ label, field }) => (
-    <div key={field} className="flex items-center gap-2">
-      <span className="text-xs text-gray-600">{label}:</span>
-      <button
-        type="button"
-        onClick={async () => {
-          const newVal = (item as any)[field] === 1 ? 0 : 1;
-          handleInputChange(item.id!, field, newVal);
-          try {
-            const url = `${API_URL}?id=${item.id}&refresh=${Date.now()}`;
-            await fetch(url, {
-              method: 'PUT',
-              cache: 'no-store',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...item, [field]: newVal }),
-            });
-          } catch (err) {
-            console.error('Toggle save error:', err);
-          }
-        }}
-        className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                    (item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-                  }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-            (item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
-  ))}
-</div>
-                    ) : (
-                      <div className="space-y-3">
-                        {[
-                          { label: 'نشط', field: 'active' },
-                          { label: 'مقرر', field: 'mokarar_active' },
-                          { label: 'كويز', field: 'quiz_active' },
-                          { label: 'صوت', field: 'voice_active' },
-                        ].map(({ label, field }) => (
-                          <div key={field} className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-gray-600">{label}:</span>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const newVal = (item as any)[field] === 1 ? 0 : 1;
-                                handleInputChange(item.id!, field, newVal);
-                                try {
-                                  await fetch(`${API_URL}?id=${item.id}&refresh=${Date.now()}`, {
-                                    method: 'PUT',
-                                    cache: 'no-store',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ ...item, [field]: newVal }),
-                                  });
-                                } catch (err) {
-                                  console.error('Toggle save error:', err);
-                                }
-                              }}
-                             className={`relative inline-flex h-6 w-11 flex-shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'}`}
-                            >
-                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* الإجراءات */}
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex flex-col space-y-2">
-                      {editingId === item.id ? (
-                        <>
-                          <button
-                            onClick={() => handleSave(item)}
-                            className="text-green-600 hover:text-green-900 flex items-center justify-center text-xs p-2 border border-green-600 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            حفظ
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="text-gray-600 hover:text-gray-900 flex items-center justify-center text-xs p-2 border border-gray-600 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                            إلغاء
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleEdit(item.id!)}
-                            className="text-yellow-600 hover:text-yellow-900 flex items-center justify-center text-xs p-2 border border-yellow-600 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                            تعديل
-                          </button>
-                          <button
-                            onClick={() => item.id && handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-900 flex items-center justify-center text-xs p-2 border border-red-600 rounded"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            حذف
-                          </button>
-                          <button
-                            onClick={() => item.id && handleViewSubscribers(item)}
-                            className="text-blue-600 hover:text-blue-900 flex items-center justify-center text-xs p-2 border border-blue-600 rounded"
-                            title="عرض المستخدمين المشتركين بالمادة"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                            </svg>
-                            المشتركون
-                          </button>
-                          <button
-                            onClick={() => item.id && handleOpenNotificationModal(item)}
-                            className="text-amber-600 hover:text-amber-900 flex items-center justify-center text-xs p-2 border border-amber-600 rounded"
-                            title="إرسال إشعار لمشتركي هذه المادة"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                            </svg>
-                            إشعار
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredData.length === 0 && !isLoading && (
-          <div className="text-center py-12">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">لا توجد مواد</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {selectedCategory === 'all' && selectedYear === 'all'
-                ? 'ابدأ بإضافة مادة جديدة من الصف الأول في الجدول'
-                : 'لا توجد مواد تطابق معايير التصفية المحددة'}
-            </p>
+{/* Modal تأكيد إرسال الإشعار عند تغيير الحالة */}
+      {statusChangeModal.open && statusChangeModal.bill && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden">
+            <div className="bg-blue-100 text-blue-900 px-6 py-4 flex items-center justify-between border-b border-blue-200">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                <span className="font-extrabold text-base">هل تريد إرسال إشعار للطالب؟</span>
+              </div>
+              <button onClick={() => setStatusChangeModal(prev => ({ ...prev, open: false }))} className="text-blue-700 hover:text-blue-900">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* اختيار نوع الإشعار لحالتي packing و completed */}
+              {(statusChangeModal.newStatus === 'packing' || statusChangeModal.newStatus === 'completed') && (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-700">نوع التوصيل:</span>
+                  <button
+                    onClick={() => {
+                      const notif = generateNotifForStatus(statusChangeModal.bill!, statusChangeModal.newStatus, 'delivery');
+                      setStatusChangeModal(prev => ({ ...prev, notifVariant: 'delivery', notifTitle: notif.title, notifBody: notif.body }));
+                    }}
+                    className={`px-4 py-2 rounded-xl font-bold text-sm border transition ${statusChangeModal.notifVariant === 'delivery' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}`}
+                  >🚚 توصيل</button>
+                  <button
+                    onClick={() => {
+                      const notif = generateNotifForStatus(statusChangeModal.bill!, statusChangeModal.newStatus, 'shipping');
+                      setStatusChangeModal(prev => ({ ...prev, notifVariant: 'shipping', notifTitle: notif.title, notifBody: notif.body }));
+                    }}
+                    className={`px-4 py-2 rounded-xl font-bold text-sm border transition ${statusChangeModal.notifVariant === 'shipping' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'}`}
+                  >📦 شحن</button>
+                </div>
+              )}
+              {/* رقم التتبع لحالة completed شحن */}
+              {statusChangeModal.newStatus === 'completed' && statusChangeModal.notifVariant === 'shipping' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1.5">رقم التتبع</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                    value={statusChangeModal.trackingNumber}
+                    onChange={(e) => {
+                      const tn = e.target.value;
+                      setStatusChangeModal(prev => {
+                        const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { trackingNumber: tn });
+                        return { ...prev, trackingNumber: tn, notifBody: notif.body };
+                      });
+                    }}
+                    placeholder="أدخل رقم تتبع الشحنة"
+                  />
+                </div>
+              )}
+              {/* تعديل تاريخ ووقت التسليم لحالة waiting_pickup */}
+              {statusChangeModal.newStatus === 'waiting_pickup' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">اليوم والتاريخ</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                      value={statusChangeModal.deliveryDate}
+                      onChange={(e) => {
+                        const dd = e.target.value;
+                        setStatusChangeModal(prev => {
+                          const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { deliveryDate: dd, deliveryTime: prev.deliveryTime });
+                          return { ...prev, deliveryDate: dd, notifBody: notif.body };
+                        });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1.5">الساعة</label>
+                    <input
+                      type="time"
+                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                      value={statusChangeModal.deliveryTime}
+                      onChange={(e) => {
+                        const dt = e.target.value;
+                        setStatusChangeModal(prev => {
+                          const notif = generateNotifForStatus(prev.bill!, prev.newStatus, prev.notifVariant, { deliveryDate: prev.deliveryDate, deliveryTime: dt });
+                          return { ...prev, deliveryTime: dt, notifBody: notif.body };
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">عنوان الإشعار</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={statusChangeModal.notifTitle}
+                  onChange={(e) => setStatusChangeModal(prev => ({ ...prev, notifTitle: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">نص الإشعار (قابل للتعديل)</label>
+                <textarea
+                  rows={6}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]"
+                  value={statusChangeModal.notifBody}
+                  onChange={(e) => setStatusChangeModal(prev => ({ ...prev, notifBody: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setStatusChangeModal(prev => ({ ...prev, open: false }))}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                >
+                  تخطي
+                </button>
+                <button
+                  onClick={handleStatusNotifSend}
+                  disabled={isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Modal إرسال الإشعار */}
+      {isNotifModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">إرسال إشعار للمستخدم</h2>
+              <button
+                onClick={closeNotifModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg text-sm text-gray-700">
+                إرسال إشعار للعميل: <span className="font-bold">{selectedUserName}</span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">عنوان الإشعار *</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={notifData.title}
+                  onChange={(e) => setNotifData({ ...notifData, title: e.target.value })}
+                  placeholder="مثال: تم شحن طلبك"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">محتوى الإشعار (الرسالة) *</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={notifData.body}
+                  onChange={(e) => setNotifData({ ...notifData, body: e.target.value })}
+                  placeholder="نص الرسالة المرسلة..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">رابط مرفق (اختياري)</label>
+                <input
+                  type="url"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-left"
+                  value={notifData.url1}
+                  onChange={(e) => setNotifData({ ...notifData, url1: e.target.value })}
+                  dir="ltr"
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeNotifModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNotifSubmit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'جاري الإرسال...' : 'إرسال الإشعار'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
-} 
+}
 
