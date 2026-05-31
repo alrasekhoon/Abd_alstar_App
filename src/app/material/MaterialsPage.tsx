@@ -603,13 +603,6 @@ const handleNewItemChange = (field: string, value: string | number) => {
               <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.material_name_print || ''} onChange={(e) => handleNewItemChange('material_name_print', e.target.value)} placeholder="الاسم على النسخة المطبوعة" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1.5">الفئة</label>
-              <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.category_id || 0} onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}>
-                <option value="0">اختر الفئة</option>
-                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.category_name}</option>)}
-              </select>
-            </div>
-            <div>
               <label className="block text-sm font-bold text-gray-700 mb-1.5">السنة</label>
               <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.year1 || 1} onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}>
                 {[1,2,3,4].map(y => <option key={y} value={y}>السنة {y}</option>)}
