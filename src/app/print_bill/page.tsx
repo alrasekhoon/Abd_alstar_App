@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useEffect, Fragment } from 'react';
@@ -67,7 +65,9 @@ export default function BillManagement() {
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const knownBillIds = React.useRef<Set<number>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>('all');
-const [materialsPrintFilter, setMaterialsPrintFilter] = useState<string>('all'); // 'all' | اسم مادة
+const [materialsPrintFilter, setMaterialsPrintFilter] = useState<string>('all');
+const [isMaterialsTableOpen, setIsMaterialsTableOpen] = useState<boolean>(true);
+
   // حالة modal الاشتراكات المجانية
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
@@ -993,22 +993,29 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
           </div>
 
           {/* Materials needed to print */}
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex flex-wrap items-center justify-between gap-3">
+<div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div
+              className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none"
+              onClick={() => setIsMaterialsTableOpen(prev => !prev)}
+            >
               <h3 className="text-md font-semibold text-gray-800 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 المواد المطلوب طباعتها
               </h3>
-<div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
                   {filteredMaterialsToPrint.reduce((s, m) => s + m.count, 0)} نسخة إجمالاً
                 </span>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-500 transition-transform ${isMaterialsTableOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </div>
             </div>
-            {/* جدول الحالة */}
-                        <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
+{isMaterialsTableOpen && (
+              <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
+
               {(() => {
                 // حساب القائمة النهائية بعد تطبيق فلتر الحالة الخاص
                 const statusFilterMap: Record<string, { field: keyof typeof materialsToPrintArray[0]; status: string }> = {
@@ -1081,13 +1088,15 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
                   <div className="p-6 text-center text-gray-500 text-sm">
                     لا توجد مواد تطابق الفلتر المحدد.
                   </div>
-                );
+    );
               })()}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
 {/* إعدادات التحويل البنكي ورقم المندوب */}
+
         <div className="mb-4">
           <button
             onClick={() => setIsBankSettingsOpen(prev => !prev)}
@@ -1980,5 +1989,3 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
-
-
