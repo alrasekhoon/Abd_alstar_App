@@ -363,7 +363,7 @@ const handleNewItemChange = (field: string, value: string | number) => {
   };
 
   const handleViewSubscribers = async (item: MaterialItem) => {
-    setSelectedMaterialName(item.material_name);
+    setSelectedMaterialName(item.material_name_elec);
     setSelectedMaterialId(item.id!);
     setSearchSubscribersQuery('');
     setShowSubscribersModal(true);
