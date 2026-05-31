@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
- 
+
 // أنواع البيانات
-type MaterialItem = { 
+type MaterialItem = {
   id?: number;
   category_id: number;
   material_name: string;
@@ -538,7 +538,7 @@ const [showAddModal, setShowAddModal] = useState(false);
 {/* Add Material Modal */}
 {showAddModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-<div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col" dir="rtl">
+    <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col" dir="rtl">
       {/* Modal Header */}
       <div className="flex justify-between items-center p-5 border-b bg-green-50 rounded-t-xl">
         <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
@@ -557,7 +557,7 @@ const [showAddModal, setShowAddModal] = useState(false);
         </button>
       </div>{/* End Modal Header */}
 
-      {/* Modal Body */}
+    {/* Modal Body */}
       <div className="overflow-y-auto max-h-[75vh] flex flex-col">
 
         {/* قسم المعلومات الأساسية */}
@@ -1241,3 +1241,4 @@ const [showAddModal, setShowAddModal] = useState(false);
   );
 } 
 
+ 
