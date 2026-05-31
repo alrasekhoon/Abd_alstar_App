@@ -1043,45 +1043,45 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
 
                 return displayList.length > 0 ? (
                   <table className="min-w-full divide-y divide-gray-200">
-<thead className="bg-white sticky top-0 shadow-sm">
+<thead className="sticky top-0 shadow-sm">
                       <tr>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">⏳ انتظار</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">💳 سداد</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">🖨️ طباعة</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">📦 تجهيز</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">🚚 استلام</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">✅ مكتمل</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">❌ ملغي</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">📋 الكل</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-gray-700">المادة</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-yellow-800  bg-yellow-50">انتظار</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-emerald-800 bg-emerald-50">سداد</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-blue-800    bg-blue-50">طباعة</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-purple-800  bg-purple-50">تجهيز</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-orange-800  bg-orange-50">استلام</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-green-800   bg-green-50">مكتمل</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-red-800     bg-red-50">ملغي</th>
+                        <th className="w-24 py-3 text-center text-sm font-bold text-gray-800    bg-gray-100">الكل</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
                       {displayList.map((item, idx) => (
                         <tr key={idx} className="hover:bg-purple-50 transition cursor-pointer" onClick={() => setMaterialsPrintFilter(item.name === materialsPrintFilter ? 'all' : item.name)}>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm font-bold text-gray-900">{item.name}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.pendingCount > 0    ? <span className="bg-yellow-100  text-yellow-800  font-bold px-2 py-0.5 rounded-lg">{item.pendingCount}</span>    : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.paidCount > 0      ? <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">{item.paidCount}</span>      : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.processingCount > 0? <span className="bg-blue-100    text-blue-800    font-bold px-2 py-0.5 rounded-lg">{item.processingCount}</span> : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.packingCount > 0   ? <span className="bg-purple-100  text-purple-800  font-bold px-2 py-0.5 rounded-lg">{item.packingCount}</span>   : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.waitingCount > 0   ? <span className="bg-orange-100  text-orange-800  font-bold px-2 py-0.5 rounded-lg">{item.waitingCount}</span>   : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.completedCount > 0 ? <span className="bg-green-100   text-green-800   font-bold px-2 py-0.5 rounded-lg">{item.completedCount}</span>  : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.cancelledCount > 0 ? <span className="bg-red-100     text-red-800     font-bold px-2 py-0.5 rounded-lg">{item.cancelledCount}</span>  : <span className="text-gray-300">—</span>}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center"><span className="bg-gray-100 text-gray-800 font-bold px-2 py-0.5 rounded-lg">{item.count}</span></td>
+                          <td className="px-4 py-3 whitespace-nowrap text-base font-bold text-gray-900">{item.name}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-yellow-50/50"> {item.pendingCount > 0    ? <span className="bg-yellow-100  text-yellow-800  font-bold px-2 py-0.5 rounded-lg">{item.pendingCount}</span>    : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-emerald-50/50">{item.paidCount > 0      ? <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">{item.paidCount}</span>      : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-blue-50/50">   {item.processingCount > 0? <span className="bg-blue-100    text-blue-800    font-bold px-2 py-0.5 rounded-lg">{item.processingCount}</span> : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-purple-50/50"> {item.packingCount > 0   ? <span className="bg-purple-100  text-purple-800  font-bold px-2 py-0.5 rounded-lg">{item.packingCount}</span>   : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-orange-50/50"> {item.waitingCount > 0   ? <span className="bg-orange-100  text-orange-800  font-bold px-2 py-0.5 rounded-lg">{item.waitingCount}</span>   : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-green-50/50">  {item.completedCount > 0 ? <span className="bg-green-100   text-green-800   font-bold px-2 py-0.5 rounded-lg">{item.completedCount}</span>  : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-red-50/50">    {item.cancelledCount > 0 ? <span className="bg-red-100     text-red-800     font-bold px-2 py-0.5 rounded-lg">{item.cancelledCount}</span>  : <span className="text-gray-300">—</span>}</td>
+                          <td className="w-24 py-3 whitespace-nowrap text-base text-center bg-gray-50">      <span className="bg-gray-100 text-gray-800 font-bold px-2 py-0.5 rounded-lg">{item.count}</span></td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-gray-50 sticky bottom-0">
+                    <tfoot className="sticky bottom-0">
                       <tr>
-                        <td className="px-4 py-2 text-xs font-bold text-gray-600">الإجمالي</td>
-                        <td className="px-4 py-2 text-xs font-bold text-yellow-700  text-center">{displayList.reduce((s, m) => s + m.pendingCount,    0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-emerald-700 text-center">{displayList.reduce((s, m) => s + m.paidCount,        0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-blue-700    text-center">{displayList.reduce((s, m) => s + m.processingCount,  0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-purple-700  text-center">{displayList.reduce((s, m) => s + m.packingCount,     0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-orange-700  text-center">{displayList.reduce((s, m) => s + m.waitingCount,     0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-green-700   text-center">{displayList.reduce((s, m) => s + m.completedCount,   0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-red-700     text-center">{displayList.reduce((s, m) => s + m.cancelledCount,   0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-gray-700    text-center">{displayList.reduce((s, m) => s + m.count,            0)}</td>
+                        <td className="px-4 py-3 text-sm font-bold text-gray-600">الإجمالي</td>
+                        <td className="w-24 py-3 text-sm font-bold text-yellow-800  text-center bg-yellow-50"> {displayList.reduce((s, m) => s + m.pendingCount,    0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-emerald-800 text-center bg-emerald-50">{displayList.reduce((s, m) => s + m.paidCount,        0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-blue-800    text-center bg-blue-50">   {displayList.reduce((s, m) => s + m.processingCount,  0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-purple-800  text-center bg-purple-50"> {displayList.reduce((s, m) => s + m.packingCount,     0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-orange-800  text-center bg-orange-50"> {displayList.reduce((s, m) => s + m.waitingCount,     0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-green-800   text-center bg-green-50">  {displayList.reduce((s, m) => s + m.completedCount,   0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-red-800     text-center bg-red-50">    {displayList.reduce((s, m) => s + m.cancelledCount,   0)}</td>
+                        <td className="w-24 py-3 text-sm font-bold text-gray-800    text-center bg-gray-100">  {displayList.reduce((s, m) => s + m.count,            0)}</td>
                       </tr>
                     </tfoot>
 
