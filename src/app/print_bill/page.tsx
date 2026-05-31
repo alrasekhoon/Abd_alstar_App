@@ -1001,19 +1001,7 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
                 </svg>
                 المواد المطلوب طباعتها
               </h3>
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* فلتر المادة */}
-                <select
-                  className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  value={materialsPrintFilter}
-                  onChange={(e) => setMaterialsPrintFilter(e.target.value)}
-                >
-                  <option value="all">📚 كل المواد ({materialsToPrintArray.length})</option>
-                  {materialsToPrintArray.map((m, idx) => (
-                    <option key={idx} value={m.name}>{m.name} ({m.count})</option>
-                  ))}
-                </select>
-                {/* شارة الإجمالي */}
+<div className="flex items-center gap-2 flex-wrap">
                 <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
                   {filteredMaterialsToPrint.reduce((s, m) => s + m.count, 0)} نسخة إجمالاً
                 </span>
@@ -1023,14 +1011,14 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
             <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50 flex-wrap">
               <span className="text-xs font-bold text-gray-500">عرض:</span>
               {[
-                { key: 'all',              label: '📋 الكل' },
-                { key: '__pending__',      label: '⏳ بانتظار السداد' },
-                { key: '__paid__',         label: '💳 تم السداد' },
-                { key: '__processing__',   label: '🖨️ قيد الطباعة' },
-                { key: '__packing__',      label: '📦 قيد التجهيز' },
-                { key: '__waiting__',      label: '🚚 بانتظار الاستلام' },
-                { key: '__completed__',    label: '✅ مكتمل' },
-                { key: '__cancelled__',    label: '❌ ملغي' },
+                { key: 'all',              label: 'الكل' },
+                { key: '__pending__',      label: 'بانتظار السداد' },
+                { key: '__paid__',         label: 'تم السداد' },
+                { key: '__processing__',   label: 'قيد الطباعة' },
+                { key: '__packing__',      label: 'قيد التجهيز' },
+                { key: '__waiting__',      label: 'بانتظار الاستلام' },
+                { key: '__completed__',    label: 'مكتمل' },
+                { key: '__cancelled__',    label: 'ملغي' },
               ].map(btn => (
                 <button
                   key={btn.key}
@@ -2014,5 +2002,3 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
-
-
