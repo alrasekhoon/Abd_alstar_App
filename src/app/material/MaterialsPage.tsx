@@ -621,14 +621,10 @@ const [showAddModal, setShowAddModal] = useState(false);
                 <tr>
                   <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">تحديد</th>
                   <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">الفئة</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر المقرر</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">أسئلة تدريبية</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر ملغى</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">سعر الصوت</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">نشط</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">مقرر</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">كويز</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">صوت</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر المقرر + تفعيل</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">أسئلة تدريبية + تفعيل</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر الطباعة + تفعيل</th>
+                  <th className="px-3 py-2.5 text-center text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">سعر الصوت + تفعيل</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 bg-white">
@@ -653,71 +649,93 @@ const [showAddModal, setShowAddModal] = useState(false);
                       {/* اسم الفئة */}
                       <td className="px-3 py-2 font-bold text-gray-700 text-xs whitespace-nowrap">{cat.category_name}</td>
 
-                      {/* سعر المقرر */}
+                      {/* سعر المقرر + تفعيل مقرر */}
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.unit_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-                          placeholder="0"
-                        />
-                      </td>
-
-                      {/* سعر أسئلة تدريبية */}
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.quizall_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-                          placeholder="0"
-                        />
-                      </td>
-
-                      {/* سعر ملغى */}
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.quiz_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                          placeholder="0"
-                        />
-                      </td>
-
-                      {/* سعر الصوت */}
-                      <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.voice_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                          placeholder="0"
-                        />
-                      </td>
-
-                      {/* أزرار التبديل: نشط، مقرر، كويز، صوت */}
-                      {(['active', 'mokarar_active', 'quiz_active', 'voice_active'] as const).map((field) => (
-                        <td key={field} className="px-3 py-2 text-center">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            disabled={!isSelected}
+                            className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                            value={isSelected ? (newItem.unit_price || '') : ''}
+                            onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
+                            placeholder="0"
+                          />
                           <button
                             type="button"
                             disabled={!isSelected}
-                            onClick={() => isSelected && handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
-                            className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
-                              (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-                            }`}
+                            onClick={() => isSelected && handleNewItemChange('mokarar_active', (newItem as any).mokarar_active === 1 ? 0 : 1)}
+                            className={`relative inline-flex h-5 w-10 shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${(newItem as any).mokarar_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
                           >
-                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                              (newItem as any)[field] === 1 ? '-translate-x-5' : '-translate-x-1'
-                            }`} />
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${(newItem as any).mokarar_active === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
                           </button>
-                        </td>
-                      ))}
+                        </div>
+                      </td>
+
+                      {/* سعر أسئلة تدريبية + تفعيل كويز */}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            disabled={!isSelected}
+                            className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                            value={isSelected ? (newItem.quizall_price || '') : ''}
+                            onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
+                            placeholder="0"
+                          />
+                          <button
+                            type="button"
+                            disabled={!isSelected}
+                            onClick={() => isSelected && handleNewItemChange('quiz_active', (newItem as any).quiz_active === 1 ? 0 : 1)}
+                            className={`relative inline-flex h-5 w-10 shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${(newItem as any).quiz_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
+                          >
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${(newItem as any).quiz_active === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* سعر الطباعة + تفعيل نشط */}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            disabled={!isSelected}
+                            className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                            value={isSelected ? (newItem.quiz_price || '') : ''}
+                            onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+                            placeholder="0"
+                          />
+                          <button
+                            type="button"
+                            disabled={!isSelected}
+                            onClick={() => isSelected && handleNewItemChange('active', (newItem as any).active === 1 ? 0 : 1)}
+                            className={`relative inline-flex h-5 w-10 shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${(newItem as any).active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
+                          >
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${(newItem as any).active === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* سعر الصوت + تفعيل صوت */}
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            disabled={!isSelected}
+                            className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                            value={isSelected ? (newItem.voice_price || '') : ''}
+                            onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+                            placeholder="0"
+                          />
+                          <button
+                            type="button"
+                            disabled={!isSelected}
+                            onClick={() => isSelected && handleNewItemChange('voice_active', (newItem as any).voice_active === 1 ? 0 : 1)}
+                            className={`relative inline-flex h-5 w-10 shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${(newItem as any).voice_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
+                          >
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${(newItem as any).voice_active === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -1239,6 +1257,5 @@ const [showAddModal, setShowAddModal] = useState(false);
     </div>
   );
 }
-
 
 
