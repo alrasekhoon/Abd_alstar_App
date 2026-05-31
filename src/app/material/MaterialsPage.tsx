@@ -1,34 +1,51 @@
-'use client'; 
+
+
+'use client';
 
 import { useState, useEffect } from 'react';
 
 // أنواع البيانات
+type SubscriptionItem = {
+  subscription_id?: number;
+  subscription_name: string;
+  page_count: number;
+  elec_seq: number;
+  price_course: string;
+  active_course: number;
+  price_quest: string;
+  active_quest: number;
+  price_voice: string;
+  active_voice: number;
+  display_status: 'visible' | 'hidden' | 'restricted';
+  // حقول الطباعة (واجهة وهمية - UI Placeholder)
+  price_print: string;
+  active_print: number;
+  print_link: string;
+};
+
 type MaterialItem = {
   id?: number;
-  category_id: number;
-  material_name: string;
   material_code: string;
-  description: string;
+  material_name_elec: string;
+  material_name_print: string;
+  year1: number;
+  semester: number;
+  exam_type: 'automated' | 'traditional';
+  category_id: number;
+  category_name?: string;
+  is_active: number;
+  has_videos: number;
+  video_price: string;
+  video_seq: number;
+  video_active: number;
+  subscriptions: SubscriptionItem[];
   created_at?: string;
   updated_at?: string;
-  year1: number;
-  unit_price: string;
-  quizall_price: string;
-  quiz_price: string;
-  voice_price: string;
-  category_name?: string;
-  // الحقول الجديدة
-  page_count: number;
-  active: number;
-  mokarar_active: number;
-  quiz_active: number;
-  voice_active: number;
 };
 
 type CategoryItem = {
   id: number;
   category_name: string;
-  // الحقول الجديدة للأسعار الافتراضية
   mokarar_price: string;
   quiz_price: string;
   voice_price: string;
@@ -68,22 +85,37 @@ const [showAddModal, setShowAddModal] = useState(false);
   const [notificationBody, setNotificationBody] = useState('');
   const [isSendingNotification, setIsSendingNotification] = useState(false);
 
+const defaultSubscription = (name = '', id = 0): SubscriptionItem => ({
+  subscription_id: id,
+  subscription_name: name,
+  page_count: 0,
+  elec_seq: 0,
+  price_course: '',
+  active_course: 1,
+  price_quest: '',
+  active_quest: 1,
+  price_voice: '',
+  active_voice: 1,
+  display_status: 'visible',
+  price_print: '',
+  active_print: 0,
+  print_link: '',
+});
+
   const [newItem, setNewItem] = useState<Partial<MaterialItem>>({
-    category_id: 0,
-    material_name: '',
     material_code: '',
-    description: '',
+    material_name_elec: '',
+    material_name_print: '',
     year1: 1,
-    unit_price: '',
-    quizall_price: '',
-    quiz_price: '',
-    voice_price: '',
-    // القيم الافتراضية للحقول الجديدة
-    page_count: 0,
-    active: 1,
-    mokarar_active: 1,
-    quiz_active: 1,
-    voice_active: 1
+    semester: 1,
+    exam_type: 'automated',
+    category_id: 0,
+    is_active: 1,
+    has_videos: 0,
+    video_price: '',
+    video_seq: 0,
+    video_active: 0,
+    subscriptions: [],
   });
 
   const API_URL = '/api/proxy/cp_material.php';
@@ -108,21 +140,15 @@ const [showAddModal, setShowAddModal] = useState(false);
     setFilteredData(result);
   }, [selectedCategory, selectedYear, data]);
 
-  // دالة للحصول على الأسعار الافتراضية من الفئة المحددة
   const getDefaultPricesFromCategory = (categoryId: number) => {
     const category = categories.find(cat => cat.id === categoryId);
     if (category) {
       return {
-        quizall_price: category.mokarar_price || '',
-        quiz_price: category.quiz_price || '',
-        voice_price: category.voice_price || ''
+        price_quest: category.mokarar_price || '',
+        price_voice: category.voice_price || '',
       };
     }
-    return {
-      quizall_price: '',
-      quiz_price: '',
-      voice_price: ''
-    };
+    return { price_quest: '', price_voice: '' };
   };
 
   const fetchData = async () => {
@@ -252,9 +278,9 @@ const [showAddModal, setShowAddModal] = useState(false);
     }
   };
 
-  const handleAdd = async () => {
-    if (!newItem.material_name || !newItem.material_code) {
-      alert('يرجى إدخال اسم المادة وكود المادة');
+const handleAdd = async () => {
+    if (!newItem.material_name_elec || !newItem.material_code) {
+      alert('يرجى إدخال اسم المادة الإلكترونية وكود المادة');
       return;
     }
 
@@ -276,22 +302,22 @@ const [showAddModal, setShowAddModal] = useState(false);
 
       if (!response.ok) throw new Error('فشل في إضافة المادة');
 
-      setNewItem({
-        category_id: 0,
-        material_name: '',
+setNewItem({
         material_code: '',
-        description: '',
+        material_name_elec: '',
+        material_name_print: '',
         year1: 1,
-        unit_price: '',
-        quizall_price: '',
-        quiz_price: '',
-        voice_price: '',
-        page_count: 0,
-        active: 1,
-        mokarar_active: 1,
-        quiz_active: 1,
-        voice_active: 1
+        semester: 1,
+        exam_type: 'automated',
+        category_id: 0,
+        is_active: 1,
+        has_videos: 0,
+        video_price: '',
+        video_seq: 0,
+        video_active: 0,
+        subscriptions: [],
       });
+
       fetchData();
       setShowAddModal(false);
       alert('تم إضافة المادة بنجاح');
@@ -314,27 +340,31 @@ const [showAddModal, setShowAddModal] = useState(false);
     );
   };
 
-  const handleNewItemChange = (field: string, value: string | number) => {
+const handleNewItemChange = (field: string, value: string | number) => {
+    setNewItem(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleNewSubscriptionChange = (index: number, field: keyof SubscriptionItem, value: string | number) => {
     setNewItem(prev => {
-      const updatedItem = { ...prev, [field]: value };
-
-      // إذا تم تغيير الفئة، قم بتحديث الأسعار الافتراضية تلقائياً
-      if (field === 'category_id' && value !== 0) {
-        const defaultPrices = getDefaultPricesFromCategory(Number(value));
-        return {
-          ...updatedItem,
-          quizall_price: defaultPrices.quizall_price,
-          quiz_price: defaultPrices.quiz_price,
-          voice_price: defaultPrices.voice_price
-        };
-      }
-
-      return updatedItem;
+      const subs = [...(prev.subscriptions || [])];
+      subs[index] = { ...subs[index], [field]: value };
+      return { ...prev, subscriptions: subs };
     });
   };
 
+  const handleEditSubscriptionChange = (materialId: number, index: number, field: keyof SubscriptionItem, value: string | number) => {
+    setData(prevData =>
+      prevData.map(item => {
+        if (item.id !== materialId) return item;
+        const subs = [...(item.subscriptions || [])];
+        subs[index] = { ...subs[index], [field]: value };
+        return { ...item, subscriptions: subs };
+      })
+    );
+  };
+
   const handleViewSubscribers = async (item: MaterialItem) => {
-    setSelectedMaterialName(item.material_name);
+    setSelectedMaterialName(item.material_name_elec);
     setSelectedMaterialId(item.id!);
     setSearchSubscribersQuery('');
     setShowSubscribersModal(true);
@@ -395,7 +425,7 @@ const [showAddModal, setShowAddModal] = useState(false);
 
   const handleOpenNotificationModal = (item: MaterialItem) => {
     setSelectedMaterialId(item.id!);
-    setSelectedMaterialName(item.material_name);
+    setSelectedMaterialName(item.material_name_elec);
     setNotificationTitle('');
     setNotificationBody('');
     setShowNotificationModal(true);
@@ -537,187 +567,145 @@ const [showAddModal, setShowAddModal] = useState(false);
 
 {/* Add Material Modal */}
 {showAddModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col" dir="rtl">
-      {/* Modal Header */}
-      <div className="flex justify-between items-center p-5 border-b bg-green-50 rounded-t-xl">
-        <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-2 md:p-4" dir="rtl">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl relative z-10 overflow-hidden flex flex-col max-h-[95vh]">
+      {/* Header */}
+      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-blue-100">
+        <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
           إضافة مادة جديدة
         </h3>
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition"
-        >
+        <button onClick={() => setShowAddModal(false)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 p-2 rounded-xl font-bold shadow-sm transition">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-      </div>{/* End Modal Header */}
+      </div>
 
-    {/* Modal Body */}
-      <div className="overflow-y-auto max-h-[75vh] flex flex-col">
-
-        {/* قسم المعلومات الأساسية */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 border-b border-gray-100">
-
-          {/* كود المادة */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">كود المادة <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-              value={newItem.material_code || ''}
-              onChange={(e) => handleNewItemChange('material_code', e.target.value)}
-            />
-          </div>
-
-          {/* اسم المادة */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">اسم المادة <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-              value={newItem.material_name || ''}
-              onChange={(e) => handleNewItemChange('material_name', e.target.value)}
-            />
-          </div>
-
-          {/* السنة */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-              value={newItem.year1 || 1}
-              onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
-            >
-              <option value="1">السنة 1</option>
-              <option value="2">السنة 2</option>
-              <option value="3">السنة 3</option>
-              <option value="4">السنة 4</option>
-            </select>
-          </div>
-
-          {/* عدد الصفحات */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">عدد الصفحات</label>
-            <input
-              type="number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-              value={newItem.page_count || 0}
-              onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
-            />
+      {/* Body */}
+      <div className="overflow-y-auto flex-1 p-6 space-y-6">
+        {/* المعلومات الأساسية */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <h4 className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100">المعلومات الأساسية</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">كود المادة <span className="text-red-500">*</span></label>
+              <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.material_code || ''} onChange={(e) => handleNewItemChange('material_code', e.target.value)} placeholder="مثال: CS101" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم المادة الإلكترونية <span className="text-red-500">*</span></label>
+              <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.material_name_elec || ''} onChange={(e) => handleNewItemChange('material_name_elec', e.target.value)} placeholder="الاسم المعروض في التطبيق" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">اسم مادة الطباعة</label>
+              <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.material_name_print || ''} onChange={(e) => handleNewItemChange('material_name_print', e.target.value)} placeholder="الاسم على النسخة المطبوعة" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">السنة</label>
+              <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.year1 || 1} onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}>
+                {[1,2,3,4].map(y => <option key={y} value={y}>السنة {y}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">الفصل</label>
+              <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.semester || 1} onChange={(e) => handleNewItemChange('semester', parseInt(e.target.value))}>
+                <option value="1">الفصل الأول</option>
+                <option value="2">الفصل الثاني</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">نظام الامتحان</label>
+              <select className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.exam_type || 'automated'} onChange={(e) => handleNewItemChange('exam_type', e.target.value)}>
+                <option value="automated">أتمتة</option>
+                <option value="traditional">تقليدي</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-3 pt-6">
+              <span className="text-sm font-bold text-gray-700">حالة المادة:</span>
+              <button type="button" onClick={() => handleNewItemChange('is_active', newItem.is_active === 1 ? 0 : 1)} className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${newItem.is_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${newItem.is_active === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
+              </button>
+              <span className="text-xs text-gray-500">{newItem.is_active === 1 ? 'نشطة' : 'معطلة'}</span>
+            </div>
           </div>
         </div>
 
-        {/* جدول الاشتراكات — كل فئة = صف */}
-        <div className="p-4">
-          <p className="text-xs font-semibold text-gray-500 mb-2 px-1">اختر الفئة وحدد الأسعار والحالة لكل اشتراك</p>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+       {/* جدول الاشتراكات */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <h4 className="text-sm font-bold text-gray-700 px-5 py-3 border-b border-gray-200 bg-gray-50">الاشتراكات المتاحة للمادة</h4>
+          <div className="overflow-x-auto">
             <table className="min-w-full text-right text-sm">
               <thead>
                 <tr>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">تحديد</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">الفئة</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر المقرر</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">أسئلة تدريبية</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر ملغى</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">سعر الصوت</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">نشط</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">مقرر</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">كويز</th>
-                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">صوت</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-10">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-24">الاشتراك</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-20">الصفحات</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">التسلسل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر المقرر</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر الأسئلة</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-28">سعر الصوت</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800 w-16">تفعيل</th>
+                  <th className="px-3 py-3 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800 w-24">الظهور</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-gray-100">
                 {categories.map((cat) => {
-                  const isSelected = (newItem.category_id === cat.id);
+                  const existingIdx = (newItem.subscriptions || []).findIndex(s => s.subscription_id === cat.id);
+                  const isSelected = existingIdx !== -1;
+                  const sub = isSelected ? (newItem.subscriptions || [])[existingIdx] : null;
                   return (
-                    <tr
-                      key={cat.id}
-                      className={`transition-colors ${isSelected ? 'bg-green-50' : 'hover:bg-gray-50 opacity-70'}`}
-                    >
-                      {/* تحديد الفئة */}
+                    <tr key={cat.id} className={`transition ${isSelected ? 'bg-green-50' : 'bg-gray-50 opacity-60'}`}>
                       <td className="px-3 py-2 text-center">
-                        <input
-                          type="radio"
-                          name="category_select"
-                          checked={isSelected}
-                          onChange={() => handleNewItemChange('category_id', cat.id)}
-                          className="w-4 h-4 accent-green-600 cursor-pointer"
-                        />
+                        <input type="checkbox" checked={isSelected} onChange={() => {
+                          if (isSelected) {
+                            setNewItem(prev => ({ ...prev, subscriptions: (prev.subscriptions || []).filter(s => s.subscription_id !== cat.id) }));
+                          } else {
+                            setNewItem(prev => ({ ...prev, subscriptions: [...(prev.subscriptions || []), defaultSubscription(cat.category_name, cat.id)] }));
+                          }
+                        }} className="w-4 h-4 accent-green-600 cursor-pointer" />
                       </td>
-
-                      {/* اسم الفئة */}
-                      <td className="px-3 py-2 font-bold text-gray-700 text-xs whitespace-nowrap">{cat.category_name}</td>
-
-                      {/* سعر المقرر */}
+                      <td className="px-3 py-2 font-bold text-gray-700 text-xs">{cat.category_name}</td>
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.unit_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-                          placeholder="0"
-                        />
+                        <input type="number" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.page_count ?? 0} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'page_count', parseInt(e.target.value) || 0)} />
                       </td>
-
-                      {/* سعر أسئلة تدريبية */}
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.quizall_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-                          placeholder="0"
-                        />
+                        <input type="number" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.elec_seq ?? 0} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'elec_seq', parseInt(e.target.value) || 0)} />
                       </td>
-
-                      {/* سعر ملغى */}
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.quiz_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-                          placeholder="0"
-                        />
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_course ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_course', e.target.value)} placeholder="0" />
                       </td>
-
-                      {/* سعر الصوت */}
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_course', sub?.active_course === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_course === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_course === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
                       <td className="px-3 py-2">
-                        <input
-                          type="text"
-                          disabled={!isSelected}
-                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                          value={isSelected ? (newItem.voice_price || '') : ''}
-                          onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-                          placeholder="0"
-                        />
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_quest ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_quest', e.target.value)} placeholder="0" />
                       </td>
-
-                      {/* أزرار التبديل: نشط، مقرر، كويز، صوت */}
-                      {(['active', 'mokarar_active', 'quiz_active', 'voice_active'] as const).map((field) => (
-                        <td key={field} className="px-3 py-2 text-center">
-                          <button
-                            type="button"
-                            disabled={!isSelected}
-                            onClick={() => isSelected && handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
-                            className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
-                              (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-                            }`}
-                          >
-                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                              (newItem as any)[field] === 1 ? '-translate-x-5' : '-translate-x-1'
-                            }`} />
-                          </button>
-                        </td>
-                      ))}
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_quest', sub?.active_quest === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_quest === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_quest === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input type="text" disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.price_voice ?? ''} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'price_voice', e.target.value)} placeholder="0" />
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <button type="button" disabled={!isSelected} onClick={() => isSelected && handleNewSubscriptionChange(existingIdx, 'active_voice', sub?.active_voice === 1 ? 0 : 1)} className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 ${sub?.active_voice === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${sub?.active_voice === 1 ? '-translate-x-5' : '-translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select disabled={!isSelected} className="w-full px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] disabled:opacity-40" value={sub?.display_status ?? 'visible'} onChange={(e) => isSelected && handleNewSubscriptionChange(existingIdx, 'display_status', e.target.value as SubscriptionItem['display_status'])}>
+                          <option value="visible">ظاهر</option>
+                          <option value="hidden">مخفي</option>
+                          <option value="restricted">مقيد</option>
+                        </select>
+                      </td>
                     </tr>
                   );
                 })}
@@ -726,30 +714,59 @@ const [showAddModal, setShowAddModal] = useState(false);
           </div>
         </div>
 
-      </div>{/* End Modal Body */}
 
-      {/* Modal Footer */}
-      <div className="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
-        <button
-          onClick={() => setShowAddModal(false)}
-          className="px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition text-sm"
-        >
+        {/* قسم الفيديوهات */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+            <h4 className="text-sm font-bold text-gray-700">الفيديوهات المدمجة</h4>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">تفعيل الفيديوهات</span>
+              <button type="button" onClick={() => handleNewItemChange('has_videos', newItem.has_videos === 1 ? 0 : 1)} className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${newItem.has_videos === 1 ? 'bg-green-500' : 'bg-gray-300'}`}>
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${newItem.has_videos === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
+              </button>
+            </div>
+          </div>
+          {newItem.has_videos === 1 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">سعر الفيديو</label>
+                <input type="text" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.video_price || ''} onChange={(e) => handleNewItemChange('video_price', e.target.value)} placeholder="0" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1.5">التسلسل</label>
+                <input type="number" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 placeholder-gray-400 transition-all text-right focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900] text-sm" value={newItem.video_seq || 0} onChange={(e) => handleNewItemChange('video_seq', parseInt(e.target.value) || 0)} />
+              </div>
+              <div className="flex items-center gap-3 pt-6">
+                <span className="text-sm font-bold text-gray-700">نشط:</span>
+                <button type="button" onClick={() => handleNewItemChange('video_active', newItem.video_active === 1 ? 0 : 1)} className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${newItem.video_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${newItem.video_active === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+        <button onClick={() => setShowAddModal(false)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
           إلغاء
         </button>
-        <button
-          onClick={() => { handleAdd(); setShowAddModal(false); }}
-          className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center gap-2"
-        >
+        <button onClick={handleAdd} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-sm transition flex items-center gap-2 text-sm">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
           إضافة المادة
         </button>
-      </div>{/* End Modal Footer */}
+      </div>
     </div>
   </div>
 )}
 {/* End Add Material Modal */}
+
 
 
       {/* Subscribers Modal */}
@@ -920,233 +937,151 @@ const [showAddModal, setShowAddModal] = useState(false);
         {/* Data Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-800">
+ <thead className="bg-gray-800">
               <tr>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">المادة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">التصنيف</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الأسعار</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الحالة</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الإجراءات</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-48">المادة</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-36">التصنيف</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">الاشتراكات والأسعار</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-24">الحالة</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-white uppercase tracking-wider w-32">الإجراءات</th>
               </tr>
             </thead>
+
             <tbody className="bg-white divide-y divide-gray-200">
 
               {/* Data rows */}
               {filteredData.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors duration-200">
                   {/* معلومات المادة */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-right">
                     {editingId === item.id ? (
                       <div className="space-y-2">
-                        <input
-                          type="text"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.material_code}
-                          onChange={(e) => handleInputChange(item.id!, 'material_code', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.material_name}
-                          onChange={(e) => handleInputChange(item.id!, 'material_name', e.target.value)}
-                        />
-                        <textarea
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.description}
-                          onChange={(e) => handleInputChange(item.id!, 'description', e.target.value)}
-                          rows={2}
-                        />
+                        <input type="text" className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.material_code} onChange={(e) => handleInputChange(item.id!, 'material_code', e.target.value)} placeholder="كود المادة" />
+                        <input type="text" className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.material_name_elec} onChange={(e) => handleInputChange(item.id!, 'material_name_elec', e.target.value)} placeholder="الاسم الإلكتروني" />
+                        <input type="text" className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.material_name_print} onChange={(e) => handleInputChange(item.id!, 'material_name_print', e.target.value)} placeholder="اسم الطباعة" />
                       </div>
                     ) : (
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{item.material_code}</div>
-                        <div className="text-sm font-semibold text-gray-800">{item.material_name}</div>
-                        <div className="text-xs text-gray-500 mt-1 line-clamp-2">{item.description}</div>
+                        <div className="text-xs font-mono text-gray-400 mb-0.5">{item.material_code}</div>
+                        <div className="text-sm font-semibold text-gray-800 truncate max-w-[180px]">{item.material_name_elec}</div>
+                        {item.material_name_print && <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[180px]">🖨 {item.material_name_print}</div>}
                       </div>
                     )}
                   </td>
 
                   {/* التصنيف والمعلومات الأساسية */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-right">
                     {editingId === item.id ? (
                       <div className="space-y-2">
-                        <select
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.category_id}
-                          onChange={(e) => handleInputChange(item.id!, 'category_id', parseInt(e.target.value))}
-                        >
-                          {categories.map(category => (
-                            <option key={category.id} value={category.id}>{category.category_name}</option>
-                          ))}
+                        <select className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.category_id} onChange={(e) => handleInputChange(item.id!, 'category_id', parseInt(e.target.value))}>
+                          {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.category_name}</option>)}
                         </select>
-                        <select
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.year1}
-                          onChange={(e) => handleInputChange(item.id!, 'year1', parseInt(e.target.value))}
-                        >
-                          <option value="1">السنة 1</option>
-                          <option value="2">السنة 2</option>
-                          <option value="3">السنة 3</option>
-                          <option value="4">السنة 4</option>
+                        <select className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.year1} onChange={(e) => handleInputChange(item.id!, 'year1', parseInt(e.target.value))}>
+                          {[1,2,3,4].map(y => <option key={y} value={y}>السنة {y}</option>)}
                         </select>
-                        <input
-                          type="number"
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          value={item.page_count}
-                          onChange={(e) => handleInputChange(item.id!, 'page_count', parseInt(e.target.value) || 0)}
-                        />
+                        <select className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.semester} onChange={(e) => handleInputChange(item.id!, 'semester', parseInt(e.target.value))}>
+                          <option value="1">الفصل الأول</option>
+                          <option value="2">الفصل الثاني</option>
+                        </select>
+                        <select className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c4a900]/40 focus:border-[#c4a900]" value={item.exam_type} onChange={(e) => handleInputChange(item.id!, 'exam_type', e.target.value)}>
+                          <option value="automated">أتمتة</option>
+                          <option value="traditional">تقليدي</option>
+                        </select>
                       </div>
                     ) : (
-                      <div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">الفئة:</span> {item.category_name}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">السنة:</span> {item.year1}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">الصفحات:</span> {item.page_count}
-                        </div>
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-gray-800">{item.category_name}</div>
+                        <div className="text-xs text-gray-500">السنة {item.year1} — الفصل {item.semester}</div>
+                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${item.exam_type === 'automated' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {item.exam_type === 'automated' ? 'أتمتة' : 'تقليدي'}
+                        </span>
                       </div>
                     )}
                   </td>
 
-                  {/* الأسعار */}
-                  <td className="px-4 py-4">
+
+                  {/* الاشتراكات والأسعار */}
+                  <td className="px-4 py-4 text-right">
                     {editingId === item.id ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">المقرر:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.unit_price}
-                            onChange={(e) => handleInputChange(item.id!, 'unit_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">اسئلة تدريبية:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.quizall_price}
-                            onChange={(e) => handleInputChange(item.id!, 'quizall_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">ملغى:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.quiz_price}
-                            onChange={(e) => handleInputChange(item.id!, 'quiz_price', e.target.value)}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600 w-16">الصوت:</span>
-                          <input
-                            type="text"
-                            className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                            value={item.voice_price}
-                            onChange={(e) => handleInputChange(item.id!, 'voice_price', e.target.value)}
-                          />
-                        </div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+                          <thead>
+                            <tr className="bg-[#f5e97a]">
+                              <th className="px-2 py-1.5 text-right font-extrabold text-gray-800 border-b border-[#c8b800]">الاشتراك</th>
+                              <th className="px-2 py-1.5 text-right font-extrabold text-gray-800 border-b border-[#c8b800] bg-[#f0e060]">سعر المقرر</th>
+                              <th className="px-2 py-1.5 text-right font-extrabold text-gray-800 border-b border-[#c8b800]">سعر الأسئلة</th>
+                              <th className="px-2 py-1.5 text-right font-extrabold text-gray-800 border-b border-[#c8b800] bg-[#f0e060]">سعر الصوت</th>
+                              <th className="px-2 py-1.5 text-right font-extrabold text-gray-800 border-b border-[#c8b800]">الظهور</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 bg-white">
+                            {(item.subscriptions || []).map((sub, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50 transition">
+                                <td className="px-2 py-1"><input type="text" className="w-20 px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#c4a900]" value={sub.subscription_name} onChange={(e) => handleEditSubscriptionChange(item.id!, idx, 'subscription_name', e.target.value)} /></td>
+                                <td className="px-2 py-1"><input type="text" className="w-20 px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#c4a900]" value={sub.price_course} onChange={(e) => handleEditSubscriptionChange(item.id!, idx, 'price_course', e.target.value)} /></td>
+                                <td className="px-2 py-1"><input type="text" className="w-20 px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#c4a900]" value={sub.price_quest} onChange={(e) => handleEditSubscriptionChange(item.id!, idx, 'price_quest', e.target.value)} /></td>
+                                <td className="px-2 py-1"><input type="text" className="w-20 px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#c4a900]" value={sub.price_voice} onChange={(e) => handleEditSubscriptionChange(item.id!, idx, 'price_voice', e.target.value)} /></td>
+                                <td className="px-2 py-1">
+                                  <select className="w-20 px-1.5 py-1 border border-gray-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#c4a900]" value={sub.display_status} onChange={(e) => handleEditSubscriptionChange(item.id!, idx, 'display_status', e.target.value as SubscriptionItem['display_status'])}>
+                                    <option value="visible">ظاهر</option>
+                                    <option value="hidden">مخفي</option>
+                                    <option value="restricted">مقيد</option>
+                                  </select>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     ) : (
-                      <div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">المقرر:</span> {item.unit_price}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">اسئلة تدريبية:</span> {item.quizall_price}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          <span className="font-medium">الصوت:</span> {item.voice_price}
-                        </div>
-                        <div className="text-sm text-gray-500 mb-2">
-                          <span className="font-medium">ملغى:</span> {item.quiz_price}
-                        </div>
+                      <div className="space-y-1">
+                        {(item.subscriptions || []).map((sub, idx) => (
+                          <div key={idx} className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-gray-700 w-14 shrink-0">{sub.subscription_name}</span>
+                            {sub.active_course === 1 && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">📖 {sub.price_course}</span>}
+                            {sub.active_quest === 1 && <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">❓ {sub.price_quest}</span>}
+                            {sub.active_voice === 1 && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">🎙 {sub.price_voice}</span>}
+                            {sub.active_print === 1 && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">🖨</span>}
+                          </div>
+                        ))}
+                        {item.has_videos === 1 && <div className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded inline-block mt-1">🎬 {item.video_price}</div>}
                       </div>
                     )}
                   </td>
 
                   {/* الحالة */}
-                  <td className="px-4 py-4">
-                    {editingId === item.id ? (
-                      <div className="space-y-3">
-  {[
-    { label: 'نشط', field: 'active' },
-    { label: 'مقرر', field: 'mokarar_active' },
-    { label: 'كويز', field: 'quiz_active' },
-    { label: 'صوت', field: 'voice_active' },
-  ].map(({ label, field }) => (
-    <div key={field} className="flex items-center gap-2">
-      <span className="text-xs text-gray-600">{label}:</span>
-      <button
-        type="button"
-        onClick={async () => {
-          const newVal = (item as any)[field] === 1 ? 0 : 1;
-          handleInputChange(item.id!, field, newVal);
-          try {
-            const url = `${API_URL}?id=${item.id}&refresh=${Date.now()}`;
-            await fetch(url, {
-              method: 'PUT',
-              cache: 'no-store',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...item, [field]: newVal }),
-            });
-          } catch (err) {
-            console.error('Toggle save error:', err);
-          }
-        }}
-        className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                    (item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-                  }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-            (item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
-  ))}
-</div>
-                    ) : (
-                      <div className="space-y-3">
-                        {[
-                          { label: 'نشط', field: 'active' },
-                          { label: 'مقرر', field: 'mokarar_active' },
-                          { label: 'كويز', field: 'quiz_active' },
-                          { label: 'صوت', field: 'voice_active' },
-                        ].map(({ label, field }) => (
-                          <div key={field} className="flex items-center justify-between gap-2">
-                            <span className="text-xs text-gray-600">{label}:</span>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const newVal = (item as any)[field] === 1 ? 0 : 1;
-                                handleInputChange(item.id!, field, newVal);
-                                try {
-                                  await fetch(`${API_URL}?id=${item.id}&refresh=${Date.now()}`, {
-                                    method: 'PUT',
-                                    cache: 'no-store',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ ...item, [field]: newVal }),
-                                  });
-                                } catch (err) {
-                                  console.error('Toggle save error:', err);
-                                }
-                              }}
-                             className={`relative inline-flex h-6 w-11 flex-shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${(item as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'}`}
-                            >
-                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${(item as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
-                            </button>
-                          </div>
-                        ))}
+                  <td className="px-4 py-4 text-right">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-gray-600">نشط:</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const newVal = item.is_active === 1 ? 0 : 1;
+                          handleInputChange(item.id!, 'is_active', newVal);
+                          try {
+                            await fetch(`${API_URL}?id=${item.id}&refresh=${Date.now()}`, {
+                              method: 'PUT',
+                              cache: 'no-store',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ ...item, is_active: newVal }),
+                            });
+                          } catch (err) {
+                            console.error('Toggle save error:', err);
+                          }
+                        }}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${item.is_active === 1 ? 'bg-green-500' : 'bg-red-400'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${item.is_active === 1 ? '-translate-x-6' : '-translate-x-1'}`} />
+                      </button>
+                    </div>
+                    {item.has_videos === 1 && (
+                      <div className="mt-2">
+                        <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">🎬 فيديو</span>
                       </div>
                     )}
                   </td>
+
+
 
                   {/* الإجراءات */}
                   <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
