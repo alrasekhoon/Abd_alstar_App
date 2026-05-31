@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, Fragment } from 'react';
@@ -16,8 +17,10 @@ type BillItem = {
   name: string;
   phone: string;
   details?: BillDetailItem[];
-  address: string;
+address: string;
+  gender?: string;
 };
+
 
 type BillDetailItem = {
   id?: number;
@@ -142,7 +145,13 @@ const API_URL = '/api/proxy/cp_bills.php';
   const getGreeting = (bill: BillItem) => {
     const firstName = (bill.name || bill.rec_name || '').split(' ')[0];
     // تحديد الجنس: إذا كان الاسم ينتهي بـ "ة" فالأرجح أنثى
-    const isFemale = firstName.endsWith('ة') || firstName.endsWith('ى') || firstName.endsWith('اء');
+    let isFemale = false;
+    if (bill.gender !== undefined && bill.gender !== null && bill.gender !== '') {
+      isFemale = bill.gender === 'أنثى';
+    } else {
+      isFemale = firstName.endsWith('ة') || firstName.endsWith('اء');
+    }
+
     return `${isFemale ? 'العزيزة' : 'العزيز'} ${firstName}`;
   };
 
@@ -1989,3 +1998,5 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
+
+
