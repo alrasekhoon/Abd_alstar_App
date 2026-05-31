@@ -1007,30 +1007,8 @@ const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, da
                 </span>
               </div>
             </div>
-            {/* شريط فلتر الحالة */}
-            <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50 flex-wrap">
-              <span className="text-xs font-bold text-gray-500">عرض:</span>
-              {[
-                { key: 'all',              label: 'الكل' },
-                { key: '__pending__',      label: 'بانتظار السداد' },
-                { key: '__paid__',         label: 'تم السداد' },
-                { key: '__processing__',   label: 'قيد الطباعة' },
-                { key: '__packing__',      label: 'قيد التجهيز' },
-                { key: '__waiting__',      label: 'بانتظار الاستلام' },
-                { key: '__completed__',    label: 'مكتمل' },
-                { key: '__cancelled__',    label: 'ملغي' },
-              ].map(btn => (
-                <button
-                  key={btn.key}
-                  onClick={() => setMaterialsPrintFilter(btn.key)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === btn.key ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-                >
-                  {btn.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
+            {/* جدول الحالة */}
+                        <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
               {(() => {
                 // حساب القائمة النهائية بعد تطبيق فلتر الحالة الخاص
                 const statusFilterMap: Record<string, { field: keyof typeof materialsToPrintArray[0]; status: string }> = {
@@ -2002,3 +1980,5 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
+
+
