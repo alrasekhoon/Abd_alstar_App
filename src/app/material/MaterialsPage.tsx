@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 // أنواع البيانات
-type MaterialItem = {
+type MaterialItem = { 
   id?: number;
   category_id: number;
   material_name: string;
@@ -538,7 +538,7 @@ const [showAddModal, setShowAddModal] = useState(false);
 {/* Add Material Modal */}
 {showAddModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 p-4">
-    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col">
+<div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col" dir="rtl">
       {/* Modal Header */}
       <div className="flex justify-between items-center p-5 border-b bg-green-50 rounded-t-xl">
         <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
@@ -558,144 +558,176 @@ const [showAddModal, setShowAddModal] = useState(false);
       </div>{/* End Modal Header */}
 
       {/* Modal Body */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-y-auto max-h-[70vh]">
-        {/* كود المادة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">كود المادة <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.material_code || ''}
-            onChange={(e) => handleNewItemChange('material_code', e.target.value)}
-          />
-        </div>
+      <div className="overflow-y-auto max-h-[75vh] flex flex-col">
 
-        {/* اسم المادة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">اسم المادة <span className="text-red-500">*</span></label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.material_name || ''}
-            onChange={(e) => handleNewItemChange('material_name', e.target.value)}
-          />
-        </div>
+        {/* قسم المعلومات الأساسية */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5 border-b border-gray-100">
 
-        {/* الفئة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">الفئة</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.category_id || 0}
-            onChange={(e) => handleNewItemChange('category_id', parseInt(e.target.value))}
-          >
-            <option value="0">اختر الفئة</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>{category.category_name}</option>
-            ))}
-          </select>
-        </div>
+          {/* كود المادة */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">كود المادة <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+              value={newItem.material_code || ''}
+              onChange={(e) => handleNewItemChange('material_code', e.target.value)}
+            />
+          </div>
 
-        {/* السنة */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.year1 || 1}
-            onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
-          >
-            <option value="1">السنة 1</option>
-            <option value="2">السنة 2</option>
-            <option value="3">السنة 3</option>
-            <option value="4">السنة 4</option>
-          </select>
-        </div>
+          {/* اسم المادة */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">اسم المادة <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+              value={newItem.material_name || ''}
+              onChange={(e) => handleNewItemChange('material_name', e.target.value)}
+            />
+          </div>
 
-        {/* عدد الصفحات */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">عدد الصفحات</label>
-          <input
-            type="number"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.page_count || 0}
-            onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
-          />
-        </div>
+          {/* السنة */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">السنة</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+              value={newItem.year1 || 1}
+              onChange={(e) => handleNewItemChange('year1', parseInt(e.target.value))}
+            >
+              <option value="1">السنة 1</option>
+              <option value="2">السنة 2</option>
+              <option value="3">السنة 3</option>
+              <option value="4">السنة 4</option>
+            </select>
+          </div>
 
-        {/* سعر المقرر */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر المقرر</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.unit_price || ''}
-            onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر أسئلة تدريبية */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر أسئلة تدريبية</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.quizall_price || ''}
-            onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر ملغى */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر ملغى</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.quiz_price || ''}
-            onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
-          />
-        </div>
-
-        {/* سعر الصوت */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سعر الصوت</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
-            value={newItem.voice_price || ''}
-            onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
-          />
-        </div>
-
-        {/* أزرار الحالة */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-3">الحالة</label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'نشط', field: 'active' },
-              { label: 'مقرر', field: 'mokarar_active' },
-              { label: 'كويز', field: 'quiz_active' },
-              { label: 'صوت', field: 'voice_active' },
-            ].map(({ label, field }) => (
-              <div key={field} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-                <span className="text-sm text-gray-700">{label}</span>
-                <button
-                  type="button"
-                  onClick={() => handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
-                  className={`relative inline-flex h-6 w-11 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none ${
-          (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
-        }`}
-                >
-                  <span
-  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-    (newItem as any)[field] === 1 ? '-translate-x-6' : '-translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-            ))}
+          {/* عدد الصفحات */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">عدد الصفحات</label>
+            <input
+              type="number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm"
+              value={newItem.page_count || 0}
+              onChange={(e) => handleNewItemChange('page_count', parseInt(e.target.value) || 0)}
+            />
           </div>
         </div>
+
+        {/* جدول الاشتراكات — كل فئة = صف */}
+        <div className="p-4">
+          <p className="text-xs font-semibold text-gray-500 mb-2 px-1">اختر الفئة وحدد الأسعار والحالة لكل اشتراك</p>
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="min-w-full text-right text-sm">
+              <thead>
+                <tr>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">تحديد</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">الفئة</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر المقرر</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">أسئلة تدريبية</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">سعر ملغى</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">سعر الصوت</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">نشط</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">مقرر</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f5e97a] text-gray-800">كويز</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-extrabold border-b border-[#c8b800] bg-[#f0e060] text-gray-800">صوت</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {categories.map((cat) => {
+                  const isSelected = (newItem.category_id === cat.id);
+                  return (
+                    <tr
+                      key={cat.id}
+                      className={`transition-colors ${isSelected ? 'bg-green-50' : 'hover:bg-gray-50 opacity-70'}`}
+                    >
+                      {/* تحديد الفئة */}
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="radio"
+                          name="category_select"
+                          checked={isSelected}
+                          onChange={() => handleNewItemChange('category_id', cat.id)}
+                          className="w-4 h-4 accent-green-600 cursor-pointer"
+                        />
+                      </td>
+
+                      {/* اسم الفئة */}
+                      <td className="px-3 py-2 font-bold text-gray-700 text-xs whitespace-nowrap">{cat.category_name}</td>
+
+                      {/* سعر المقرر */}
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          disabled={!isSelected}
+                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                          value={isSelected ? (newItem.unit_price || '') : ''}
+                          onChange={(e) => handleNewItemChange('unit_price', e.target.value)}
+                          placeholder="0"
+                        />
+                      </td>
+
+                      {/* سعر أسئلة تدريبية */}
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          disabled={!isSelected}
+                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                          value={isSelected ? (newItem.quizall_price || '') : ''}
+                          onChange={(e) => handleNewItemChange('quizall_price', e.target.value)}
+                          placeholder="0"
+                        />
+                      </td>
+
+                      {/* سعر ملغى */}
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          disabled={!isSelected}
+                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                          value={isSelected ? (newItem.quiz_price || '') : ''}
+                          onChange={(e) => handleNewItemChange('quiz_price', e.target.value)}
+                          placeholder="0"
+                        />
+                      </td>
+
+                      {/* سعر الصوت */}
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          disabled={!isSelected}
+                          className="w-20 px-2 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-right focus:outline-none focus:ring-2 focus:ring-green-400/40 focus:border-green-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                          value={isSelected ? (newItem.voice_price || '') : ''}
+                          onChange={(e) => handleNewItemChange('voice_price', e.target.value)}
+                          placeholder="0"
+                        />
+                      </td>
+
+                      {/* أزرار التبديل: نشط، مقرر، كويز، صوت */}
+                      {(['active', 'mokarar_active', 'quiz_active', 'voice_active'] as const).map((field) => (
+                        <td key={field} className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            disabled={!isSelected}
+                            onClick={() => isSelected && handleNewItemChange(field, (newItem as any)[field] === 1 ? 0 : 1)}
+                            className={`relative inline-flex h-5 w-10 overflow-hidden items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed ${
+                              (newItem as any)[field] === 1 ? 'bg-green-500' : 'bg-red-400'
+                            }`}
+                          >
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                              (newItem as any)[field] === 1 ? '-translate-x-5' : '-translate-x-1'
+                            }`} />
+                          </button>
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>{/* End Modal Body */}
+
 
       {/* Modal Footer */}
       <div className="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
@@ -1208,3 +1240,4 @@ const [showAddModal, setShowAddModal] = useState(false);
     </div>
   );
 } 
+
