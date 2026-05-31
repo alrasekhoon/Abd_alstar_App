@@ -67,6 +67,7 @@ export default function BillManagement() {
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const knownBillIds = React.useRef<Set<number>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>('all');
+const [materialsPrintFilter, setMaterialsPrintFilter] = useState<string>('all'); // 'all' | اسم مادة
   // حالة modal الاشتراكات المجانية
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
@@ -894,20 +895,41 @@ processing: bills.filter(b => b.status === 'processing').length,
     cancelled: bills.filter(b => b.status === 'cancelled').length,
   };
 
-  const materialsToPrint: Record<string, number> = {};
-  bills.filter(b => b.status === 'processing').forEach(bill => {
+// تجميع كل الفواتير غير المطبوعة (paid + processing) مع تتبع حالة كل فاتورة
+  type MaterialBillEntry = { billId: number | undefined; billStatus: string; userName: string };
+  const materialsToPrintMap: Record<string, { count: number; bills: MaterialBillEntry[] }> = {};
+
+  bills.filter(b => b.status === 'processing' || b.status === 'paid').forEach(bill => {
     if (bill.details) {
       bill.details.forEach(detail => {
         if (detail.m_name) {
-          materialsToPrint[detail.m_name] = (materialsToPrint[detail.m_name] || 0) + 1;
+          if (!materialsToPrintMap[detail.m_name]) {
+            materialsToPrintMap[detail.m_name] = { count: 0, bills: [] };
+          }
+          materialsToPrintMap[detail.m_name].count += 1;
+          materialsToPrintMap[detail.m_name].bills.push({
+            billId: bill.id,
+            billStatus: bill.status,
+            userName: bill.name || bill.rec_name || ''
+          });
         }
       });
     }
   });
 
-  const materialsToPrintArray = Object.entries(materialsToPrint).map(([name, count]) => ({
-    name, count
+  const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, data]) => ({
+    name,
+    count: data.count,
+    bills: data.bills,
+    processingCount: data.bills.filter(b => b.billStatus === 'processing').length,
+    paidCount: data.bills.filter(b => b.billStatus === 'paid').length,
   })).sort((a, b) => b.count - a.count);
+
+  // الفلترة حسب materialsPrintFilter
+  const filteredMaterialsToPrint = materialsPrintFilter === 'all'
+    ? materialsToPrintArray
+    : materialsToPrintArray.filter(m => m.name === materialsPrintFilter);
+
   // ----------------------------
 
   return (
@@ -967,42 +989,117 @@ processing: bills.filter(b => b.status === 'processing').length,
 
           {/* Materials needed to print */}
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex items-center justify-between">
+            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-md font-semibold text-gray-800 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
-                المواد المطلوب طباعتها (للفواتير قيد المعالجة)
+                المواد المطلوب طباعتها
               </h3>
-              <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                {materialsToPrintArray.length} مواد مختلفة
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* فلتر المادة */}
+                <select
+                  className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  value={materialsPrintFilter}
+                  onChange={(e) => setMaterialsPrintFilter(e.target.value)}
+                >
+                  <option value="all">📚 كل المواد ({materialsToPrintArray.length})</option>
+                  {materialsToPrintArray.map((m, idx) => (
+                    <option key={idx} value={m.name}>{m.name} ({m.count})</option>
+                  ))}
+                </select>
+                {/* شارة الإجمالي */}
+                <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                  {filteredMaterialsToPrint.reduce((s, m) => s + m.count, 0)} نسخة إجمالاً
+                </span>
+              </div>
             </div>
-            <div className="p-0 overflow-x-auto max-h-60 overflow-y-auto">
-              {materialsToPrintArray.length > 0 ? (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-white sticky top-0">
-                    <tr>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النسخ المطلوبة</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
-                    {materialsToPrintArray.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition">
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                          <span className="font-bold text-gray-800">{item.count}</span> نسخة
-                        </td>
+            {/* شريط فلتر الحالة */}
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50 flex-wrap">
+              <span className="text-xs font-bold text-gray-500">عرض:</span>
+              <button
+                onClick={() => setMaterialsPrintFilter('all')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === 'all' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+              >
+                🖨️ قيد الطباعة + تم السداد
+              </button>
+              <button
+                onClick={() => {
+                  // تصفية لعرض فواتير قيد الطباعة فقط عبر تعيين فلتر مؤقت
+                  setMaterialsPrintFilter('__processing__');
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === '__processing__' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+              >
+                🖨️ قيد الطباعة فقط
+              </button>
+              <button
+                onClick={() => setMaterialsPrintFilter('__paid__')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === '__paid__' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+              >
+                💳 تم السداد فقط
+              </button>
+            </div>
+            <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
+              {(() => {
+                // حساب القائمة النهائية بعد تطبيق فلتر الحالة الخاص
+                let displayList = materialsToPrintArray;
+                if (materialsPrintFilter === '__processing__') {
+                  displayList = materialsToPrintArray
+                    .map(m => ({ ...m, count: m.processingCount, bills: m.bills.filter(b => b.billStatus === 'processing') }))
+                    .filter(m => m.count > 0);
+                } else if (materialsPrintFilter === '__paid__') {
+                  displayList = materialsToPrintArray
+                    .map(m => ({ ...m, count: m.paidCount, bills: m.bills.filter(b => b.billStatus === 'paid') }))
+                    .filter(m => m.count > 0);
+                } else if (materialsPrintFilter !== 'all') {
+                  displayList = filteredMaterialsToPrint;
+                }
+
+                return displayList.length > 0 ? (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-white sticky top-0 shadow-sm">
+                      <tr>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">قيد الطباعة</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تم السداد</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجمالي</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  لا توجد فواتير قيد المعالجة تتطلب طباعة في الوقت الحالي.
-                </div>
-              )}
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {displayList.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-purple-50 transition cursor-pointer" onClick={() => setMaterialsPrintFilter(item.name === materialsPrintFilter ? 'all' : item.name)}>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm font-bold text-gray-900">{item.name}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                            {item.processingCount > 0
+                              ? <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-lg">{item.processingCount} نسخة</span>
+                              : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                            {item.paidCount > 0
+                              ? <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">{item.paidCount} نسخة</span>
+                              : <span className="text-gray-300">—</span>}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">
+                            <span className="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-lg">{item.count} نسخة</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-gray-50 sticky bottom-0">
+                      <tr>
+                        <td className="px-4 py-2 text-xs font-bold text-gray-600">الإجمالي</td>
+                        <td className="px-4 py-2 text-xs font-bold text-blue-700">{displayList.reduce((s, m) => s + m.processingCount, 0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-emerald-700">{displayList.reduce((s, m) => s + m.paidCount, 0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-purple-700">{displayList.reduce((s, m) => s + m.count, 0)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <div className="p-6 text-center text-gray-500 text-sm">
+                    لا توجد مواد تطابق الفلتر المحدد.
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1900,3 +1997,5 @@ onClick={() => bill.id && toggleRow(bill.id)}
     </div>
   );
 }
+
+
