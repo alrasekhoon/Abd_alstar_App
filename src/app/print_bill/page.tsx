@@ -899,7 +899,7 @@ processing: bills.filter(b => b.status === 'processing').length,
   type MaterialBillEntry = { billId: number | undefined; billStatus: string; userName: string };
   const materialsToPrintMap: Record<string, { count: number; bills: MaterialBillEntry[] }> = {};
 
-  bills.filter(b => b.status === 'processing' || b.status === 'paid').forEach(bill => {
+  bills.forEach(bill => {
     if (bill.details) {
       bill.details.forEach(detail => {
         if (detail.m_name) {
@@ -917,12 +917,17 @@ processing: bills.filter(b => b.status === 'processing').length,
     }
   });
 
-  const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, data]) => ({
+const materialsToPrintArray = Object.entries(materialsToPrintMap).map(([name, data]) => ({
     name,
     count: data.count,
     bills: data.bills,
-    processingCount: data.bills.filter(b => b.billStatus === 'processing').length,
-    paidCount: data.bills.filter(b => b.billStatus === 'paid').length,
+    pendingCount:      data.bills.filter(b => b.billStatus === 'pending').length,
+    paidCount:         data.bills.filter(b => b.billStatus === 'paid').length,
+    processingCount:   data.bills.filter(b => b.billStatus === 'processing').length,
+    packingCount:      data.bills.filter(b => b.billStatus === 'packing').length,
+    waitingCount:      data.bills.filter(b => b.billStatus === 'waiting_pickup').length,
+    completedCount:    data.bills.filter(b => b.billStatus === 'completed').length,
+    cancelledCount:    data.bills.filter(b => b.billStatus === 'cancelled').length,
   })).sort((a, b) => b.count - a.count);
 
   // الفلترة حسب materialsPrintFilter
@@ -1017,82 +1022,94 @@ processing: bills.filter(b => b.status === 'processing').length,
             {/* شريط فلتر الحالة */}
             <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50 flex-wrap">
               <span className="text-xs font-bold text-gray-500">عرض:</span>
-              <button
-                onClick={() => setMaterialsPrintFilter('all')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === 'all' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-              >
-                🖨️ قيد الطباعة + تم السداد
-              </button>
-              <button
-                onClick={() => {
-                  // تصفية لعرض فواتير قيد الطباعة فقط عبر تعيين فلتر مؤقت
-                  setMaterialsPrintFilter('__processing__');
-                }}
-                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === '__processing__' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-              >
-                🖨️ قيد الطباعة فقط
-              </button>
-              <button
-                onClick={() => setMaterialsPrintFilter('__paid__')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === '__paid__' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-              >
-                💳 تم السداد فقط
-              </button>
+              {[
+                { key: 'all',              label: '📋 الكل' },
+                { key: '__pending__',      label: '⏳ بانتظار السداد' },
+                { key: '__paid__',         label: '💳 تم السداد' },
+                { key: '__processing__',   label: '🖨️ قيد الطباعة' },
+                { key: '__packing__',      label: '📦 قيد التجهيز' },
+                { key: '__waiting__',      label: '🚚 بانتظار الاستلام' },
+                { key: '__completed__',    label: '✅ مكتمل' },
+                { key: '__cancelled__',    label: '❌ ملغي' },
+              ].map(btn => (
+                <button
+                  key={btn.key}
+                  onClick={() => setMaterialsPrintFilter(btn.key)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${materialsPrintFilter === btn.key ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+                >
+                  {btn.label}
+                </button>
+              ))}
             </div>
+
             <div className="p-0 overflow-x-auto max-h-72 overflow-y-auto">
               {(() => {
                 // حساب القائمة النهائية بعد تطبيق فلتر الحالة الخاص
+                const statusFilterMap: Record<string, { field: keyof typeof materialsToPrintArray[0]; status: string }> = {
+                  '__pending__':    { field: 'pendingCount',    status: 'pending' },
+                  '__paid__':       { field: 'paidCount',       status: 'paid' },
+                  '__processing__': { field: 'processingCount', status: 'processing' },
+                  '__packing__':    { field: 'packingCount',    status: 'packing' },
+                  '__waiting__':    { field: 'waitingCount',    status: 'waiting_pickup' },
+                  '__completed__':  { field: 'completedCount',  status: 'completed' },
+                  '__cancelled__':  { field: 'cancelledCount',  status: 'cancelled' },
+                };
+
                 let displayList = materialsToPrintArray;
-                if (materialsPrintFilter === '__processing__') {
+                if (statusFilterMap[materialsPrintFilter]) {
+                  const { field, status } = statusFilterMap[materialsPrintFilter];
                   displayList = materialsToPrintArray
-                    .map(m => ({ ...m, count: m.processingCount, bills: m.bills.filter(b => b.billStatus === 'processing') }))
-                    .filter(m => m.count > 0);
-                } else if (materialsPrintFilter === '__paid__') {
-                  displayList = materialsToPrintArray
-                    .map(m => ({ ...m, count: m.paidCount, bills: m.bills.filter(b => b.billStatus === 'paid') }))
+                    .map(m => ({ ...m, count: m[field] as number, bills: m.bills.filter(b => b.billStatus === status) }))
                     .filter(m => m.count > 0);
                 } else if (materialsPrintFilter !== 'all') {
                   displayList = filteredMaterialsToPrint;
                 }
 
+
                 return displayList.length > 0 ? (
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-white sticky top-0 shadow-sm">
+<thead className="bg-white sticky top-0 shadow-sm">
                       <tr>
                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المادة</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">قيد الطباعة</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تم السداد</th>
-                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجمالي</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">⏳ انتظار</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">💳 سداد</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">🖨️ طباعة</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">📦 تجهيز</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">🚚 استلام</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">✅ مكتمل</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">❌ ملغي</th>
+                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">📋 الكل</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
                       {displayList.map((item, idx) => (
                         <tr key={idx} className="hover:bg-purple-50 transition cursor-pointer" onClick={() => setMaterialsPrintFilter(item.name === materialsPrintFilter ? 'all' : item.name)}>
                           <td className="px-4 py-2 whitespace-nowrap text-sm font-bold text-gray-900">{item.name}</td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            {item.processingCount > 0
-                              ? <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-lg">{item.processingCount} نسخة</span>
-                              : <span className="text-gray-300">—</span>}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            {item.paidCount > 0
-                              ? <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">{item.paidCount} نسخة</span>
-                              : <span className="text-gray-300">—</span>}
-                          </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm">
-                            <span className="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-lg">{item.count} نسخة</span>
-                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.pendingCount > 0    ? <span className="bg-yellow-100  text-yellow-800  font-bold px-2 py-0.5 rounded-lg">{item.pendingCount}</span>    : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.paidCount > 0      ? <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-lg">{item.paidCount}</span>      : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.processingCount > 0? <span className="bg-blue-100    text-blue-800    font-bold px-2 py-0.5 rounded-lg">{item.processingCount}</span> : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.packingCount > 0   ? <span className="bg-purple-100  text-purple-800  font-bold px-2 py-0.5 rounded-lg">{item.packingCount}</span>   : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.waitingCount > 0   ? <span className="bg-orange-100  text-orange-800  font-bold px-2 py-0.5 rounded-lg">{item.waitingCount}</span>   : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.completedCount > 0 ? <span className="bg-green-100   text-green-800   font-bold px-2 py-0.5 rounded-lg">{item.completedCount}</span>  : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center">{item.cancelledCount > 0 ? <span className="bg-red-100     text-red-800     font-bold px-2 py-0.5 rounded-lg">{item.cancelledCount}</span>  : <span className="text-gray-300">—</span>}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm text-center"><span className="bg-gray-100 text-gray-800 font-bold px-2 py-0.5 rounded-lg">{item.count}</span></td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot className="bg-gray-50 sticky bottom-0">
                       <tr>
                         <td className="px-4 py-2 text-xs font-bold text-gray-600">الإجمالي</td>
-                        <td className="px-4 py-2 text-xs font-bold text-blue-700">{displayList.reduce((s, m) => s + m.processingCount, 0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-emerald-700">{displayList.reduce((s, m) => s + m.paidCount, 0)}</td>
-                        <td className="px-4 py-2 text-xs font-bold text-purple-700">{displayList.reduce((s, m) => s + m.count, 0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-yellow-700  text-center">{displayList.reduce((s, m) => s + m.pendingCount,    0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-emerald-700 text-center">{displayList.reduce((s, m) => s + m.paidCount,        0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-blue-700    text-center">{displayList.reduce((s, m) => s + m.processingCount,  0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-purple-700  text-center">{displayList.reduce((s, m) => s + m.packingCount,     0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-orange-700  text-center">{displayList.reduce((s, m) => s + m.waitingCount,     0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-green-700   text-center">{displayList.reduce((s, m) => s + m.completedCount,   0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-red-700     text-center">{displayList.reduce((s, m) => s + m.cancelledCount,   0)}</td>
+                        <td className="px-4 py-2 text-xs font-bold text-gray-700    text-center">{displayList.reduce((s, m) => s + m.count,            0)}</td>
                       </tr>
                     </tfoot>
+
                   </table>
                 ) : (
                   <div className="p-6 text-center text-gray-500 text-sm">
